@@ -7,28 +7,25 @@
 
 
 How to compile:
-
-
-
-
-
-
-
+- Making librpc.a
+  > make librpc.a
+- Making binder
+  > make binder
+- Making client
+  > make client
+- Making server
+  > make server
+  
 How to run:
-
-
-
+- Run binder
+  > ./binder
 
 
 Dependencies:
 
 
-
-
-
-
 Message Format:
-
+all message format are specified in the assignment specifications
 
 
 Other things:
