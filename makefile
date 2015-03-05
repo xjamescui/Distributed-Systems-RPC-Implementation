@@ -6,7 +6,7 @@ AR = ar
 ARFLAGS = -cvq
 
 # list of given client/server files files
-GIVEN_SOURCES = client.c server.c server_function_skels.c server_functions.c
+GIVEN_SOURCES = client1.c server.c server_function_skels.c server_functions.c
 GIVEN_OBJECTS = $(GIVEN_SOURCES:.c=.o)
 EXECUTABLES = server client
 
@@ -16,7 +16,7 @@ RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
 RPC_ARCHIVE = librpc.a
 
 # make all
-all: $(EXECUTABLES) $(RPC_ARCHIVE)
+all: $(RPC_ARCHIVE) $(EXECUTABLES)
 
 # make the archive
 $(RPC_ARCHIVE): $(RPC_OBJECTS)
@@ -26,7 +26,7 @@ $(RPC_ARCHIVE): $(RPC_OBJECTS)
 # make the given client
 client: $(GIVEN_OBJECTS)
 	@echo "making $@ ... running the given command"
-	g++ -L. client.o -lrpc -o client
+	g++ -L. client1.o -lrpc -o client
 
 # make the given server
 server: $(GIVEN_OBJECTS)
