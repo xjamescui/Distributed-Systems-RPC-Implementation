@@ -16,7 +16,7 @@
 extern ssize_t myread(int fd, char* const buffer, const unsigned int buffer_len);
 
 /** write() that can take a large buffer_len
- *  returns # of chars read if successful
+ *  returns # of chars written if successful
  *          -1 if fail
  */
 extern ssize_t mywrite(int fd, const char* const buffer, const unsigned int buffer_len);
