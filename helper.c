@@ -12,12 +12,12 @@
 #include <sys/ioctl.h>  // SIOCGIFADDR, ioctl()
 
 /******************************************************************************
- * myread and mywrite
+ * read and write large
  *
  * 
  *****************************************************************************/
 // div big chunk into smaller chunks and receive one by one
-ssize_t myread(int fd, char* const buffer, const int buffer_len)
+ssize_t read_large(int fd, char* const buffer, const int buffer_len)
 {
     int read_so_far = 0;
     ssize_t read_len;
@@ -33,12 +33,12 @@ ssize_t myread(int fd, char* const buffer, const int buffer_len)
         }
         read_so_far += read_len;
     }
-    DEBUG("myread: read %d of %d",read_so_far,buffer_len);
+    DEBUG("read_large: read %d of %d",read_so_far,buffer_len);
     return read_so_far;
 }
 
 // div big chunk into smaller chunks and send one by one
-ssize_t mywrite(int fd, const char* const buffer, const int buffer_len)
+ssize_t write_large(int fd, const char* const buffer, const int buffer_len)
 {
     int write_so_far = 0;
     ssize_t write_len;
@@ -51,7 +51,7 @@ ssize_t mywrite(int fd, const char* const buffer, const int buffer_len)
         }
         write_so_far += write_len;
     }
-    DEBUG("mywrite: sent %d of %d",write_so_far,buffer_len);
+    DEBUG("write_large: sent %d of %d",write_so_far,buffer_len);
     return write_so_far;
 }
 

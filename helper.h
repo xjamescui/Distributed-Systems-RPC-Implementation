@@ -13,13 +13,13 @@
  *  returns # of chars read if successful
  *          -1 if fail
  */
-ssize_t myread(int fd, char* const buffer, const unsigned int buffer_len);
+ssize_t read_large(int fd, char* const buffer, const unsigned int buffer_len);
 
 /** write() that can take a large buffer_len
  *  returns # of chars read if successful
  *          -1 if fail
  */
-ssize_t mywrite(int fd, const char* const buffer, const unsigned int buffer_len);
+ssize_t write_large(int fd, const char* const buffer, const unsigned int buffer_len);
 
 
 /**
