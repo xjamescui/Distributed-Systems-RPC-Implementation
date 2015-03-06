@@ -70,22 +70,22 @@ int compute_type_int(int &type_int, const bool is_input, const bool is_output,
     return 0;
 }
 
-int type_is_input(bool &is_input, const unsigned int type){
+int type_is_input(bool &is_input, const int type){
     is_input = 0x80000000 & type;
     return 0;
 }
 
-int type_is_output(bool &is_output, const unsigned int type){
+int type_is_output(bool &is_output, const int type){
     is_output = 0x40000000 & type;
     return 0;
 }
 
-int type_arg_type(char &arg_type, const unsigned int type){
+int type_arg_type(char &arg_type, const int type){
     arg_type = (type >> 16) & 0x000000FF;
     return 0;
 }
 
-int type_arg_size(int &arg_size, const unsigned int type){
+int type_arg_size(int &arg_size, const int type){
     arg_size = type & 0x0000FFFF;
     return 0;
 }
