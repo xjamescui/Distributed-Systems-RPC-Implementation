@@ -10,3 +10,6 @@ g++ test_helper.c helper.o -o test_helper
 rm test_helper
 make clean
 echo "==test_helper passed!=="
+
+
+
