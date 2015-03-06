@@ -36,7 +36,7 @@ int compute_type_int(int &type_int, const bool is_input, const bool is_output,
                       const unsigned int arg_type, const unsigned int arg_size );
 int type_is_input(bool &is_input, const int type);
 int type_is_output(bool &is_output, const int type);
-int type_arg_type(int &arg_type, const int type);
+int type_arg_type(char &arg_type, const int type);
 int type_arg_size(int &arg_size, const int type);
 
 
