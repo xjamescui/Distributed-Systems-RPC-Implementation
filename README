@@ -7,14 +7,8 @@
 
 
 How to compile:
-- Making librpc.a
-  > make librpc.a
-- Making binder
-  > make binder
-- Making client
-  > make client
-- Making server
-  > make server
+> make librpc.a
+> make binder
   
 How to run:
 - Run binder
