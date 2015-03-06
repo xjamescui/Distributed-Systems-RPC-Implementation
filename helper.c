@@ -7,7 +7,9 @@
 #include <string.h>
 #include <unistd.h>
 
-
+#include <arpa/inet.h>  // inet_ntoa()
+#include <net/if.h>     // IFNAMSIZ
+#include <sys/ioctl.h>  // SIOCGIFADDR, ioctl()
 
 /******************************************************************************
  * myread and mywrite
@@ -55,7 +57,7 @@ ssize_t mywrite(int fd, const char* const buffer, const int buffer_len)
 
 
 /******************************************************************************
- * myread and mywrite
+ * Type stuff
  *
  * 
  *****************************************************************************/
@@ -89,3 +91,54 @@ int type_arg_size(int &arg_size, const int type){
     arg_size = type & 0x0000FFFF;
     return 0;
 }
+
+
+/******************************************************************************
+ * Returns IP given socket_fd
+ *
+ * 
+ *****************************************************************************/
+// http://stackoverflow.com/questions/4770985/something-like-startswithstr-a-str-b-in-c
+bool starts_with(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+// function to return eth0 or etho000 ip addr
+int get_ip_from_socket(unsigned int &ip, int socket_fd) {
+    unsigned int i;
+    struct ifreq ifreqs[20];
+    struct ifconf ic;
+
+    ic.ifc_len = sizeof(ifreqs);
+    ic.ifc_req = ifreqs;
+
+    if (ioctl(socket_fd, SIOCGIFCONF, &ic) < 0) {
+        return -1;
+    }
+
+    for (i = 0; i < ic.ifc_len/sizeof(struct ifreq); ++i) {
+        if ( starts_with("eth0",ifreqs[i].ifr_name) ||
+             starts_with("eth000",ifreqs[i].ifr_name) ){
+            DEBUG("%s: %s", ifreqs[i].ifr_name,
+                       inet_ntoa(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr));
+            ip = htonl(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr) ;
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -40,4 +40,11 @@ int type_arg_type(char &arg_type, const int type);
 int type_arg_size(int &arg_size, const int type);
 
 
+/**
+ * returns IP given a socket_fd
+ */
+int get_ip_from_socket(unsigned int &ip, int socket_fd);
+
+
+
 #endif // HELPER_H
