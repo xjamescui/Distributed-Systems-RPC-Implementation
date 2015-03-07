@@ -58,7 +58,7 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd);
  * buffer = length(4) + type(1) + message(m)
  */
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... );
-int extract_msg_type(char *msg_type, const char* const buffer, const unsigned int buffer_len);
+int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer);
 int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...);
 
 

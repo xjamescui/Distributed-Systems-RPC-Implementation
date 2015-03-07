@@ -188,7 +188,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
         // LLLLTSSSSPPFff......fNnnnTtttTtttTtttTttt
         // 01234567890123456789012345678901234567890123456789
-        memcpy(&(*buffer)[0],buffer_len,4);         // set length
+        unsigned int msg_len = (*buffer_len) - 5;
+        memcpy(&(*buffer)[0],&msg_len,4);           // set length
         memcpy(&(*buffer)[4],&msg_type,1);          // set type
         memcpy(&(*buffer)[5],&ip,4);                // set ip
         memcpy(&(*buffer)[9],&port,2);              // set port
@@ -207,8 +208,9 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     return 0;
 }
 
-int extract_msg_type(char *msg_type, const char* const buffer, const unsigned int buffer_len) {
+int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
     // message: LLLLT[...]
+    memcpy(msg_len,&buffer[0],4);
     memcpy(msg_type,&buffer[4],1);
     return 0;
 }

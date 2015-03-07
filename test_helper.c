@@ -50,8 +50,11 @@ int main() {
     print_buffer(buffer,buffer_len);
 
     char msg_type;
-    extract_msg_type(&msg_type,buffer,buffer_len);
+    unsigned int msg_len;
+    extract_msg_len_type(&msg_len,&msg_type,buffer);
+    assert(msg_len == buffer_len - 5);
     assert(msg_type == MSG_REGISTER);
+    printf("msg_len=%d\n",msg_len);
 
     unsigned int ip, port;
     char* fct_name2 = 0;
