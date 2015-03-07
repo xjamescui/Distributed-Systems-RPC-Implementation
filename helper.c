@@ -129,7 +129,7 @@ bool starts_with(const char *pre, const char *str)
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 // function to return eth0 or etho000 ip addr
-int get_ip_from_socket(unsigned int &ip, int socket_fd) {
+int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     unsigned int i;
     struct ifreq ifreqs[20];
     struct ifconf ic;
@@ -145,7 +145,7 @@ int get_ip_from_socket(unsigned int &ip, int socket_fd) {
         if ( starts_with("eth0",ifreqs[i].ifr_name) ){
             DEBUG("%s: %s", ifreqs[i].ifr_name,
                        inet_ntoa(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr));
-            ip = htonl(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr) ;
+            *ip = htonl(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr) ;
             return 0;
         }
     }
