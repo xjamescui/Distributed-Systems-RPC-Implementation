@@ -5,8 +5,9 @@
 
 // save a list of server_fd that are active
 typedef struct {
+    unsigned int fct_name_len; // length of fct name
     char *fct_name;         // fct name
-    unsigned int num_args;  // num of args
+    unsigned int arg_types_len;  // num of args
     int *arg_types;         // arg types
 } SIGNATURE;
 typedef struct _HOST_ {
@@ -27,6 +28,7 @@ int db_get(unsigned int *ip, unsigned int *port, SIGNATURE sig);
 int db_delete_host(unsigned int ip, unsigned int port, SIGNATURE sig);
 int db_drop();
 
-
+int db_print();
+int db_size(unsigned int *size);
 
 #endif // DATABASE_H

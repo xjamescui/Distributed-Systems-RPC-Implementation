@@ -26,7 +26,7 @@
 
 #define MAX_RW_CHUNK_SIZE       16348
 
-#define FUNCTION_NAME_SIZE      80
+#define FUNCTION_NAME_SIZE      80 // TODO: make it dynamic
 
 
 
@@ -36,6 +36,8 @@
  ******************************************************************/
 
 #define SIGNATURE_PUT_SUCCESS   0
+#define SIGNATURE_PUT_DUPLICATE 1
+#define SIGNATURE_PUT_FAIL      -1
 #define SIGNATURE_FOUND         0
 #define SIGNATURE_NOT_FOUND     -1
 #define SIGNATURE_HAS_NO_HOSTS  -2
