@@ -56,12 +56,12 @@ int main() {
     assert(msg_type == MSG_REGISTER);
     printf("msg_len=%d\n",msg_len);
 
-    unsigned int ip, port;
+    unsigned int ip, port, num_args;
     char* fct_name2 = 0;
     int* argTypes2 = 0;
 
     extract_msg(buffer,buffer_len,
-        MSG_REGISTER,&ip,&port,&fct_name2,&argTypes2);
+        MSG_REGISTER,&ip,&port,&fct_name2,&num_args,&argTypes2);
 
     assert(ip == 0x12121212);
     assert(port == 0x3344);

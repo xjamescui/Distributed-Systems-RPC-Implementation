@@ -27,3 +27,20 @@
 #define MAX_RW_CHUNK_SIZE       16348
 
 #define FUNCTION_NAME_SIZE      80
+
+
+
+/******************************************************************
+ * For database                                                   *
+ *                                                                *
+ ******************************************************************/
+
+#define SIGNATURE_PUT_SUCCESS   0
+#define SIGNATURE_FOUND         0
+#define SIGNATURE_NOT_FOUND     -1
+#define SIGNATURE_HAS_NO_HOSTS  -2
+
+#define DELETE_HOST_SUCCESS     0
+#define DELETE_HOST_NOT_FOUND   1
+#define DELETE_SIG_NOT_FOUND    2
+
