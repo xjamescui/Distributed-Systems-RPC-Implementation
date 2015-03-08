@@ -26,9 +26,6 @@
 
 #define MAX_RW_CHUNK_SIZE       16348
 
-#define FUNCTION_NAME_SIZE      80 // TODO: make it dynamic
-
-
 
 /******************************************************************
  * For database                                                   *

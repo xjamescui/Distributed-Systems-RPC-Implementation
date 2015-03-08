@@ -40,11 +40,14 @@ int main() {
     argTypes[0] = type1;
     argTypes[1] = type1;
 
-    char fct_name[] = "abcd 1234 1234";
+    unsigned int fct_name_len = 12;
+    char fct_name[] = "abcd12341234";
+    printf("assemble\n");
     assemble_msg(&buffer,&buffer_len,
-        MSG_REGISTER,0x12121212,0x3344,fct_name,2,argTypes);
+        MSG_REGISTER,0x12121212,0x3344,fct_name_len,fct_name,2,argTypes);
+    printf("assemble done\n");
 
-    assert(buffer_len == (4 + 1 + 4 + 2 + FUNCTION_NAME_SIZE + 4 + 8 ) );
+    assert(buffer_len == (4 + 1 + 4 + 2 + 4 + fct_name_len + 4 + 8 ) );
 
     printf("buffer_len=%d\n",buffer_len);
     print_buffer(buffer,buffer_len);
@@ -56,15 +59,16 @@ int main() {
     assert(msg_type == MSG_REGISTER);
     printf("msg_len=%d\n",msg_len);
 
-    unsigned int ip, port, num_args;
+    unsigned int ip, port, fct_name2_len, num_args;
     char* fct_name2 = 0;
     int* argTypes2 = 0;
 
     extract_msg(buffer,buffer_len,
-        MSG_REGISTER,&ip,&port,&fct_name2,&num_args,&argTypes2);
+        MSG_REGISTER,&ip,&port,&fct_name2_len,&fct_name2,&num_args,&argTypes2);
 
     assert(ip == 0x12121212);
     assert(port == 0x3344);
+    assert(fct_name2_len == fct_name_len);
     assert(strcmp(fct_name2,fct_name) == 0);
     assert(argTypes2 != NULL);
     assert(argTypes2[0] == type1);
