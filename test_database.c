@@ -148,20 +148,20 @@ int main() {
     assert(db_put(ip_b,port_b,sig_g) == SIGNATURE_PUT_SUCCESS);
     assert(db_size(&size) ==0 && size == 5);
 
-    db_print();
+    // db_print();
 
     assert(db_get(&get_ip,&get_port,sig_f) == SIGNATURE_FOUND);
     assert(get_ip == ip_a && get_port == port_a );
-    db_print();
+    // db_print();
     assert(db_get(&get_ip,&get_port,sig_h) == SIGNATURE_FOUND);
     assert(get_ip == ip_a && get_port == port_a );
-    db_print();
+    // db_print();
     assert(db_get(&get_ip,&get_port,sig_g) == SIGNATURE_FOUND);
     assert(get_ip == ip_b && get_port == port_b );
-    db_print();
+    // db_print();
     assert(db_get(&get_ip,&get_port,sig_f) == SIGNATURE_FOUND);
     assert(get_ip == ip_a && get_port == port_a );
-    db_print();
+    // db_print();
 
     assert(db_drop() == 0);
     assert(db_size(&size) ==0 && size == 0);

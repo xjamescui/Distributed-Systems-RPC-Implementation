@@ -6,6 +6,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+// #define DEBUG(args ...) do { } while (0)
+
+
+
 /**
  * root node
  *
@@ -69,8 +74,9 @@ bool get_db_node(DB_NODE** node, SIGNATURE sig) {
 /**
  * put
  *
- *
- *
+ * returns:
+ * SIGNATURE_PUT_SUCCESS
+ * SIGNATURE_PUT_DUPLICATE if duplicate
  *
  *
  *

@@ -74,6 +74,19 @@ int main() {
     assert(argTypes2[0] == type1);
     assert(argTypes2[1] == type1);
 
+    free(buffer);
+    buffer = 0;
+
+
+    // assemble terminate
+
+    printf("assemble terminate\n");
+    assemble_msg(&buffer,&buffer_len,MSG_TERMINATE);
+    print_buffer(buffer,buffer_len);
+    printf("assemble terminate done\n");
+    extract_msg_len_type(&msg_len,&msg_type,buffer);
+    assert(msg_len == buffer_len - 5);
+    assert(msg_type == MSG_TERMINATE);
 
 
     return 0;

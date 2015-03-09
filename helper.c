@@ -156,7 +156,7 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
 /******************************************************************************
  * assemble buffer and read buffer
  *
- * will free and reallocate buffer
+ * will free and alloc buffer again
  *
  *****************************************************************************/
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
@@ -185,6 +185,9 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         *buffer_len += 4;                           // num_args = u_int
         *buffer_len += num_args*4;                  // arg_types = 4*num_args
 
+        if ( *buffer != NULL ) {
+            free(*buffer);
+        }
         *buffer = (char*)malloc(*buffer_len);
         memset(*buffer,'0',*buffer_len);
 
@@ -201,6 +204,36 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set argTypes
 
     } break;
+    case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE : {
+        // length, type, result
+        int register_result = va_arg(vl,int);
+
+        *buffer_len = 0;
+        *buffer_len += 4;                           // length = u_int
+        *buffer_len += 1;                           // type = char
+        *buffer_len += 4;                           // result = 4 chars
+
+        *buffer = (char*)malloc(*buffer_len);
+        memset(*buffer,'0',*buffer_len);
+
+        unsigned int msg_len = (*buffer_len) - 5;
+        memcpy(&(*buffer)[0],&msg_len,4);           // set length
+        memcpy(&(*buffer)[4],&msg_type,1);          // set type
+        memcpy(&(*buffer)[5],&register_result,4);   // set result
+
+    } break;
+    case MSG_TERMINATE: {
+        *buffer_len = 0;
+        *buffer_len += 4;                           // length = u_int
+        *buffer_len += 1;                           // type = char
+
+        *buffer = (char*)malloc(*buffer_len);
+        memset(*buffer,'0',*buffer_len);
+
+        unsigned int msg_len = (*buffer_len) - 5;
+        memcpy(&(*buffer)[0],&msg_len,4);           // set length
+        memcpy(&(*buffer)[4],&msg_type,1);          // set type
+    } break;
     default:
         DEBUG("Warning: unknown msg_type");
         break;
@@ -210,6 +243,12 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
     return 0;
 }
+
+
+
+
+
+
 
 int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
     // message: LLLLT[...]
@@ -247,14 +286,21 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
         // LLLLTIIIIPPFFFFfff......fAAAAaaa.aaa.aaa.
         // 0123456789012345678901234567890123456789
-        memcpy(ip,&buffer[5],4);           // extract ip
-        memcpy(port,&buffer[9],2);         // extract port
-        memcpy(fct_name_len,&buffer[11],4); // extract num_args
-        *fct_name = (char*)malloc(*fct_name_len); 
-        memcpy(*fct_name,&buffer[15],*fct_name_len); // extract fct name
+        memcpy(ip,&buffer[5],4);                        // extract ip
+        memcpy(port,&buffer[9],2);                      // extract port
+        memcpy(fct_name_len,&buffer[11],4);             // extract num_args
+        *fct_name = (char*)malloc(*fct_name_len);       // extract fct name len
+        memcpy(*fct_name,&buffer[15],*fct_name_len);    // extract fct name
         memcpy(num_args,&buffer[15+(*fct_name_len)],4); // extract num_args
         *arg_types = (int*)malloc((*num_args)*4);
         memcpy(*arg_types,&buffer[19+(*fct_name_len)],(*num_args)*4); // extract argTypes
+    } break;
+    case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE : {
+        // length, type, result
+        int *register_result = va_arg(vl,int*);
+
+        memcpy(register_result,&buffer[5],4);           // extract result
+
     } break;
     default:
         DEBUG("Warning: unknown msg_type");

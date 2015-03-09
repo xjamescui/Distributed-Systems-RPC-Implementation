@@ -19,6 +19,7 @@
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
+#include "database.h"
 
 using namespace std;
 
@@ -31,27 +32,31 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 // ONLY CALL THIS IN MAIN THREAD
 void clean_and_exit(int exit_code);
 
-// save a list of server_fd that are active
-
-
-
 // handle REGISTER / LOC_REQUEST / TERMINATE
-int handle_request(int connection_fd, fd_set *active_fds);
-int handle_register(int msg_len) {
-    // parse message
-    // add message to the db
-    return -1;
-}
-int handle_loc_request(int msg_len) {
-    // go through queue to find function
-    // ping server
-    // return server address
-    return -1;
-}
-int handle_terminate() {
-    // send a terminate request to all active servers
-    return -1;
-}
+int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds);
+
+int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds);
+int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds);
+int handle_terminate(fd_set *active_fds, fd_set *server_fds);
+
+/**
+ * MAIN
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 
 
 int main(int argc, char** argv) {
@@ -93,7 +98,7 @@ int main(int argc, char** argv) {
     }
 
     // initialize set of file descriptors
-    fd_set read_fds, active_fds;
+    fd_set temp_fds, active_fds, server_fds;
     FD_ZERO(&active_fds);
     FD_SET(binder_fd, &active_fds);
 
@@ -102,8 +107,8 @@ int main(int argc, char** argv) {
     bool running = true;
     while ( running ) {
         // block until one fd is ready
-        read_fds = active_fds;
-        if ( select(FD_SETSIZE, &read_fds, NULL, NULL, NULL) < 0) {
+        temp_fds = active_fds;
+        if ( select(FD_SETSIZE, &temp_fds, NULL, NULL, NULL) < 0) {
             fprintf(stderr,"Error : select() failed\n");
             exit_code = 1;
             running = false;
@@ -112,7 +117,7 @@ int main(int argc, char** argv) {
 
         // check who's ready
         for ( int i = 0 ; i < FD_SETSIZE ; i += 1 ) {
-            if ( FD_ISSET(i, &read_fds) ) {
+            if ( FD_ISSET(i, &temp_fds) ) {
                 if ( i == binder_fd) {
                     // there is a new connection request, gotta take it
                     connection_fd = accept(binder_fd,NULL,NULL);
@@ -126,7 +131,7 @@ int main(int argc, char** argv) {
                     FD_SET(connection_fd,&active_fds);
                 } else {
                     // a connected connection request arrived, gotta talk to it
-                    if ( handle_request(i,&active_fds) < 0 ) {
+                    if ( handle_request(i,&active_fds,&server_fds) < 0 ) {
                         DEBUG("COULDN'T HANDLE REQUEST!!!");
                         exit_code = 1;
                     }
@@ -141,84 +146,10 @@ int main(int argc, char** argv) {
     clean_and_exit(exit_code);
 }
 
-// handle incoming request
-int handle_request(int connection_fd, fd_set *active_fds) {
-    ssize_t read_len;
-    unsigned int msg_len;
-    char msg_type;
-    char* rw_buffer;
-
-    // read()
-    rw_buffer = (char*)malloc(5);
-    read_len = read(connection_fd,rw_buffer,5);
-
-    if ( read_len <= 0 ) {
-        fprintf(stderr,"Error : read() failed\n");
-        free(rw_buffer);
-        return -1;
-    }
-    if ( read_len != 5 ) {
-        fprintf(stderr,"Error : read() didn't read size 5, msg not from protocol?\n");
-        free(rw_buffer);
-        return -1;
-    }
-
-    // extract msg_len and msg_type
-    extract_msg_len_type(&msg_len,&msg_type,rw_buffer);
-    free(rw_buffer);
-
-    // handle specific request according to its message code
-    int return_code = 0;
-    switch ( msg_type ) {
-    case MSG_REGISTER: {
-        if ( handle_register(msg_len) < 0 ) {
-            fprintf(stderr,"Error : handle_register() failed\n");
-            return_code = -1;
-        }
-    } break;
-    case MSG_LOC_REQUEST: {
-        if ( handle_loc_request(msg_len) < 0 ) {
-            fprintf(stderr,"Error : handle_request() failed\n");
-            return_code = -1;
-        }
-    } break;
-    case MSG_TERMINATE: {
-        if ( handle_terminate() < 0 ) {
-            fprintf(stderr,"Error : handle_terminate() failed\n");
-            return_code = -1;
-        }
-    } break;
-    default:
-        fprintf(stderr,"ERROR: binder does not handle this request type:%x\n",msg_type&0xff);
-        return_code = -1;
-    }
-
-    return return_code;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void clean_and_exit(int exit_code) {
+    db_drop();
     exit(exit_code);
 }
-
-
 
 
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len){
@@ -258,4 +189,185 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 }
 
 
+/**
+ * HANDLING REQUESTS LOGIC
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
 
+
+// handle incoming request
+int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds) {
+    ssize_t read_len;
+    unsigned int msg_len;
+    char msg_type;
+    char* rw_buffer;
+
+    // read()
+    rw_buffer = (char*)malloc(5);
+    read_len = read(connection_fd,rw_buffer,5);
+
+    if ( read_len <= 0 ) {
+        fprintf(stderr,"Error : read() failed\n");
+        free(rw_buffer);
+        return -1;
+    }
+    if ( read_len != 5 ) {
+        fprintf(stderr,"Error : read() didn't read size 5, msg not from protocol?\n");
+        free(rw_buffer);
+        return -1;
+    }
+
+    // extract msg_len and msg_type
+    extract_msg_len_type(&msg_len,&msg_type,rw_buffer);
+    free(rw_buffer);
+
+    // handle specific request according to its message code
+    int return_code = 0;
+    switch ( msg_type ) {
+    case MSG_REGISTER: {
+        if ( handle_register(connection_fd,msg_len,server_fds) < 0 ) {
+            fprintf(stderr,"Error : handle_register() failed\n");
+            return_code = -1;
+        }
+    } break;
+    case MSG_LOC_REQUEST: {
+        if ( handle_loc_request(connection_fd,msg_len,active_fds,server_fds) < 0 ) {
+            fprintf(stderr,"Error : handle_request() failed\n");
+            return_code = -1;
+        }
+    } break;
+    case MSG_TERMINATE: {
+        if ( handle_terminate(active_fds,server_fds) < 0 ) {
+            fprintf(stderr,"Error : handle_terminate() failed\n");
+            return_code = -1;
+        }
+    } break;
+    default:
+        fprintf(stderr,"ERROR: binder does not handle this request type:%x\n",msg_type&0xff);
+        return_code = -1;
+    }
+
+    return return_code;
+}
+
+
+/**
+ * register
+ *
+ *
+ */
+
+int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds) {
+
+    // init vars
+    char* rw_buffer;
+    ssize_t read_len;
+
+    // stuff that get extracted
+    unsigned int server_ip;
+    unsigned int server_port;
+    unsigned int fct_name_len;
+    char* fct_name = 0;
+    unsigned int arg_types_len;
+    int* arg_types = 0;
+
+    // read everythin
+    rw_buffer = (char*)malloc(msg_len);
+    read_len = read_large(connection_fd,rw_buffer,msg_len);
+    if ( read_len < msg_len ) {
+        fprintf(stderr,"handle_register() : couldn't read everything\n");
+        free(rw_buffer);
+        return -1;
+    }
+
+    // extract message
+    extract_msg(rw_buffer,read_len,MSG_REGISTER,
+        &server_ip,&server_port,
+        &fct_name_len,&fct_name,
+        &arg_types_len,&arg_types);
+
+    free(rw_buffer);
+
+    // add message to the db
+    SIGNATURE sig;
+    sig.fct_name_len = fct_name_len;
+    sig.fct_name = fct_name;
+    sig.arg_types_len = arg_types_len;
+    sig.arg_types = arg_types;
+
+    int put_result;
+    put_result = db_put(server_ip,server_port,sig);
+
+    free(fct_name);
+    free(arg_types);
+
+    rw_buffer = NULL;
+    msg_len = 0;
+    assemble_msg(&rw_buffer,&msg_len,MSG_REGISTER_SUCCESS,
+        put_result);
+
+    ssize_t write_len;
+    write_len = write_large(connection_fd,rw_buffer,msg_len);
+    if ( write_len < msg_len ) {
+        fprintf(stderr, "Error : couldn't send register request\n");
+        return -1;
+    }
+
+    FD_SET(connection_fd,server_fds);
+    return 0;
+
+}
+
+/**
+ * loc request
+ *
+ *
+ */
+int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds) {
+    // go through db to find function
+    // ping server 
+    // if its not there, remove from server + active fds
+    // return server address
+    return -1;
+}
+
+/**
+ * terminate
+ *
+ *
+ */
+int handle_terminate(fd_set *active_fds,fd_set *server_fds) {
+
+    char* rw_buffer = NULL;
+    unsigned int rw_buffer_len;
+    ssize_t write_len;
+
+    assemble_msg(&rw_buffer,&rw_buffer_len,MSG_TERMINATE);
+
+    // send a terminate request to all active servers in server_fds
+    for ( int i = 0 ; i < FD_SETSIZE ; i += 1 ) {
+        if ( FD_ISSET(i,server_fds) ) {
+            write_len = write_large(i,rw_buffer,rw_buffer_len);
+            if ( write_len < rw_buffer_len ) {
+                fprintf(stderr,"Error : couldn't terminate server at socket %d\n",i);
+            }
+            FD_CLR(i,server_fds);
+            FD_CLR(i,active_fds);
+        }
+    }
+    return -1;
+}
