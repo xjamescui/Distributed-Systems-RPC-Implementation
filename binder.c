@@ -33,7 +33,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 void clean_and_exit(int exit_code);
 
 // handle REGISTER / LOC_REQUEST / TERMINATE
-int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds);
+int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running);
 
 int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds);
 int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds);
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
                     FD_SET(connection_fd,&active_fds);
                 } else {
                     // a connected connection request arrived, gotta talk to it
-                    if ( handle_request(i,&active_fds,&server_fds) < 0 ) {
+                    if ( handle_request(i,&active_fds,&server_fds,&running) < 0 ) {
                         DEBUG("COULDN'T HANDLE REQUEST!!!");
                         exit_code = 1;
                     }
@@ -210,7 +210,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 
 
 // handle incoming request
-int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds) {
+int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running) {
     ssize_t read_len;
     unsigned int msg_len;
     char msg_type;
@@ -254,6 +254,8 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds) {
         if ( handle_terminate(active_fds,server_fds) < 0 ) {
             fprintf(stderr,"Error : handle_terminate() failed\n");
             return_code = -1;
+        } else {
+            running = false;
         }
     } break;
     default:
@@ -369,5 +371,5 @@ int handle_terminate(fd_set *active_fds,fd_set *server_fds) {
             FD_CLR(i,active_fds);
         }
     }
-    return -1;
+    return 0;
 }
