@@ -11,9 +11,10 @@ typedef struct {
     int *arg_types;         // arg types
 } SIGNATURE;
 typedef struct _HOST_ {
+    int sock_fd;            // host's socket_fd
     unsigned int ip;        // host's ip
     unsigned int port;      // host's port
-    _HOST_* next;             // pointer to next HOST
+    _HOST_* next;           // pointer to next HOST
 } HOST;
 typedef struct _DB_NODE_ {
     SIGNATURE sig;          // one signature
@@ -23,9 +24,9 @@ typedef struct _DB_NODE_ {
 
 extern DB_NODE* g_db_nodes_root;
 
-int db_put(unsigned int ip, unsigned int port, SIGNATURE sig);
-int db_get(unsigned int *ip, unsigned int *port, SIGNATURE sig);
-int db_delete_host(unsigned int ip, unsigned int port, SIGNATURE sig);
+int db_put(const HOST &host, SIGNATURE sig);
+int db_get(HOST* host, SIGNATURE sig);
+int db_delete_host(const HOST &host, SIGNATURE sig);
 int db_drop();
 
 int db_print();

@@ -81,7 +81,7 @@ bool get_db_node(DB_NODE** node, SIGNATURE sig) {
  *
  *
  */
-int db_put(unsigned int ip, unsigned int port, SIGNATURE sig) {
+int db_put(const HOST &host, SIGNATURE sig) {
 
     DEBUG("db_put");
 
@@ -91,7 +91,7 @@ int db_put(unsigned int ip, unsigned int port, SIGNATURE sig) {
     DB_NODE* found_node = NULL;
     if ( get_db_node(&found_node,sig) == true ) {
         // found a node
-        if ( db_delete_host(ip,port,sig) == DELETE_HOST_SUCCESS ) {
+        if ( db_delete_host(host,sig) == DELETE_HOST_SUCCESS ) {
             // found sig and removed it
             ret_code = SIGNATURE_PUT_DUPLICATE;
         }
@@ -127,8 +127,9 @@ int db_put(unsigned int ip, unsigned int port, SIGNATURE sig) {
 
     // append host
     HOST* new_host = (HOST*)malloc(sizeof(HOST));
-    new_host->ip = ip;
-    new_host->port = port;
+    new_host->sock_fd = host.sock_fd;
+    new_host->ip = host.ip;
+    new_host->port = host.port;
     new_host->next = NULL;
     if ( found_node->hosts_root == NULL ) {
         // if node is empty
@@ -157,7 +158,7 @@ int db_put(unsigned int ip, unsigned int port, SIGNATURE sig) {
  *
  *
  */
-int db_get(unsigned int *ip, unsigned int *port, SIGNATURE sig) {
+int db_get(HOST *host, SIGNATURE sig) {
 
     DEBUG("db_get");
 
@@ -170,12 +171,14 @@ int db_get(unsigned int *ip, unsigned int *port, SIGNATURE sig) {
     // return the first ip
     HOST* first_host = found_node->hosts_root;
     if ( first_host == NULL ) {
-        *ip = 0;
-        *port = 0;
+        host->sock_fd = 0;
+        host->ip = 0;
+        host->port = 0;
         return SIGNATURE_HAS_NO_HOSTS;
     }
-    *ip = first_host->ip;
-    *port = first_host->port;
+    host->sock_fd = first_host->sock_fd;
+    host->ip = first_host->ip;
+    host->port = first_host->port;
 
     // put head node to end
     // HOST* last_host = host;
@@ -222,7 +225,7 @@ int db_get(unsigned int *ip, unsigned int *port, SIGNATURE sig) {
  *
  *
  */
-int db_delete_host(unsigned int ip, unsigned int port, SIGNATURE sig) {
+int db_delete_host(const HOST &host, SIGNATURE sig) {
 
     DEBUG("db_delete_host");
 
@@ -233,30 +236,30 @@ int db_delete_host(unsigned int ip, unsigned int port, SIGNATURE sig) {
     }
 
     // look for the host
-    HOST* host = found_node->hosts_root;
-    while ( host != NULL ) {
-        if ( host->ip == ip &&
-             host->port == port ) {
+    HOST* temp_host = found_node->hosts_root;
+    while ( temp_host != NULL ) {
+        if ( temp_host->ip == host.ip &&
+             temp_host->port == host.port ) {
             // found it
-            if ( host == found_node->hosts_root ) {
+            if ( temp_host == found_node->hosts_root ) {
                 // if it's first
-                found_node->hosts_root = host->next;
+                found_node->hosts_root = temp_host->next;
             } else {
                 // find the previous one
                 HOST* prev = found_node->hosts_root;
-                while ( prev->next != host ) {
+                while ( prev->next != temp_host ) {
                     prev = prev->next;
                 }
-                prev->next = host->next;
+                prev->next = temp_host->next;
 
             }
-            free(host);
+            free(temp_host);
             break;
         }
-        host = host->next;
+        temp_host = temp_host->next;
     }
 
-    if ( host == NULL ) {
+    if ( temp_host == NULL ) {
         return DELETE_HOST_NOT_FOUND;
     } else {
         return DELETE_HOST_SUCCESS;
@@ -348,12 +351,13 @@ int db_print() {
         }
         HOST* temp_host = temp_node->hosts_root;
         while ( temp_host != NULL ) {
-            DEBUG("    H:%x.%x.%x.%x %x",
+            DEBUG("    H:%x.%x.%x.%x:%x sock:%d",
                     (temp_host->ip >> 24 ) & 0xff,
                     (temp_host->ip >> 16 ) & 0xff,
                     (temp_host->ip >> 8 ) & 0xff,
                     (temp_host->ip >> 0 ) & 0xff,
-                    (temp_host->port >> 0 ) & 0xffff
+                    (temp_host->port >> 0 ) & 0xffff,
+                    temp_host->sock_fd
                     );
             temp_host = temp_host->next;
         }
