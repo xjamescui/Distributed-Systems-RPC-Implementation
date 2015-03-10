@@ -1,5 +1,6 @@
 *.a
 *.o
+*.orig
 *.d
 binder
 server

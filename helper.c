@@ -128,6 +128,7 @@ bool starts_with(const char *pre, const char *str)
            lenstr = strlen(str);
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
+
 // function to return eth0 or etho000 ip addr
 int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     unsigned int i;
