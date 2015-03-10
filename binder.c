@@ -50,12 +50,6 @@ int handle_terminate(fd_set *active_fds, fd_set *server_fds);
  *
  *
  *
- *
- *
- *
- *
- *
- *
  */
 
 
@@ -135,6 +129,9 @@ int main(int argc, char** argv) {
                         DEBUG("COULDN'T HANDLE REQUEST!!!");
                         exit_code = 1;
                     }
+                    if ( running == false ) {
+                        break;
+                    }
                 }
             } // if FD_ISSET
         } // for
@@ -191,15 +188,6 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 
 /**
  * HANDLING REQUESTS LOGIC
- *
- *
- *
- *
- *
- *
- *
- *
- *
  *
  *
  *
@@ -311,8 +299,13 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
     sig.arg_types_len = arg_types_len;
     sig.arg_types = arg_types;
 
+    HOST host;
+    host.sock_fd = connection_fd;
+    host.ip = server_ip;
+    host.port = server_port;
+
     int put_result;
-    put_result = db_put(server_ip,server_port,sig);
+    put_result = db_put(host,sig);
 
     free(fct_name);
     free(arg_types);
@@ -340,12 +333,63 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
  *
  */
 int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds) {
+    // read the message
+    char* rw_buffer;
+    ssize_t read_len;
+
+    // stuff that get extracted
+    unsigned int fct_name_len;
+    char* fct_name = 0;
+    unsigned int arg_types_len;
+    int* arg_types = 0;
+
+    // read message
+    rw_buffer = (char*)malloc(msg_len);
+    read_len = read_large(connection_fd,rw_buffer,msg_len);
+    if ( read_len < msg_len ) {
+        fprintf(stderr,"handle_loc_request() : couldn't read everything\n");
+        free(rw_buffer);
+        return -1;
+    }
+
+    // extract message
+    extract_msg(rw_buffer,read_len,MSG_LOC_REQUEST,
+        &fct_name_len,&fct_name,
+        &arg_types_len,&arg_types);
+
     // go through db to find function
-    // ping server 
-    // if its not there, remove from server + active fds
+    unsigned int server_ip = 0;
+    unsigned int server_port;
+
+    while ( 0 ) {
+        SIGNATURE sig;
+        sig.fct_name_len = fct_name_len;
+        sig.fct_name = fct_name;
+        sig.arg_types_len = arg_types_len;
+        sig.arg_types = arg_types;
+
+        // TODO
+        // int get_code = db_get(&server_ip,&server_port,sig);
+
+        // if ( get_code == SIGNATURE_FOUND ) {
+        //     // ping server 
+
+
+
+        //     // if its not there, remove from server + active fds
+
+
+        // }
+    }
     // return server address
     return -1;
 }
+
+
+
+
+
+
 
 /**
  * terminate
