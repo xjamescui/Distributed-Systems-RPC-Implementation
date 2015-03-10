@@ -1,0 +1,7 @@
+*.a
+*.o
+*.d
+binder
+server
+client
+test_helper
