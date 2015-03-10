@@ -3,8 +3,10 @@
 * and we can turn it on/off in here                               *
 *******************************************************************/
 
+#include "stdio.h"
+
 // debug on/off
-#if 0
+#if 1
 #define _ENABLE_DEBUG_
 #endif
 
