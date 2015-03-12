@@ -10,12 +10,14 @@ typedef struct {
     unsigned int arg_types_len;  // num of args
     int *arg_types;         // arg types
 } SIGNATURE;
+
 typedef struct _HOST_ {
     int sock_fd;            // host's socket_fd
     unsigned int ip;        // host's ip
     unsigned int port;      // host's port
     _HOST_* next;           // pointer to next HOST
 } HOST;
+
 typedef struct _DB_NODE_ {
     SIGNATURE sig;          // one signature
     HOST* hosts_root;       // a queue of hosts

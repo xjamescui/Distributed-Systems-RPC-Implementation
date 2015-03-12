@@ -159,6 +159,9 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
  *
  * will free and alloc buffer again
  *
+ * return:
+ * 0 = success
+ * TODO: error is negative?
  *****************************************************************************/
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
 
