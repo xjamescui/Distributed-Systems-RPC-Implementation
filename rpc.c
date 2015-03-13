@@ -14,8 +14,8 @@
 
 #define MAX_CLIENT_CONNECTIONS 100
 
-int server_fd, binder_fd; // SERVER: client listener socket, binder connection socket
-unsigned int server_port, server_ip;
+unsigned int g_binder_fd;
+unsigned int g_server_fd, g_server_port, g_server_ip;
 
 /**
  * create sockets and connect to the binder
@@ -43,8 +43,8 @@ int rpcInit() {
     binder_address = getenv("BINDER_ADDRESS");
 
     // create client listener socket
-    server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (server_fd < 0) {
+    g_server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (g_server_fd < 0) {
         fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
         return -1;
     }
@@ -55,21 +55,21 @@ int rpcInit() {
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     // bind client listener socket
-    if ( bind(server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
+    if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
         fprintf(stderr,"ERROR binding client listener socket: %s\n", strerror(errno));
         return -1;
     }
 
     // set server ip and port to global variable
-    server_port = server_addr.sin_port;
-    if(get_ip_from_socket(&server_ip, server_fd) < 0){
+    g_server_port = server_addr.sin_port;
+    if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0){
         return -1;
     }
 
     // create binder connection socket
-    binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    g_binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    if (binder_fd < 0) {
+    if (g_binder_fd < 0) {
         fprintf(stderr, "ERROR creating binder connection socket on server: %s\n", strerror(errno));
         return -1;
     }
@@ -82,7 +82,7 @@ int rpcInit() {
     binder_addr.sin_port = htons(binder_port);
 
     // connect to binder
-    if ( connect(binder_fd, (const struct sockaddr*)(&binder_addr), binder_addr_len) < 0 ) {
+    if ( connect(g_binder_fd, (const struct sockaddr*)(&binder_addr), binder_addr_len) < 0 ) {
         fprintf(stderr, "ERROR connecting to binder from server: %s\n", strerror(errno));
         return -1;
     }
@@ -133,13 +133,13 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, server_ip, server_port, name_len, name, num_args, argTypes) < 0){
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
         fprintf(stderr, "ERROR creating registration request message\n");
         return -1;
     }
 
     // send registration message to binder
-    write_len = write_large(binder_fd,msg,msg_len);
+    write_len = write_large(g_binder_fd,msg,msg_len);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
         return -1;
