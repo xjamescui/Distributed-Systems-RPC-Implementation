@@ -10,10 +10,12 @@
 #include "defines.h"
 #include "helper.h"
 #include "rpc.h"
+#include "skeleton_database.h"
 
 #define MAX_CLIENT_CONNECTIONS 100
 
 int server_fd, binder_fd; // SERVER: client listener socket, binder connection socket
+unsigned int server_port, server_ip;
 
 /**
  * create sockets and connect to the binder
@@ -58,6 +60,12 @@ int rpcInit() {
         return -1;
     }
 
+    // set server ip and port to global variable
+    server_port = server_addr.sin_port;
+    if(get_ip_from_socket(&server_ip, server_fd) < 0){
+        return -1;
+    }
+
     // create binder connection socket
     binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -91,6 +99,9 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
     return -1;
 }
 
+
+
+
 /** 
  * register a function on binder and add skeleton record into local database
  *
@@ -101,23 +112,31 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
  */
 int rpcRegister(char* name, int* argTypes, skeleton f) {
 
-    unsigned int server_ip, server_port, num_args;
+    unsigned int num_args, msg_len, name_len;
     char* msg = NULL;
-    int msg_len;
+    name_len = strlen(name);
+    num_args = 4; // TODO change this later: need to know how to determine length of int*
 
-    server_ip = 0;
-    server_port = 0;
-
+    DEBUG("fct_name is %s\n", name);
+    DEBUG("fct_name_len is %d\n", name_len);
     // insert skeleton and name and argTypes into local database
+    /* skel_record.fct_name = name; */
+    /* skel_record.arg_types = argTypes; */
+    /* skel_record.skel = f; */
+
+    /* db_op_result = skel_db_put(skel_record); */
+
+    /* if (db_op_result < 0) { */
+    /*   // ERROR inserting record */
+    /*   return db_op_result; */
+    /* } */
 
     // create MSG_REGISTER type msg
-    // format: msg_len, msg_type, server_ip, server_port, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, server_ip, server_port, name, num_args, argTypes) < 0){
+    // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, server_ip, server_port, name_len, name, num_args, argTypes) < 0){
         fprintf(stderr, "ERROR creating registration request message\n");
         return -1;
     }
-
-
 
     return 0;
 }

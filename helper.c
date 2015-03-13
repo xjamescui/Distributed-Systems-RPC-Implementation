@@ -170,7 +170,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
     switch ( msg_type ) {
     case MSG_REGISTER : {
-        // len, type, ip, port, fct_name, num_args, arg_types
+        // len, type, ip, port, fct_name_len, fct_name, num_args, arg_types
         unsigned int ip = va_arg(vl,unsigned int);
         unsigned int port = va_arg(vl,unsigned int);
         unsigned int fct_name_len = va_arg(vl,unsigned int);
@@ -205,7 +205,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[11],&fct_name_len,4);     // set fct name length
         memcpy(&(*buffer)[15],fct_name,fct_name_len); // set fct name
         memcpy(&(*buffer)[15+fct_name_len],&num_args,4); // set num_args
-        memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set argTypes
+        memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set arg_types
+
 
     } break;
     case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE : {
@@ -315,54 +316,3 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

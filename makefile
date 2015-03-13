@@ -22,7 +22,7 @@ RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
 RPC_ARCHIVE = librpc.a
 
 # list of binder sources and objects
-BINDER_SOURCES = binder.c database.c helper.c
+BINDER_SOURCES = binder.c binder_database.c helper.c
 BINDER_OBJECTS = $(BINDER_SOURCES:.c=.o)
 BINDER_EXECUTABLE = binder
 
