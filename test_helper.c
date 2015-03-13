@@ -88,6 +88,11 @@ int main() {
     assert(msg_len == buffer_len - 5);
     assert(msg_type == MSG_TERMINATE);
 
+    free(buffer);
+    free(argTypes2);
+    free(fct_name2);
+
+    free(argTypes);
 
     return 0;
 }

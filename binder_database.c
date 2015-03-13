@@ -1,4 +1,4 @@
-#include "database.h"
+#include "binder_database.h"
 #include "debug.h"
 #include "defines.h"
 
@@ -55,8 +55,9 @@ bool is_same_sig(const SIGNATURE &a, const SIGNATURE &b) {
     return true;
 }
 
-bool is_same_host(const HOST* const a, const HOST* const b) {
-    return (a->ip == b->ip) && (a->port == b->port);
+bool is_same_host(const HOST &a, const HOST &b) {
+    // TODO: should I check for the host's sock_id also?
+    return (a.ip == b.ip) && (a.port == b.port);
 }
 
 bool get_db_node(DB_NODE** node, SIGNATURE sig) {
@@ -75,8 +76,8 @@ bool get_db_node(DB_NODE** node, SIGNATURE sig) {
  * put
  *
  * returns:
- * SIGNATURE_PUT_SUCCESS
- * SIGNATURE_PUT_DUPLICATE if duplicate
+ * BINDER_DB_PUT_SIGNATURE_SUCCESS
+ * BINDER_DB_PUT_SIGNATURE_DUPLICATE if duplicate
  *
  *
  *
@@ -85,15 +86,15 @@ int db_put(const HOST &host, SIGNATURE sig) {
 
     DEBUG("db_put");
 
-    int ret_code = SIGNATURE_PUT_SUCCESS;
+    int ret_code = BINDER_DB_PUT_SIGNATURE_SUCCESS;
 
     // find the sig
     DB_NODE* found_node = NULL;
     if ( get_db_node(&found_node,sig) == true ) {
         // found a node
-        if ( db_delete_host(host,sig) == DELETE_HOST_SUCCESS ) {
+        if ( db_delete_host(host,sig) == BINDER_DB_DELETE_HOST_SUCCESS ) {
             // found sig and removed it
-            ret_code = SIGNATURE_PUT_DUPLICATE;
+            ret_code = BINDER_DB_PUT_SIGNATURE_DUPLICATE;
         }
     } else {
         // can't find : make a new node
@@ -165,7 +166,7 @@ int db_get(HOST *host, SIGNATURE sig) {
     // find the sig
     DB_NODE* found_node = NULL;
     if ( get_db_node(&found_node,sig) == false ) {
-        return SIGNATURE_NOT_FOUND;
+        return BINDER_DB_GET_SIGNATURE_NOT_FOUND;
     }
 
     // return the first ip
@@ -174,7 +175,7 @@ int db_get(HOST *host, SIGNATURE sig) {
         host->sock_fd = 0;
         host->ip = 0;
         host->port = 0;
-        return SIGNATURE_HAS_NO_HOSTS;
+        return BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS;
     }
     host->sock_fd = first_host->sock_fd;
     host->ip = first_host->ip;
@@ -196,7 +197,7 @@ int db_get(HOST *host, SIGNATURE sig) {
     while ( temp_node != NULL ) {
         HOST* temp_first_host = temp_node->hosts_root;
         if ( temp_first_host != NULL ) {
-            if ( is_same_host(temp_first_host,first_host) ) {
+            if ( is_same_host(*temp_first_host,*first_host) ) {
                 // find last
                 HOST* temp_last = temp_first_host;
                 while ( temp_last->next != NULL ) {
@@ -212,7 +213,7 @@ int db_get(HOST *host, SIGNATURE sig) {
         temp_node = temp_node->next;
     }
 
-    return SIGNATURE_FOUND;
+    return BINDER_DB_GET_SIGNATURE_FOUND; 
 }
 
 
@@ -232,14 +233,13 @@ int db_delete_host(const HOST &host, SIGNATURE sig) {
     // find the sig
     DB_NODE* found_node = NULL;
     if ( get_db_node(&found_node,sig) == false ) {
-        return SIGNATURE_NOT_FOUND;
+        return BINDER_DB_DELETE_SIGNATURE_NOT_FOUND;
     }
 
     // look for the host
     HOST* temp_host = found_node->hosts_root;
     while ( temp_host != NULL ) {
-        if ( temp_host->ip == host.ip &&
-             temp_host->port == host.port ) {
+        if ( is_same_host(*temp_host,host) ) {
             // found it
             if ( temp_host == found_node->hosts_root ) {
                 // if it's first
@@ -260,9 +260,9 @@ int db_delete_host(const HOST &host, SIGNATURE sig) {
     }
 
     if ( temp_host == NULL ) {
-        return DELETE_HOST_NOT_FOUND;
+        return BINDER_DB_DELETE_HOST_NOT_FOUND;
     } else {
-        return DELETE_HOST_SUCCESS;
+        return BINDER_DB_DELETE_HOST_SUCCESS;
     }
 
 }
