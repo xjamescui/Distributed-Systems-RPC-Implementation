@@ -5,6 +5,12 @@
 | Student Id |  2040 2357  |  2037 8921  |
 +------------+-------------+-------------+
 
+Assumptions:
+- Server is always online unless temination by client (i.e. never a ctrl+c)
+- When server registers same function name with same argTypes, 
+  binder will remove previous entry and re-added to the database,
+  and the host will be placed in last in the round-robin algorithm.
+
 
 How to compile:
 > make librpc.a
