@@ -40,7 +40,7 @@ bool type_is_valid(const int type);
 
 
 /**
- * helper functino for debugging
+ * helper function for debugging
  *
  */
 void print_buffer(const char* const buffer, int buffer_len);

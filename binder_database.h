@@ -1,5 +1,5 @@
-#ifndef DATABASE_H
-#define DATABASE_H
+#ifndef BINDER_DATABASE_H
+#define BINDER_DATABASE_H
 
 #include "defines.h"
 
@@ -32,4 +32,4 @@ int db_drop();
 int db_print();
 int db_size(unsigned int *size);
 
-#endif // DATABASE_H
+#endif // BINDER_DATABASE_H

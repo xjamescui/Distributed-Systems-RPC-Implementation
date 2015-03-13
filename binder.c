@@ -21,8 +21,6 @@
 #include "helper.h"
 #include "binder_database.h"
 
-using namespace std;
-
 #define DEBUG_BINDER_PORT 10000
 
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
@@ -197,7 +195,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
  *
  */
 
-
+// TODO: check if should remove connection from active_fds or server_fds when it fails
 // handle incoming request
 int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running) {
     ssize_t read_len;
@@ -378,7 +376,6 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
 int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds) {
     // read the message
     char* rw_buffer;
-    unsigned int rw_buffer_len;
     ssize_t read_len;
     ssize_t write_len;
 
@@ -423,13 +420,13 @@ int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_f
     // make reply
     switch ( get_result ) {
     case BINDER_DB_GET_SIGNATURE_FOUND : {
-        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_SUCCESS,host.ip,host.port);
+        assemble_msg(&rw_buffer,&msg_len,MSG_LOC_SUCCESS,host.ip,host.port);
     } break;
     case BINDER_DB_GET_SIGNATURE_NOT_FOUND : {
-        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
+        assemble_msg(&rw_buffer,&msg_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
     } break;
     case BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
-        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
+        assemble_msg(&rw_buffer,&msg_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
     } break;
     default:
         DEBUG("get result not handled yet %d",get_result);
@@ -437,7 +434,8 @@ int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_f
     } // switch
 
     // send reply
-    if ( (write_len = write_large(connection_fd,rw_buffer,rw_buffer_len)) < 0 ) {
+    write_len = write_large(connection_fd,rw_buffer,msg_len);
+    if ( write_len < msg_len ) {
         fprintf(stderr, "handle_loc_request() write: is client still there?\n");
         free(rw_buffer);
         return -1;
