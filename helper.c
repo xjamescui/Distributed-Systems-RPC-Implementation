@@ -251,10 +251,6 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
 
 
-
-
-
-
 int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
     // message: LLLLT[...]
     memcpy(msg_len,&buffer[0],4);

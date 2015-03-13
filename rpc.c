@@ -112,7 +112,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
  */
 int rpcRegister(char* name, int* argTypes, skeleton f) {
 
-    unsigned int num_args, msg_len, name_len;
+    unsigned int num_args, msg_len, name_len, write_len;
     char* msg = NULL;
     name_len = strlen(name);
     num_args = 4; // TODO change this later: need to know how to determine length of int*
@@ -135,6 +135,13 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
     if (assemble_msg(&msg, &msg_len, MSG_REGISTER, server_ip, server_port, name_len, name, num_args, argTypes) < 0){
         fprintf(stderr, "ERROR creating registration request message\n");
+        return -1;
+    }
+
+    // send registration message to binder
+    write_len = write_large(binder_fd,msg,msg_len);
+    if ( write_len < msg_len ) {
+        fprintf(stderr, "Error : couldn't send register request\n");
         return -1;
     }
 
