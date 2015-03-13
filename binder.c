@@ -19,7 +19,7 @@
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
-#include "database.h"
+#include "binder_database.h"
 
 using namespace std;
 
@@ -94,6 +94,7 @@ int main(int argc, char** argv) {
     // initialize set of file descriptors
     fd_set temp_fds, active_fds, server_fds;
     FD_ZERO(&active_fds);
+    FD_ZERO(&server_fds);
     FD_SET(binder_fd, &active_fds);
 
     int connection_fd;
@@ -222,6 +223,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     // extract msg_len and msg_type
     extract_msg_len_type(&msg_len,&msg_type,rw_buffer);
     free(rw_buffer);
+    rw_buffer = 0;
 
     // handle specific request according to its message code
     int return_code = 0;
@@ -240,7 +242,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     } break;
     case MSG_TERMINATE: {
         if ( handle_terminate(active_fds,server_fds) < 0 ) {
-            fprintf(stderr,"Error : handle_terminate() failed\n");
+            fprintf(stderr,"Error : handle_terminate() failed, terminate command not executed\n");
             return_code = -1;
         } else {
             running = false;
@@ -260,12 +262,21 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
  *
  *
  */
+int is_valid_register(unsigned int ip, unsigned int port, 
+                        unsigned int fct_name_len, char* fct_name, 
+                        unsigned int arg_types_len, int* arg_types) {
+    // TODO: check if fct_name_len < 64
+    // TODO: check the argTypes
+    return 0;
+}
+
 
 int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds) {
 
-    // init vars
+    // declare vars
     char* rw_buffer;
     ssize_t read_len;
+    ssize_t write_len;
 
     // stuff that get extracted
     unsigned int server_ip;
@@ -275,7 +286,7 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
     unsigned int arg_types_len;
     int* arg_types = 0;
 
-    // read everythin
+    // read everything
     rw_buffer = (char*)malloc(msg_len);
     read_len = read_large(connection_fd,rw_buffer,msg_len);
     if ( read_len < msg_len ) {
@@ -292,6 +303,25 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
 
     free(rw_buffer);
 
+    // check if it's valid
+    int is_valid = is_valid_register(server_ip,server_port,fct_name_len,fct_name,arg_types_len,arg_types);
+    if ( is_valid < 0 ) {
+        DEBUG("invalid register!! %d",is_valid);
+
+        free(fct_name); // from extract_msg
+        free(arg_types); // from extract_msg
+
+        // send MSG_REGISTER_FAILURE
+        rw_buffer = 0;
+        assemble_msg(&rw_buffer,&msg_len,MSG_REGISTER_FAILURE,is_valid_register);
+        write_len = write_large(connection_fd,rw_buffer,msg_len);
+        if ( write_len < msg_len ) {
+            fprintf(stderr, "Error : couldn't send register request\n");
+            free(rw_buffer);
+        }
+        return -1;
+    }
+
     // add message to the db
     SIGNATURE sig;
     sig.fct_name_len = fct_name_len;
@@ -307,21 +337,34 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
     int put_result;
     put_result = db_put(host,sig);
 
-    free(fct_name);
-    free(arg_types);
+    free(fct_name); // from extract_msg
+    free(arg_types); // from extract_msg
+    rw_buffer = 0;
 
-    rw_buffer = NULL;
-    msg_len = 0;
-    assemble_msg(&rw_buffer,&msg_len,MSG_REGISTER_SUCCESS,
-        put_result);
-
-    ssize_t write_len;
-    write_len = write_large(connection_fd,rw_buffer,msg_len);
-    if ( write_len < msg_len ) {
-        fprintf(stderr, "Error : couldn't send register request\n");
+    // send reply
+    switch (put_result) {
+    case BINDER_DB_PUT_SIGNATURE_SUCCESS: {
+        assemble_msg(&rw_buffer,&msg_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_NO_ERRORS);
+    } break;
+    case BINDER_DB_PUT_SIGNATURE_DUPLICATE: {
+        assemble_msg(&rw_buffer,&msg_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS);
+    } break;
+    default:
+        DEBUG("put result not handled yet %d",put_result);
         return -1;
     }
 
+    write_len = write_large(connection_fd,rw_buffer,msg_len);
+    if ( write_len < msg_len ) {
+        // should only get here if server terminated
+        fprintf(stderr, "Error : couldn't send register request\n");
+        free(rw_buffer);
+        return -1;
+    }
+
+    free(rw_buffer);        // from assemble_msg
+
+    // add connection
     FD_SET(connection_fd,server_fds);
     return 0;
 
@@ -335,7 +378,9 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
 int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds) {
     // read the message
     char* rw_buffer;
+    unsigned int rw_buffer_len;
     ssize_t read_len;
+    ssize_t write_len;
 
     // stuff that get extracted
     unsigned int fct_name_len;
@@ -357,39 +402,51 @@ int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_f
         &fct_name_len,&fct_name,
         &arg_types_len,&arg_types);
 
+    free(rw_buffer);
+
+    SIGNATURE sig;
+    sig.fct_name_len = fct_name_len;
+    sig.fct_name = fct_name;
+    sig.arg_types_len = arg_types_len;
+    sig.arg_types = arg_types;
+
     // go through db to find function
-    unsigned int server_ip = 0;
-    unsigned int server_port;
+    HOST host = { 0, 0, 0, 0 };
 
-    while ( 0 ) {
-        SIGNATURE sig;
-        sig.fct_name_len = fct_name_len;
-        sig.fct_name = fct_name;
-        sig.arg_types_len = arg_types_len;
-        sig.arg_types = arg_types;
+    int get_result;
+    get_result = db_get(&host,sig);
 
-        // TODO
-        // int get_code = db_get(&server_ip,&server_port,sig);
+    free(fct_name);
+    free(arg_types);
+    rw_buffer = 0;
 
-        // if ( get_code == SIGNATURE_FOUND ) {
-        //     // ping server 
+    // make reply
+    switch ( get_result ) {
+    case BINDER_DB_GET_SIGNATURE_FOUND : {
+        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_SUCCESS,host.ip,host.port);
+    } break;
+    case BINDER_DB_GET_SIGNATURE_NOT_FOUND : {
+        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
+    } break;
+    case BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
+        assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
+    } break;
+    default:
+        DEBUG("get result not handled yet %d",get_result);
+        return -1;
+    } // switch
 
-
-
-        //     // if its not there, remove from server + active fds
-
-
-        // }
+    // send reply
+    if ( (write_len = write_large(connection_fd,rw_buffer,rw_buffer_len)) < 0 ) {
+        fprintf(stderr, "handle_loc_request() write: is client still there?\n");
+        free(rw_buffer);
+        return -1;
     }
-    // return server address
-    return -1;
+
+    free(rw_buffer); // from assemble_msg
+
+    return 0;
 }
-
-
-
-
-
-
 
 /**
  * terminate
@@ -410,7 +467,9 @@ int handle_terminate(fd_set *active_fds,fd_set *server_fds) {
             write_len = write_large(i,rw_buffer,rw_buffer_len);
             if ( write_len < rw_buffer_len ) {
                 fprintf(stderr,"Error : couldn't terminate server at socket %d\n",i);
+                continue;
             }
+            close(i);
             FD_CLR(i,server_fds);
             FD_CLR(i,active_fds);
         }

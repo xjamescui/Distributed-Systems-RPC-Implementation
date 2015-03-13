@@ -76,12 +76,12 @@ int compute_type_int(int *type_int, const bool is_input, const bool is_output,
 }
 
 int type_is_input(bool *is_input, const int type){
-    *is_input = 0x80000000 & type;
+    *is_input = ( type >> ARG_INPUT );
     return 0;
 }
 
 int type_is_output(bool *is_output, const int type){
-    *is_output = 0x40000000 & type;
+    *is_output = ( type >> ARG_OUTPUT );
     return 0;
 }
 
@@ -93,6 +93,35 @@ int type_arg_type(char *arg_type, const int type){
 int type_arg_size(int *arg_size, const int type){
     *arg_size = type & 0x0000FFFF;
     return 0;
+}
+
+bool type_is_valid(const int type) {
+
+    // check if it's one of input/output (i.e. return false if it's not input and not output)
+    if ( ( (type>>24) & 0xC0 ) == 0 ) {
+        return false;
+    }
+
+    // check if the first 8 bits is xx00 0000
+    if ( ( (type>>24) & 0x3F ) != 0 ) {
+        return false;
+    }
+
+    // check if its arg_type is one of ARG_CHAR, ARG_SHORT, ARG_INT, ARG_LONG, ARG_DOUBLE, ARG_FLOAT
+    char arg_type;
+    type_arg_type(&arg_type,type);
+    switch (arg_type) {
+    case ARG_CHAR:
+    case ARG_SHORT:
+    case ARG_INT:
+    case ARG_LONG:
+    case ARG_DOUBLE:
+    case ARG_FLOAT:
+        break;
+    default:
+        return false;
+    }
+    return true;
 }
 
 /******************************************************************************

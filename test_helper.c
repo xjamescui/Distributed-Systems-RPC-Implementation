@@ -33,6 +33,15 @@ int main() {
 
     assertTypeEquals(type1,true,true,3,7);
 
+    //                    AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD
+    int type_invalid1 = 0b00000000000000110000000000000111; // not input nor output
+    int type_invalid2 = 0b10000000000000000000000000000111; // invalid type
+    int type_invalid3 = 0b10010110000000110000000000000111; // not padded by zeros
+
+    assert(type_is_valid(type_invalid1) == false);
+    assert(type_is_valid(type_invalid2) == false);
+    assert(type_is_valid(type_invalid3) == false);
+
     // test assemble message
     char* buffer = 0;
     unsigned int buffer_len;

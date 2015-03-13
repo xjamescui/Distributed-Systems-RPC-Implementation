@@ -34,11 +34,18 @@
  * error codes                                                    *
  *                                                                *
  ******************************************************************/
+#define MSG_REGISTER_SUCCESS_NO_ERRORS              0
+
+#define MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS      1
 
 #define MSG_REGISTER_FAILURE_INVALID_SERVER_PORT    -1
 #define MSG_REGISTER_FAILURE_INVALID_SERVER_IP      -2
 #define MSG_REGISTER_FAILURE_INVALID_FCT_NAME       -3
 #define MSG_REGISTER_FAILURE_INVALID_ARGTYPES       -4
+
+#define MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND         -1
+#define MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS          -2
+
 
 
 

@@ -36,6 +36,8 @@ int type_is_output(bool *is_output, const int type);
 int type_arg_type(char *arg_type, const int type);
 int type_arg_size(int *arg_size, const int type);
 
+bool type_is_valid(const int type);
+
 
 /**
  * helper functino for debugging
