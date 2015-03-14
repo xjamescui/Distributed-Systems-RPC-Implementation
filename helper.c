@@ -312,3 +312,13 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
     return 0;
 }
+
+unsigned int arg_types_length(int* argTypes) {
+
+    unsigned int len = 0;
+    while (*argTypes != 0){
+      *argTypes++;
+      len++;
+    }
+    return len;
+}

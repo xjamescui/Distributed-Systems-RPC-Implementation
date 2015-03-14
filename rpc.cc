@@ -10,12 +10,14 @@
 #include "defines.h"
 #include "helper.h"
 #include "rpc.h"
-#include "skeleton_database.h"
+#include "SkeletonDatabase.h"
 
 #define MAX_CLIENT_CONNECTIONS 100
 
+
 unsigned int g_binder_fd;
 unsigned int g_server_fd, g_server_port, g_server_ip;
+SkeletonDatabase* g_skeleton_database;
 
 
 int create_server_socket();
@@ -38,8 +40,79 @@ int rpcInit() {
     // create server socket to listen to client
     if((serverOpCode = create_server_socket()) < 0) return serverOpCode;
 
+    // initialize skeleton database
+    g_skeleton_database = new SkeletonDatabase();
+
     return 0;
 } // rpcInit
+
+
+int rpcCall(char* name, int* argTypes, void** args) {
+    return -1;
+}
+
+int rpcCacheCall(char* name, int* argTypes, void** args) {
+    return -1;
+}
+
+/** 
+ * register a function on binder and add skeleton record into local database
+ *
+ * returns:
+ * 0  = successful registration
+ * >0 = warning
+ * <0 = failure
+ */
+int rpcRegister(char* name, int* argTypes, skeleton f) {
+
+    unsigned int num_args, msg_len, name_len, write_len;
+    char* msg = NULL;
+    SKEL_RECORD skel_record;
+    int dbOpCode;
+
+    name_len = strlen(name);
+    num_args = arg_types_length(argTypes);
+
+    // insert skeleton and name and argTypes into local database
+    skel_record.fct_name = name;
+    skel_record.arg_types = argTypes;
+    skel_record.arg_types_len = num_args;
+    skel_record.skel = f;
+
+    DEBUG("NOW INSERTING: %s %d\n", skel_record.fct_name, skel_record.arg_types_len);
+    dbOpCode = g_skeleton_database->db_put(skel_record);
+
+    g_skeleton_database->db_print(); // TODO remove later
+
+    if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
+
+
+    // create MSG_REGISTER type msg
+    // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
+        fprintf(stderr, "ERROR creating registration request message\n");
+        return -1;
+    }
+
+    // send registration message to binder
+    write_len = write_large(g_binder_fd,msg,msg_len);
+    if ( write_len < msg_len ) {
+        fprintf(stderr, "Error : couldn't send register request\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int rpcExecute() {
+
+    return -1;
+}
+
+int rpcTerminate() {
+    return -1;
+}
+
 
 int create_server_socket() {
 
@@ -113,70 +186,6 @@ int connect_to_binder() {
     }
 
     DEBUG("CONNECTED to %s\n", binder_hostinfo->h_name);
-    
+
     return 0;
 } // connect_to_binder
-
-int rpcCall(char* name, int* argTypes, void** args) {
-    return -1;
-}
-
-int rpcCacheCall(char* name, int* argTypes, void** args) {
-    return -1;
-}
-
-
-/** 
- * register a function on binder and add skeleton record into local database
- *
- * returns:
- * 0  = successful registration
- * >0 = warning
- * <0 = failure
- */
-int rpcRegister(char* name, int* argTypes, skeleton f) {
-
-    unsigned int num_args, msg_len, name_len, write_len;
-    char* msg = NULL;
-    name_len = strlen(name);
-    num_args = 4; // TODO change this later: need to know how to determine length of int*
-
-    DEBUG("fct_name is %s\n", name);
-    DEBUG("fct_name_len is %d\n", name_len);
-    // insert skeleton and name and argTypes into local database
-    /* skel_record.fct_name = name; */
-    /* skel_record.arg_types = argTypes; */
-    /* skel_record.skel = f; */
-
-    /* db_op_result = skel_db_put(skel_record); */
-
-    /* if (db_op_result < 0) { */
-    /*   // ERROR inserting record */
-    /*   return db_op_result; */
-    /* } */
-
-    // create MSG_REGISTER type msg
-    // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
-        fprintf(stderr, "ERROR creating registration request message\n");
-        return -1;
-    }
-
-    // send registration message to binder
-    write_len = write_large(g_binder_fd,msg,msg_len);
-    if ( write_len < msg_len ) {
-        fprintf(stderr, "Error : couldn't send register request\n");
-        return -1;
-    }
-
-    return 0;
-}
-
-int rpcExecute() {
-
-    return -1;
-}
-
-int rpcTerminate() {
-    return -1;
-}
