@@ -76,10 +76,9 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
     // insert skeleton and name and argTypes into local database
     skel_record.fct_name = name;
     skel_record.arg_types = argTypes;
-    skel_record.arg_types_len = num_args;
     skel_record.skel = f;
 
-    DEBUG("NOW INSERTING: %s %d\n", skel_record.fct_name, skel_record.arg_types_len);
+    DEBUG("NOW INSERTING: %s\n", skel_record.fct_name);
     dbOpCode = g_skeleton_database->db_put(skel_record);
 
     g_skeleton_database->db_print(); // TODO remove later
@@ -87,19 +86,19 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
     if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
 
 
-    // create MSG_REGISTER type msg
-    // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
-        fprintf(stderr, "ERROR creating registration request message\n");
-        return -1;
-    }
+    /* // create MSG_REGISTER type msg */
+    /* // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes */
+    /* if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){ */
+    /*     fprintf(stderr, "ERROR creating registration request message\n"); */
+    /*     return -1; */
+    /* } */
 
-    // send registration message to binder
-    write_len = write_large(g_binder_fd,msg,msg_len);
-    if ( write_len < msg_len ) {
-        fprintf(stderr, "Error : couldn't send register request\n");
-        return -1;
-    }
+    /* // send registration message to binder */
+    /* write_len = write_large(g_binder_fd,msg,msg_len); */
+    /* if ( write_len < msg_len ) { */
+    /*     fprintf(stderr, "Error : couldn't send register request\n"); */
+    /*     return -1; */
+    /* } */
 
     return 0;
 }
@@ -185,7 +184,7 @@ int connect_to_binder() {
         return -1;
     }
 
-    DEBUG("CONNECTED to %s\n", binder_hostinfo->h_name);
+    DEBUG("CONNECTED to binder: %s\n", binder_hostinfo->h_name);
 
     return 0;
 } // connect_to_binder

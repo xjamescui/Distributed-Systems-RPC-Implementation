@@ -317,8 +317,8 @@ unsigned int arg_types_length(int* argTypes) {
 
     unsigned int len = 0;
     while (*argTypes != 0){
-      *argTypes++;
-      len++;
+      argTypes += 1;
+      len += 1;
     }
     return len;
 }

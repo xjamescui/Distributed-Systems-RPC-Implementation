@@ -9,16 +9,15 @@
 typedef struct _SKEL_RECORD_ {
     char *fct_name;
     int *arg_types;
-    unsigned int arg_types_len;
     skeleton skel;
 } SKEL_RECORD;
 
 class SkeletonDatabase {
     private:
-        std::list<SKEL_RECORD> db;
+        std::list<SKEL_RECORD> _db;
 
         void find_record(SKEL_RECORD **found, char* fct_name, int* arg_types);
-        bool same_signature(const SKEL_RECORD* record, char* fct_name, int* arg_types, unsigned int arg_types_len);
+        bool same_signature(const SKEL_RECORD* record, char* fct_name, int* arg_types);
 
     public:
         SkeletonDatabase();
@@ -31,6 +30,9 @@ class SkeletonDatabase {
 
         // print out the contents of the database
         void db_print();
+
+        // return the size of the database
+        int db_size();
 
 };
 
