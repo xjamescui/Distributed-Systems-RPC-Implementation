@@ -5,8 +5,11 @@
 
 using namespace std;
 
-SkeletonDatabase::SkeletonDatabase(){}
+SkeletonDatabase::SkeletonDatabase(){} // constructor
+
 /**
+ * Insert a record into the database if it currently does not already exist in the db
+ *
  * Returns:
  * RECORD_PUT_SUCCESS
  * RECORD_PUT_DUPLICATE
@@ -32,6 +35,8 @@ int SkeletonDatabase::db_put(SKEL_RECORD record){
 
 
 /**
+ * Retrieve the skeleton that matches the given function name and argument types
+ *
  * Returns:
  * RECORD_FOUND
  * RECORD_NOT_FOUND
@@ -68,6 +73,9 @@ int SkeletonDatabase::db_delete(SKEL_RECORD record) {
 } // db_delete
 
 
+/**
+ * Prints out the contents of the database
+ */
 void SkeletonDatabase::db_print(){
     int index = 0;
     DEBUG("Printing.. Skel DB size: %d\n ", (int)this->db.size());
@@ -82,6 +90,10 @@ void SkeletonDatabase::db_print(){
     }
 } 
 
+
+/**
+ * Finds a record in the database that matches the function name and arg types
+ */
 void SkeletonDatabase::find_record( SKEL_RECORD **found, char* fct_name, int* arg_types){
 
     unsigned int arg_types_len = arg_types_length(arg_types);
@@ -93,6 +105,9 @@ void SkeletonDatabase::find_record( SKEL_RECORD **found, char* fct_name, int* ar
     }
 }
 
+/**
+ * Checks if a record has the wanted signature (function name and argument types)
+ */
 bool SkeletonDatabase::same_signature(const SKEL_RECORD *record, char* fct_name, int* arg_types, unsigned int arg_types_len) {
 
     // compare function names
@@ -121,6 +136,5 @@ bool SkeletonDatabase::same_signature(const SKEL_RECORD *record, char* fct_name,
             }
         }
     }
-
     return true;
 }
