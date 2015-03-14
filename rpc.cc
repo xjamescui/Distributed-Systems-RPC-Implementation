@@ -86,19 +86,20 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
     if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
 
 
-    /* // create MSG_REGISTER type msg */
-    /* // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes */
-    /* if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){ */
-    /*     fprintf(stderr, "ERROR creating registration request message\n"); */
-    /*     return -1; */
-    /* } */
+    // create MSG_REGISTER type msg
+    // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
+        fprintf(stderr, "ERROR creating registration request message\n");
+        free(msg);
+        return -1;
+    }
 
-    /* // send registration message to binder */
-    /* write_len = write_large(g_binder_fd,msg,msg_len); */
-    /* if ( write_len < msg_len ) { */
-    /*     fprintf(stderr, "Error : couldn't send register request\n"); */
-    /*     return -1; */
-    /* } */
+    // send registration message to binder
+    write_len = write_large(g_binder_fd,msg,msg_len);
+    if ( write_len < msg_len ) {
+        fprintf(stderr, "Error : couldn't send register request\n");
+        return -1;
+    }
 
     return 0;
 }
