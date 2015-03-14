@@ -40,12 +40,12 @@ $(BINDER_EXECUTABLE): $(BINDER_OBJECTS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 # make the given client
-client: $(CLIENT_OBJECTS)
+client: $(CLIENT_OBJECTS) $(RPC_ARCHIVE)
 	@echo "making $@ ... running the given command"
 	g++ -L. client1.o -lrpc -o client
 
 # make the given server
-server: $(SERVER_OBJECTS)
+server: $(SERVER_OBJECTS) $(RPC_ARCHIVE)
 	@echo "making $@ ... running the given command"
 	g++ -L. server_functions.o server_function_skels.o server.o -lrpc -o server
 
