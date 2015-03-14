@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "stdbool.h"
 #include <unistd.h>
 #include <errno.h>
 
@@ -19,9 +20,7 @@
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
-#include "database.h"
-
-using namespace std;
+#include "binder_database.h"
 
 #define DEBUG_BINDER_PORT 10000
 

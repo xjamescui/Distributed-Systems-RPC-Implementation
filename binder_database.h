@@ -1,5 +1,5 @@
-#ifndef DATABASE_H
-#define DATABASE_H
+#ifndef BINDER_DATABASE_H
+#define BINDER_DATABASE_H
 
 #include "defines.h"
 
@@ -10,12 +10,14 @@ typedef struct {
     unsigned int arg_types_len;  // num of args
     int *arg_types;         // arg types
 } SIGNATURE;
+
 typedef struct _HOST_ {
     int sock_fd;            // host's socket_fd
     unsigned int ip;        // host's ip
     unsigned int port;      // host's port
     _HOST_* next;           // pointer to next HOST
 } HOST;
+
 typedef struct _DB_NODE_ {
     SIGNATURE sig;          // one signature
     HOST* hosts_root;       // a queue of hosts
@@ -32,4 +34,4 @@ int db_drop();
 int db_print();
 int db_size(unsigned int *size);
 
-#endif // DATABASE_H
+#endif // BINDER_DATABASE_H

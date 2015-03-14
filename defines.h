@@ -51,3 +51,14 @@
 #define DELETE_HOST_NOT_FOUND   1
 #define DELETE_SIG_NOT_FOUND    2
 
+
+// Skeleton Database
+#define RECORD_PUT_SUCCESS      0
+#define RECORD_PUT_DUPLICATE    1
+#define RECORD_PUT_FAIL         -1
+
+#define RECORD_FOUND            0
+#define RECORD_NOT_FOUND         -1
+
+#define RECORD_DELETE_SUCCESS   0
+#define RECORD_DELETE_FAIL      -1

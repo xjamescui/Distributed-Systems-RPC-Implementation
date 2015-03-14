@@ -128,6 +128,7 @@ bool starts_with(const char *pre, const char *str)
            lenstr = strlen(str);
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
+
 // function to return eth0 or etho000 ip addr
 int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     unsigned int i;
@@ -158,6 +159,9 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
  *
  * will free and alloc buffer again
  *
+ * return:
+ * 0 = success
+ * TODO: error is negative?
  *****************************************************************************/
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
 
@@ -166,7 +170,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
     switch ( msg_type ) {
     case MSG_REGISTER : {
-        // len, type, ip, port, fct_name, num_args, arg_types
+        // len, type, ip, port, fct_name_len, fct_name, num_args, arg_types
         unsigned int ip = va_arg(vl,unsigned int);
         unsigned int port = va_arg(vl,unsigned int);
         unsigned int fct_name_len = va_arg(vl,unsigned int);
@@ -201,7 +205,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[11],&fct_name_len,4);     // set fct name length
         memcpy(&(*buffer)[15],fct_name,fct_name_len); // set fct name
         memcpy(&(*buffer)[15+fct_name_len],&num_args,4); // set num_args
-        memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set argTypes
+        memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set arg_types
+
 
     } break;
     case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE : {
@@ -243,10 +248,6 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
     return 0;
 }
-
-
-
-
 
 
 
@@ -312,53 +313,12 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     return 0;
 }
 
+unsigned int arg_types_length(int* argTypes) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    unsigned int len = 0;
+    while (*argTypes != 0){
+      argTypes += 1;
+      len += 1;
+    }
+    return len;
+}

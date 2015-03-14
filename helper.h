@@ -43,8 +43,7 @@ int type_arg_size(int *arg_size, const int type);
  */
 void print_buffer(const char* const buffer, int buffer_len);
 
-
-
+unsigned int arg_types_length(int* argTypes);
 
 
 /**
