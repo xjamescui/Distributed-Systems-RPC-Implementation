@@ -84,7 +84,7 @@ bool get_db_node(DB_NODE** node, SIGNATURE sig) {
  */
 int db_put(const HOST &host, SIGNATURE sig) {
 
-    DEBUG("db_put");
+    // DEBUG("db_put");
 
     int ret_code = BINDER_DB_PUT_SIGNATURE_SUCCESS;
 
@@ -161,7 +161,7 @@ int db_put(const HOST &host, SIGNATURE sig) {
  */
 int db_get(HOST *host, SIGNATURE sig) {
 
-    DEBUG("db_get");
+    // DEBUG("db_get");
 
     // find the sig
     DB_NODE* found_node = NULL;
@@ -228,7 +228,7 @@ int db_get(HOST *host, SIGNATURE sig) {
  */
 int db_delete_host(const HOST &host, SIGNATURE sig) {
 
-    DEBUG("db_delete_host");
+    // DEBUG("db_delete_host");
 
     // find the sig
     DB_NODE* found_node = NULL;
@@ -281,7 +281,7 @@ int db_delete_host(const HOST &host, SIGNATURE sig) {
  *
  */
 int db_drop() {
-    DEBUG("db_drop");
+    // DEBUG("db_drop");
     DB_NODE* temp_node = g_db_nodes_root;
     HOST* temp_host = NULL;
     while( temp_node != NULL ) {

@@ -23,7 +23,7 @@ int main() {
     unsigned int size;
 
     // get empty
-    printf("test get empty\n");
+    // printf("test get empty\n");
     db_size(&size);
     assert(size == 0);
     assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
@@ -45,7 +45,7 @@ int main() {
     sig2.arg_types[0] = 1;
     sig2.arg_types[1] = 2;
 
-    printf("test put duplicate\n");
+    // printf("test put duplicate\n");
     assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
     assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
     assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
@@ -60,7 +60,7 @@ int main() {
     host_3.ip = 0x3333;
     host_3.port = 0x33;
 
-    printf("test put non-duplicate\n");
+    // printf("test put non-duplicate\n");
     assert(db_put(host_3,sig2) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
     assert(db_size(&size) ==0 && size == 2);
 
@@ -70,12 +70,12 @@ int main() {
     assert(db_size(&size) ==0 && size == 2);
 
     // get
-    printf("test get not found\n");
+    // printf("test get not found\n");
     assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
     assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
     assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
 
-    printf("test get found\n");
+    // printf("test get found\n");
     assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_2.sock_fd && host_1.ip == host_2.ip && host_1.port == host_2.port );
     assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
@@ -86,7 +86,7 @@ int main() {
     assert(host_1.sock_fd == host_3.sock_fd && host_1.ip == host_3.ip && host_1.port == host_3.port );
 
     // delete then get
-    printf("test get found , host not found\n");
+    // printf("test get found , host not found\n");
     assert(db_delete_host(host_2,sig) == BINDER_DB_DELETE_SIGNATURE_NOT_FOUND);
     assert(db_delete_host(host_2,sig2) == BINDER_DB_DELETE_HOST_SUCCESS);
     assert(db_delete_host(host_2,sig2) == BINDER_DB_DELETE_HOST_NOT_FOUND);
@@ -94,7 +94,7 @@ int main() {
     assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS);
 
     // test drop
-    printf("test drop\n");
+    // printf("test drop\n");
     assert(db_drop() == 0);
     assert(db_size(&size) ==0 && size == 0);
 
@@ -103,7 +103,7 @@ int main() {
     free(sig2.fct_name);
     free(sig2.arg_types);
 
-    printf("test given\n");
+    // printf("test given\n");
     // try the given example
     // A:f,g,h
     // B:f,g

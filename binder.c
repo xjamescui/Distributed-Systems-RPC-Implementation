@@ -34,7 +34,7 @@ void clean_and_exit(int exit_code);
 int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running);
 
 int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds);
-int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds);
+int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds);
 int handle_terminate(fd_set *active_fds, fd_set *server_fds);
 
 /**
@@ -147,7 +147,12 @@ void clean_and_exit(int exit_code) {
     exit(exit_code);
 }
 
-
+/**
+ * prints the ip and port
+ * ex:
+ * BINDER_ADDRESS 129.97.167.41
+ * BINDER_PORT 10000
+ */
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len){
     struct hostent* host;
 
@@ -194,8 +199,6 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
  *
  *
  */
-
-// TODO: check if should remove connection from active_fds or server_fds when it fails
 // handle incoming request
 int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running) {
     ssize_t read_len;
@@ -233,7 +236,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
         }
     } break;
     case MSG_LOC_REQUEST: {
-        if ( handle_loc_request(connection_fd,msg_len,active_fds,server_fds) < 0 ) {
+        if ( handle_loc_request(connection_fd,msg_len,active_fds) < 0 ) {
             fprintf(stderr,"Error : handle_request() failed\n");
             return_code = -1;
         }
@@ -257,8 +260,8 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
 
 /**
  * register
- *
- *
+ *   - add server socket to server_fds
+ * returns -1 if either read/write fails
  */
 int is_valid_register(unsigned int ip, unsigned int port, 
                         unsigned int fct_name_len, char* fct_name, 
@@ -267,8 +270,6 @@ int is_valid_register(unsigned int ip, unsigned int port,
     // TODO: check the argTypes
     return 0;
 }
-
-
 int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds) {
 
     // declare vars
@@ -369,11 +370,12 @@ int handle_register(int connection_fd, unsigned int msg_len, fd_set *server_fds)
 }
 
 /**
- * loc request
- *
- *
+ * loc request:
+ *   - answers client with a ip and port
+ *   - close client and remove it from active_fds
+ * returns -1 if either fail to read/write
  */
-int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds, fd_set *server_fds) {
+int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_fds) {
     // read the message
     char* rw_buffer;
     ssize_t read_len;
@@ -442,14 +444,17 @@ int handle_loc_request(int connection_fd, unsigned int msg_len, fd_set *active_f
     }
 
     free(rw_buffer); // from assemble_msg
+    close(connection_fd);
+    FD_CLR(connection_fd,active_fds);
 
     return 0;
 }
 
 /**
- * terminate
- *
- *
+ * terminate:
+ *    - send a message to every server
+ *    - close each server socket
+ *    - remove each socket from server_fds and active_fds
  */
 int handle_terminate(fd_set *active_fds,fd_set *server_fds) {
 

@@ -95,6 +95,10 @@ int type_arg_size(unsigned int *arg_size, const int type){
     return 0;
 }
 
+/**
+ * calculate the total length of an argType
+ * ex: double[4] will return 32
+ */
 int type_arg_total_length(const int type) {
 
     char arg_type;
@@ -105,12 +109,12 @@ int type_arg_total_length(const int type) {
 
     unsigned int individual_size;
     switch ( arg_type ) {
-    case ARG_CHAR : individual_size=1 ; break;
-    case ARG_SHORT : individual_size=2 ; break;
-    case ARG_INT : individual_size=4 ; break;
-    case ARG_LONG : individual_size=4 ; break;
-    case ARG_DOUBLE : individual_size=8 ; break;
-    case ARG_FLOAT : individual_size=4 ; break;
+    case ARG_CHAR : individual_size=sizeof(char) ; break;
+    case ARG_SHORT : individual_size=sizeof(short int) ; break;
+    case ARG_INT : individual_size=sizeof(int) ; break;
+    case ARG_LONG : individual_size=sizeof(long int); break;
+    case ARG_DOUBLE : individual_size=sizeof(double) ; break;
+    case ARG_FLOAT : individual_size=sizeof(float) ; break;
     default:
         individual_size = -1; break;
     }
@@ -128,6 +132,11 @@ bool type_is_array(const int type) {
     return size > 0 ? true : false;
 }
 
+/**
+ * returns true/valid if and only if it satisfies the following
+ * - must be either input or output or both
+ * - type must be one of the defines one
+ */
 bool type_is_valid(const int type) {
 
     // check if it's one of input/output (i.e. return false if it's not input and not output)
@@ -225,17 +234,6 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
  * extract will free and allocate fct_name and arg_types
  *
  *****************************************************************************/
-// MSG_REGISTER            done: assemble, extract, tested
-// MSG_REGISTER_SUCCESS    done: assemble, extract, tested
-// MSG_REGISTER_FAILURE    done: assemble, extract, tested
-// MSG_LOC_REQUEST         done: assemble, extract, tested
-// MSG_LOC_SUCCESS         done: assemble, extract, tested
-// MSG_LOC_FAILURE         done: assemble, extract, tested
-// MSG_EXECUTE             done: assemble, extract, tested
-// MSG_EXECUTE_SUCCESS     done: assemble, extract, tested
-// MSG_EXECUTE_FAILURE     done: assemble, extract, tested
-// MSG_TERMINATE           done: assemble, no need for extract, tested
-
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
 
     va_list vl;             // declare a list of args
@@ -374,7 +372,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     } break;
 
     /**
-     * execute
+     * execute and execute success
      */
      case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
         // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
@@ -451,12 +449,6 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 
     return 0;
 }
-
-
-
-
-
-
 
 int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
     // message: LLLLT[...]
@@ -563,7 +555,7 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     } break;
 
     /**
-     * execute
+     * execute and execute success
      */
     case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
         // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
@@ -606,9 +598,9 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
     } break;
 
-
-
-
+    /**
+     * unknown?????
+     */
     default:
         DEBUG("Warning: unknown msg_type: %x",msg_type);
         break;
@@ -618,54 +610,4 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
