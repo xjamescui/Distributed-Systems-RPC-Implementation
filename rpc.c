@@ -17,6 +17,10 @@
 unsigned int g_binder_fd;
 unsigned int g_server_fd, g_server_port, g_server_ip;
 
+
+int create_server_socket();
+int connect_to_binder();
+
 /**
  * create sockets and connect to the binder
  *
@@ -26,8 +30,53 @@ unsigned int g_server_fd, g_server_port, g_server_ip;
  */
 int rpcInit() {
 
-    struct sockaddr_in server_addr, binder_addr;
+    int binderOpCode, serverOpCode;
+
+    // create binder socket and connect to binder
+    if((binderOpCode = connect_to_binder()) < 0) return binderOpCode;
+
+    // create server socket to listen to client
+    if((serverOpCode = create_server_socket()) < 0) return serverOpCode;
+
+    return 0;
+} // rpcInit
+
+int create_server_socket() {
+
+    struct sockaddr_in server_addr;
     unsigned int server_addr_len = sizeof(server_addr);
+
+    // prep client listener socket info for binding
+    memset(&server_addr, '0', server_addr_len);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    // create client listener socket
+    g_server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (g_server_fd < 0) {
+        fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
+        return -1;
+    }
+
+    // bind client listener socket
+    if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
+        fprintf(stderr,"ERROR binding client listener socket: %s\n", strerror(errno));
+        return -1;
+    }
+
+    // set server ip and port to global variable
+    g_server_port = server_addr.sin_port;
+    if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0){
+        return -1;
+    }
+
+    return 0;
+} // create_server_socket
+
+
+int connect_to_binder() {
+
+    struct sockaddr_in binder_addr;
     unsigned int binder_addr_len = sizeof(binder_addr);
     struct hostent* binder_hostinfo;
     int binder_port;
@@ -41,30 +90,6 @@ int rpcInit() {
 
     binder_port = atoi(getenv("BINDER_PORT"));
     binder_address = getenv("BINDER_ADDRESS");
-
-    // create client listener socket
-    g_server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (g_server_fd < 0) {
-        fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
-        return -1;
-    }
-
-    // prep client listener socket info for binding
-    memset(&server_addr, '0', server_addr_len);
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-
-    // bind client listener socket
-    if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
-        fprintf(stderr,"ERROR binding client listener socket: %s\n", strerror(errno));
-        return -1;
-    }
-
-    // set server ip and port to global variable
-    g_server_port = server_addr.sin_port;
-    if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0){
-        return -1;
-    }
 
     // create binder connection socket
     g_binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -88,8 +113,9 @@ int rpcInit() {
     }
 
     DEBUG("CONNECTED to %s\n", binder_hostinfo->h_name);
+    
     return 0;
-}
+} // connect_to_binder
 
 int rpcCall(char* name, int* argTypes, void** args) {
     return -1;
@@ -98,8 +124,6 @@ int rpcCall(char* name, int* argTypes, void** args) {
 int rpcCacheCall(char* name, int* argTypes, void** args) {
     return -1;
 }
-
-
 
 
 /** 

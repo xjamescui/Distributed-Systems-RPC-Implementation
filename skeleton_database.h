@@ -7,7 +7,7 @@
 typedef struct _SKEL_RECORD_ {
     char *fct_name;
     int *arg_types;
-    int arg_types_len;
+    unsigned int arg_types_len;
     skeleton skel;
     _SKEL_RECORD_* next;
 } SKEL_RECORD;
