@@ -90,9 +90,42 @@ int type_arg_type(char *arg_type, const int type){
     return 0;
 }
 
-int type_arg_size(int *arg_size, const int type){
+int type_arg_size(unsigned int *arg_size, const int type){
     *arg_size = type & 0x0000FFFF;
     return 0;
+}
+
+int type_arg_total_length(const int type) {
+
+    char arg_type;
+    unsigned int total_number;
+
+    type_arg_type(&arg_type,type);
+    type_arg_size(&total_number,type);
+
+    unsigned int individual_size;
+    switch ( arg_type ) {
+    case ARG_CHAR : individual_size=1 ; break;
+    case ARG_SHORT : individual_size=2 ; break;
+    case ARG_INT : individual_size=4 ; break;
+    case ARG_LONG : individual_size=4 ; break;
+    case ARG_DOUBLE : individual_size=8 ; break;
+    case ARG_FLOAT : individual_size=4 ; break;
+    default:
+        individual_size = -1; break;
+    }
+
+    if ( total_number == 0 ) {
+        return individual_size;
+    } else {
+        return individual_size * total_number;
+    }
+}
+
+bool type_is_array(const int type) {
+    unsigned int size;
+    type_arg_size(&size,type);
+    return size > 0 ? true : false;
 }
 
 bool type_is_valid(const int type) {
@@ -198,8 +231,8 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
 // MSG_LOC_REQUEST         done: assemble, extract, tested
 // MSG_LOC_SUCCESS         done: assemble, extract, tested
 // MSG_LOC_FAILURE         done: assemble, extract, tested
-// MSG_EXECUTE             done: 
-// MSG_EXECUTE_SUCCESS     done: 
+// MSG_EXECUTE             done: assemble, extract, tested
+// MSG_EXECUTE_SUCCESS     done: assemble, extract, tested
 // MSG_EXECUTE_FAILURE     done: assemble, extract, tested
 // MSG_TERMINATE           done: assemble, no need for extract, tested
 
@@ -237,12 +270,12 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
      * register
      */
     case MSG_REGISTER : {
-        // len, type, ip, port, fct_name, num_args, arg_types
+        // len, type, ip, port, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int ip = va_arg(vl,unsigned int);
         unsigned int port = va_arg(vl,unsigned int) & 0x0000ffff;
         unsigned int fct_name_len = va_arg(vl,unsigned int);
         char* fct_name = va_arg(vl,char*);
-        unsigned int num_args = va_arg(vl,unsigned int);
+        unsigned int arg_types_len = va_arg(vl,unsigned int);
         int* arg_types = va_arg(vl,int*);
 
         // compute len + allocate right size
@@ -253,8 +286,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         *buffer_len += 2;                           // port = 2 chars
         *buffer_len += 4;                           // fct_name_len = int
         *buffer_len += fct_name_len;                // fct_name
-        *buffer_len += 4;                           // num_args = u_int
-        *buffer_len += num_args*4;                  // arg_types = 4*num_args
+        *buffer_len += 4;                           // arg_types_len = u_int
+        *buffer_len += arg_types_len*4;             // arg_types = 4*arg_types_len
 
         if ( *buffer != NULL ) {
             free(*buffer);
@@ -271,8 +304,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[9],&port,2);              // set port
         memcpy(&(*buffer)[11],&fct_name_len,4);     // set fct name length
         memcpy(&(*buffer)[15],fct_name,fct_name_len); // set fct name
-        memcpy(&(*buffer)[15+fct_name_len],&num_args,4); // set num_args
-        memcpy(&(*buffer)[19+fct_name_len],arg_types,num_args*4); // set argTypes
+        memcpy(&(*buffer)[15+fct_name_len],&arg_types_len,4); // set arg_types_len
+        memcpy(&(*buffer)[19+fct_name_len],arg_types,arg_types_len*4); // set argTypes
 
     } break;
 
@@ -283,7 +316,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         // length, type, fct_name_len, fct_name, arg_tyles_len, arg_types
         unsigned int fct_name_len = va_arg(vl,unsigned int);
         char* fct_name = va_arg(vl,char*);
-        unsigned int num_args = va_arg(vl,unsigned int);
+        unsigned int arg_types_len = va_arg(vl,unsigned int);
         int* arg_types = va_arg(vl,int*);
 
         // compute len + allocate right size
@@ -292,8 +325,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         *buffer_len += 1;                           // type = char
         *buffer_len += 4;                           // fct_name_len = int
         *buffer_len += fct_name_len;                // fct_name
-        *buffer_len += 4;                           // num_args = u_int
-        *buffer_len += num_args*4;                  // arg_types = 4*num_args
+        *buffer_len += 4;                           // arg_types_len = u_int
+        *buffer_len += arg_types_len*4;             // arg_types = 4*arg_types_len
 
         if ( *buffer != NULL ) {
             free(*buffer);
@@ -308,8 +341,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[4],&msg_type,1);          // set type
         memcpy(&(*buffer)[5],&fct_name_len,4);      // set fct name length
         memcpy(&(*buffer)[9],fct_name,fct_name_len); // set fct name
-        memcpy(&(*buffer)[9+fct_name_len],&num_args,4); // set num_args
-        memcpy(&(*buffer)[13+fct_name_len],arg_types,num_args*4); // set argTypes
+        memcpy(&(*buffer)[9+fct_name_len],&arg_types_len,4); // set arg_types_len
+        memcpy(&(*buffer)[13+fct_name_len],arg_types,arg_types_len*4); // set argTypes
 
     } break;
     case MSG_LOC_SUCCESS : {
@@ -343,7 +376,51 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     /**
      * execute
      */
+     case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
+        // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
+        unsigned int fct_name_len = va_arg(vl,unsigned int);
+        char* fct_name = va_arg(vl,char*);
+        unsigned int arg_types_len = va_arg(vl,unsigned int);
+        int* arg_types = va_arg(vl,int*);
+        void** args = va_arg(vl,void**);
 
+        // compute len + allocate right size
+        *buffer_len = 0;
+        *buffer_len += 4;                           // length = u_int
+        *buffer_len += 1;                           // type = char
+        *buffer_len += 4;
+        *buffer_len += fct_name_len;
+        *buffer_len += 4;                           // arg_types_len = u_int
+        *buffer_len += arg_types_len*4;             // arg_types = 4*arg_types_len
+        for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
+            *buffer_len += type_arg_total_length(arg_types[i]);   // dynamically compute length
+        }
+
+        if ( *buffer != NULL ) {
+            free(*buffer);
+        }
+        *buffer = (char*)malloc(*buffer_len);
+        memset(*buffer,'\0',*buffer_len);
+
+        // assume arg1 = 2 int, arg2 = double, arg3 = double
+        // LLLLTFFFFfff......fAAAAa...a...a...i...i...d.......d.......
+        // 012345678901234567890123456789012345678901234567890123456789
+        unsigned int msg_len = (*buffer_len) - 5;
+        memcpy(&(*buffer)[0],&msg_len,4);           // set length
+        memcpy(&(*buffer)[4],&msg_type,1);          // set type
+        memcpy(&(*buffer)[5],&fct_name_len,4);      // set fct name length
+        memcpy(&(*buffer)[9],fct_name,fct_name_len); // set fct name
+        memcpy(&(*buffer)[9+fct_name_len],&arg_types_len,4); // set arg_types_len
+        memcpy(&(*buffer)[13+fct_name_len],arg_types,arg_types_len*4); // set argTypes
+        unsigned int buffer_current_index = 4+1+4+fct_name_len+4+arg_types_len*4;
+        unsigned int single_arg_type_len = 0;
+        for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
+            single_arg_type_len = type_arg_total_length(arg_types[i]);
+            memcpy(&(*buffer)[buffer_current_index],args[i],single_arg_type_len);
+            buffer_current_index += single_arg_type_len;
+        }
+
+     } break;
 
 
     /**
@@ -366,7 +443,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
      * unknown?????
      */
     default:
-        DEBUG("Warning: unknown msg_type");
+        DEBUG("Warning: unknown msg_type: %x",msg_type);
         break;
     }
 
@@ -415,12 +492,12 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
      * register
      */
     case MSG_REGISTER : {
-        // len, type, ip, port, fct_name_len, fct_name, num_args, arg_types
+        // len, type, ip, port, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int *ip = va_arg(vl,unsigned int*);
         unsigned int *port = va_arg(vl,unsigned int*);
         unsigned int *fct_name_len = va_arg(vl,unsigned int*);
         char **fct_name = va_arg(vl,char**);
-        unsigned int *num_args = va_arg(vl,unsigned int*);
+        unsigned int *arg_types_len = va_arg(vl,unsigned int*);
         int **arg_types = va_arg(vl,int**);
 
         *port = 0;
@@ -438,9 +515,9 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         memcpy(fct_name_len,&buffer[11],4);             // extract fct name len
         *fct_name = (char*)malloc(*fct_name_len);
         memcpy(*fct_name,&buffer[15],*fct_name_len);    // extract fct name
-        memcpy(num_args,&buffer[15+(*fct_name_len)],4); // extract num_args
-        *arg_types = (int*)malloc((*num_args)*4);
-        memcpy(*arg_types,&buffer[19+(*fct_name_len)],(*num_args)*4); // extract argTypes
+        memcpy(arg_types_len,&buffer[15+(*fct_name_len)],4); // extract arg_types_len
+        *arg_types = (int*)malloc((*arg_types_len)*4);
+        memcpy(*arg_types,&buffer[19+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
     } break;
 
@@ -448,10 +525,10 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
      * loc request
      */
     case MSG_LOC_REQUEST : {
-        // len, type, fct_name_len, fct_name, num_args, arg_types
+        // len, type, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int *fct_name_len = va_arg(vl,unsigned int*);
         char **fct_name = va_arg(vl,char**);
-        unsigned int *num_args = va_arg(vl,unsigned int*);
+        unsigned int *arg_types_len = va_arg(vl,unsigned int*);
         int **arg_types = va_arg(vl,int**);
 
         if ( *fct_name != NULL ) {
@@ -466,13 +543,13 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         memcpy(fct_name_len,&buffer[5],4);              // extract fct name len
         *fct_name = (char*)malloc(*fct_name_len);
         memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
-        memcpy(num_args,&buffer[9+(*fct_name_len)],4);  // extract num_args
-        *arg_types = (int*)malloc((*num_args)*4);
-        memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*num_args)*4); // extract argTypes
+        memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
+        *arg_types = (int*)malloc((*arg_types_len)*4);
+        memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
     } break;
     case MSG_LOC_SUCCESS : {
-        // len, type, ip, port, fct_name_len, fct_name, num_args, arg_types
+        // len, type, ip, port, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int *ip = va_arg(vl,unsigned int*);
         unsigned int *port = va_arg(vl,unsigned int*);
 
@@ -488,8 +565,52 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     /**
      * execute
      */
+    case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
+        // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
+        unsigned int *fct_name_len = va_arg(vl,unsigned int*);
+        char **fct_name = va_arg(vl,char**);
+        unsigned int *arg_types_len = va_arg(vl,unsigned int*);
+        int **arg_types = va_arg(vl,int**);
+        void ***args = va_arg(vl,void***);
+        
+        if ( *fct_name != NULL ) {
+            free(*fct_name);
+        }
+        if ( *arg_types != NULL ) {
+            free(*arg_types);
+        }
+        if ( *args != NULL ) {
+            free(*args);
+        }
+
+        // LLLLTFFFFfff......fAAAAaaa.aaa.aaa.
+        // 01234567890123456789012345678901234
+        memcpy(fct_name_len,&buffer[5],4);              // extract fct name len
+        *fct_name = (char*)malloc(*fct_name_len);
+        memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
+        memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
+        *arg_types = (int*)malloc((*arg_types_len)*4);
+        memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
+        *args = (void**)malloc((*arg_types_len)*sizeof(void*));
+
+        // extract each single arg
+        unsigned int buffer_current_index = 4+1+4+(*fct_name_len)+4+(*arg_types_len)*4;
+        unsigned int single_arg_type_len = 0;
+        for ( unsigned int i = 0 ; i < *arg_types_len ; i += 1 ) {
+            single_arg_type_len = type_arg_total_length((*arg_types)[i]);
+            // DEBUG("type total len:%d , buffer_current_index:%d",single_arg_type_len,buffer_current_index);
+            (*args)[i] = malloc(single_arg_type_len);
+            memcpy((*args)[i],&buffer[buffer_current_index],single_arg_type_len);
+            buffer_current_index += single_arg_type_len;
+        }
+
+    } break;
+
+
+
+
     default:
-        DEBUG("Warning: unknown msg_type");
+        DEBUG("Warning: unknown msg_type: %x",msg_type);
         break;
     }
 
