@@ -22,7 +22,7 @@ SkeletonDatabase* g_skeleton_database;
 
 int create_server_socket();
 int connect_to_binder();
-void handle_binder_message(char* msg, unsigned int binder_fd);
+int extract_registration_results(char *msg, int* result);
 void handle_client_message(char* msg, unsigned int client_fd);
 
 /**
@@ -75,6 +75,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     char* msg = NULL;
     SKEL_RECORD skel_record;
     int dbOpCode;
+    int register_result;
 
     name_len = strlen(name);
     num_args = arg_types_length(argTypes);
@@ -102,12 +103,18 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     // send registration message to binder
     write_len = write_message(g_binder_fd,msg,msg_len);
+    free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
         return -1;
     }
 
-    return 0;
+    msg = NULL;
+    read_message(msg, g_binder_fd);
+    extract_registration_results(msg,&register_result);
+    free(msg);
+
+    return register_result;
 } // rpcRegister
 
 /**
@@ -118,8 +125,11 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 int rpcExecute()
 {
 
-    int highest_fd, select_rv, client_fd;
+    int select_rv, client_fd;
     fd_set active_fds, read_fds;
+
+    FD_SET(g_server_fd, &active_fds);
+
     listen(g_server_fd, MAX_CLIENT_CONNECTIONS);
 
     struct sockaddr_in client_addr;
@@ -127,11 +137,12 @@ int rpcExecute()
 
     char* connection_msg = NULL;
     ssize_t write_len;
+    bool running = true;
 
-    while (1) {
+    while (running) {
 
         read_fds = active_fds;
-        select_rv = select(highest_fd, &read_fds, NULL, NULL, NULL);
+        select_rv = select(FD_SETSIZE, &read_fds, NULL, NULL, NULL);
 
         if (select_rv < 0) {
             fprintf(stderr, "ERROR on select: %s\n", strerror(errno));
@@ -139,7 +150,7 @@ int rpcExecute()
         }
 
         // iterate through each socket
-        for (unsigned int connection_fd = 0; connection_fd <= highest_fd; connection_fd++) {
+        for (unsigned int connection_fd = 0; connection_fd <= FD_SETSIZE; connection_fd++) {
 
             // this connection has no read requests
             if (!FD_ISSET(connection_fd, &read_fds)) continue;
@@ -156,12 +167,19 @@ int rpcExecute()
             } else if (connection_fd == g_binder_fd) {
                 // this is the binder connection
 
+                char msg_type;
+                unsigned int msg_len;
                 if (read_message(connection_msg, connection_fd) < 0) {
                     fprintf(stderr, "ERROR reading from binder socket: %s\n", strerror(errno));
                     continue;
                 }
 
-                handle_binder_message(connection_msg, connection_fd);
+                extract_msg_len_type(&msg_len, &msg_type, connection_msg);
+
+                if (msg_type == MSG_TERMINATE ){
+                    running = false;
+                    break; // terminate
+                }
 
             } else {
                 // this is a client connection
@@ -172,11 +190,9 @@ int rpcExecute()
                 }
 
                 handle_client_message(connection_msg, connection_fd);
-
             }
-        }
-
-    }
+        } // for
+    } // while
 
     FD_ZERO(&active_fds);
     FD_ZERO(&read_fds);
@@ -269,13 +285,23 @@ int connect_to_binder()
 } // connect_to_binder
 
 
-void handle_binder_message(char* msg, unsigned int binder_fd)
+int extract_registration_results(char *msg, int* result) 
 {
 
-} // handle_binder_message
+    unsigned int msg_len;
+    char msg_type;
 
-
-void handle_client_message(char* msg, unsigned int client_fd)
-{
-
-} // handle_client_message
+    extract_msg_len_type(&msg_len, &msg_type, msg);
+    switch (msg_type) {
+        case MSG_REGISTER_SUCCESS:
+        case MSG_REGISTER_FAILURE:
+            // register success or failure
+            if (extract_msg(msg, msg_len, msg_type, result) < 0) {
+                fprintf(stderr, "ERROR extracting msg\n");
+                return -1;
+            }
+            return 0;
+        default:
+            return -1;
+    }
+}
