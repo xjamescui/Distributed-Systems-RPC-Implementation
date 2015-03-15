@@ -47,8 +47,7 @@ bool type_is_array(const int type);
  */
 void print_buffer(const char* const buffer, int buffer_len);
 
-
-
+unsigned int arg_types_length(int* argTypes);
 
 
 /**

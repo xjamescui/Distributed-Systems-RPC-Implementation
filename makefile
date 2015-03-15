@@ -17,8 +17,9 @@ CLIENT_OBJECTS = $(CLIENT_SOURCES:.c=.o)
 EXECUTABLES = server client
 
 # list of rpc sources and objects
-RPC_SOURCES = rpc.c helper.c
+RPC_SOURCES = rpc.cc helper.c SkeletonDatabase.cc
 RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
+RPC_CPP_OBJECTS = $(RPC_SOURCES:.cc=.o)
 RPC_ARCHIVE = librpc.a
 
 # list of binder sources and objects
@@ -30,7 +31,7 @@ BINDER_EXECUTABLE = binder
 all: $(RPC_ARCHIVE) binder $(EXECUTABLES)
 
 # make the archive
-$(RPC_ARCHIVE): $(RPC_OBJECTS)
+$(RPC_ARCHIVE): $(RPC_OBJECTS) $(RPC_CPP_OBJECTS)
 	@echo "making $@ ..."
 	$(AR) $(ARFLAGS) $@ $^
 
@@ -58,5 +59,8 @@ clean:
 	@echo "making $@ ..."
 	$(CC) $(CFLAGS) $< -o $@
 
-
+# rule to transform .cc to .o
+%.o: %.cc debug.h defines.h
+	@echo "making $@ ..."
+	$(CC) $(CFLAGS) $< -o $@
 

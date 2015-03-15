@@ -199,6 +199,7 @@ bool starts_with(const char *pre, const char *str)
            lenstr = strlen(str);
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
+
 // function to return eth0 or etho000 ip addr
 int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     unsigned int i;
@@ -233,6 +234,9 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
  *
  * extract will free and allocate fct_name and arg_types
  *
+ * return:
+ * 0 = success
+ * TODO: error is negative?
  *****************************************************************************/
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
 
@@ -450,6 +454,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     return 0;
 }
 
+
 int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
     // message: LLLLT[...]
     memcpy(msg_len,&buffer[0],4);
@@ -609,5 +614,15 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     va_end(vl);             // end list
 
     return 0;
+}
+
+unsigned int arg_types_length(int* argTypes) {
+
+    unsigned int len = 0;
+    while (*argTypes != 0){
+      argTypes += 1;
+      len += 1;
+    }
+    return len;
 }
 

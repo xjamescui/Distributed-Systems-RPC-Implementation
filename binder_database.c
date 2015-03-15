@@ -1,6 +1,7 @@
 #include "binder_database.h"
 #include "debug.h"
 #include "defines.h"
+#include "stdbool.h"
 
 #include <unistd.h>
 #include <string.h>
