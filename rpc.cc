@@ -26,6 +26,18 @@ void handle_client_message(char* msg, unsigned int client_fd);
 int connect_server_to_binder();
 
 /**
+ * rpcCall helper functions
+ *
+ *
+ */
+int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
+                        unsigned int fct_name_len, char *name,
+                        unsigned int arg_types_len, int *arg_types);
+int send_execute_to_server(int server_fd,
+                           unsigned int fct_name_len, char *name,
+                           unsigned int arg_types_len, int *arg_types, void** args);
+
+/**
  * create sockets and connect to the binder
  *
  * return:
@@ -67,20 +79,47 @@ int rpcCall(char* name, int* argTypes, void** args)
     binder_address = getenv(BINDER_ADDRESS_STRING);
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
-        fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
+        fprintf(stderr, "Error : rpcCall() BINDER_ADDRESS and/or BINDER_PORT not set\n");
         return -1;
     }
     binder_port = atoi(binder_port_str);
 
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
-        fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
+        fprintf(stderr, "Error : rpcCall() cannot connect to binder\n");
         return -1;
     }
 
-    //
+    int server_fd;
+    unsigned int server_ip;
+    unsigned int server_port;
 
-    return -1;
+    int opCode;
+
+    unsigned int name_len = strlen(name);
+    unsigned int argTypesLen = arg_types_length(argTypes);
+
+
+    // get ip and port from binder
+    if ( (opCode = ask_binder_for_host(binder_fd,&server_ip,&server_port,name_len,name,argTypesLen,argTypes)) < 0 ) {
+        // fprintf(stderr, "Error : rpcCall() cannot get host\n");
+        DEBUG("Error : rpcCall() cannot get host %d\n",opCode);
+        return opCode;
+    }
+
+    // connect to server
+    if ( connect_to_ip_port(&server_fd, server_ip, server_port) < 0 ) {
+        fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%x\n",server_ip,server_port);
+        return -1;
+    }
+
+    // execute the message
+    if ( (opCode = send_execute_to_server(server_fd, name_len, name, argTypesLen, argTypes, args)) < 0 ) {
+        fprintf(stderr, "Error : rpcCall() cannot execute %d\n",opCode);
+        return opCode;
+    }
+
+    return 0;
 }
 
 int rpcCacheCall(char* name, int* argTypes, void** args)
