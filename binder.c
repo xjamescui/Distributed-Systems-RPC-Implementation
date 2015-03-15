@@ -1,5 +1,3 @@
-
-
 // PF_INET, SOCK_STREAM, IPPROTO_TCP, AF_INET, INADDR_ANY
 // socket, bind, listen, ntohs, htons, inet_ntoa
 #include <arpa/inet.h>
@@ -273,6 +271,7 @@ int is_valid_register(unsigned int ip, unsigned int port,
     // TODO: check the argTypes
     return 0;
 }
+
 int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *server_fds)
 {
 

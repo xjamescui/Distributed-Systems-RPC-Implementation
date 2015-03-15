@@ -32,7 +32,8 @@ DB_NODE* g_db_nodes_root = NULL;
  *
  *
  */
-bool is_same_sig(const SIGNATURE &a, const SIGNATURE &b) {
+bool is_same_sig(const SIGNATURE &a, const SIGNATURE &b)
+{
     // check fct_name_len
     if ( a.fct_name_len != b.fct_name_len ) {
         return false;
@@ -56,12 +57,14 @@ bool is_same_sig(const SIGNATURE &a, const SIGNATURE &b) {
     return true;
 }
 
-bool is_same_host(const HOST &a, const HOST &b) {
+bool is_same_host(const HOST &a, const HOST &b)
+{
     // TODO: should I check for the host's sock_id also?
     return (a.ip == b.ip) && (a.port == b.port);
 }
 
-bool get_db_node(DB_NODE** node, SIGNATURE sig) {
+bool get_db_node(DB_NODE** node, SIGNATURE sig)
+{
     DB_NODE* temp = g_db_nodes_root;
     while ( temp != NULL ) {
         if ( is_same_sig(temp->sig,sig) ) {
@@ -83,7 +86,8 @@ bool get_db_node(DB_NODE** node, SIGNATURE sig) {
  *
  *
  */
-int db_put(const HOST &host, SIGNATURE sig) {
+int db_put(const HOST &host, SIGNATURE sig)
+{
 
     // DEBUG("db_put");
 
@@ -154,13 +158,14 @@ int db_put(const HOST &host, SIGNATURE sig) {
 /**
  * get
  *
- * 
+ *
  *
  *
  *
  *
  */
-int db_get(HOST *host, SIGNATURE sig) {
+int db_get(HOST *host, SIGNATURE sig)
+{
 
     // DEBUG("db_get");
 
@@ -214,7 +219,7 @@ int db_get(HOST *host, SIGNATURE sig) {
         temp_node = temp_node->next;
     }
 
-    return BINDER_DB_GET_SIGNATURE_FOUND; 
+    return BINDER_DB_GET_SIGNATURE_FOUND;
 }
 
 
@@ -227,7 +232,8 @@ int db_get(HOST *host, SIGNATURE sig) {
  *
  *
  */
-int db_delete_host(const HOST &host, SIGNATURE sig) {
+int db_delete_host(const HOST &host, SIGNATURE sig)
+{
 
     // DEBUG("db_delete_host");
 
@@ -281,7 +287,8 @@ int db_delete_host(const HOST &host, SIGNATURE sig) {
  *
  *
  */
-int db_drop() {
+int db_drop()
+{
     // DEBUG("db_drop");
     DB_NODE* temp_node = g_db_nodes_root;
     HOST* temp_host = NULL;
@@ -310,7 +317,8 @@ int db_drop() {
  *
  *
  */
-int db_size(unsigned int *size) {
+int db_size(unsigned int *size)
+{
 
     *size = 0 ;
 
@@ -337,7 +345,8 @@ int db_size(unsigned int *size) {
  *
  *
  */
-int db_print() {
+int db_print()
+{
 
     DEBUG("printing db start ====");
 
@@ -346,20 +355,20 @@ int db_print() {
         DEBUG("N:%s",temp_node->sig.fct_name);
         for ( unsigned int i = 0 ; i < temp_node->sig.arg_types_len ; i += 1 ) {
             DEBUG("Arg:%x %x %x",
-                (temp_node->sig.arg_types[i] >> 24) & 0xff,
-                (temp_node->sig.arg_types[i] >> 16) & 0xff,
-                (temp_node->sig.arg_types[i] >> 0) & 0xffff);
+                  (temp_node->sig.arg_types[i] >> 24) & 0xff,
+                  (temp_node->sig.arg_types[i] >> 16) & 0xff,
+                  (temp_node->sig.arg_types[i] >> 0) & 0xffff);
         }
         HOST* temp_host = temp_node->hosts_root;
         while ( temp_host != NULL ) {
             DEBUG("    H:%x.%x.%x.%x:%x sock:%d",
-                    (temp_host->ip >> 24 ) & 0xff,
-                    (temp_host->ip >> 16 ) & 0xff,
-                    (temp_host->ip >> 8 ) & 0xff,
-                    (temp_host->ip >> 0 ) & 0xff,
-                    (temp_host->port >> 0 ) & 0xffff,
-                    temp_host->sock_fd
-                    );
+                  (temp_host->ip >> 24 ) & 0xff,
+                  (temp_host->ip >> 16 ) & 0xff,
+                  (temp_host->ip >> 8 ) & 0xff,
+                  (temp_host->ip >> 0 ) & 0xff,
+                  (temp_host->port >> 0 ) & 0xffff,
+                  temp_host->sock_fd
+                 );
             temp_host = temp_host->next;
         }
         temp_node = temp_node->next;
