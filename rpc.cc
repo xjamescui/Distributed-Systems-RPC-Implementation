@@ -21,9 +21,9 @@ SkeletonDatabase* g_skeleton_database;
 
 
 int create_server_socket();
-int connect_to_binder();
 int extract_registration_results(char *msg, int* result);
 void handle_client_message(char* msg, unsigned int client_fd);
+int connect_server_to_binder();
 
 /**
  * create sockets and connect to the binder
@@ -38,7 +38,7 @@ int rpcInit()
     int binderOpCode, serverOpCode;
 
     // create binder socket and connect to binder
-    if((binderOpCode = connect_to_binder()) < 0) return binderOpCode;
+    if((binderOpCode = connect_server_to_binder()) < 0) return binderOpCode;
 
     // create server socket to listen to client
     if((serverOpCode = create_server_socket()) < 0) return serverOpCode;
@@ -52,6 +52,34 @@ int rpcInit()
 
 int rpcCall(char* name, int* argTypes, void** args)
 {
+    // declare sock vars
+    int binder_fd;
+    char* binder_address;
+    char* binder_port_str;
+    int binder_port;
+
+    // declare vars for buffer
+    char* w_buffer = NULL;
+    unsigned int w_buffer_len;
+    ssize_t write_len;
+
+    // get environment variables
+    binder_address = getenv(BINDER_ADDRESS_STRING);
+    binder_port_str = getenv(BINDER_PORT_STRING);
+    if (binder_address == NULL || binder_port_str == NULL) {
+        fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
+        return -1;
+    }
+    binder_port = atoi(binder_port_str);
+
+    // connect to binder
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+        fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
+        return -1;
+    }
+
+    //
+
     return -1;
 }
 
@@ -202,7 +230,48 @@ int rpcExecute()
 
 int rpcTerminate()
 {
-    return -1;
+    // declare sock vars
+    int binder_fd;
+    char* binder_address;
+    char* binder_port_str;
+    int binder_port;
+
+    // declare vars for buffer
+    char* w_buffer = NULL;
+    unsigned int w_buffer_len;
+    ssize_t write_len;
+
+    // get environment variables
+    binder_address = getenv(BINDER_ADDRESS_STRING);
+    binder_port_str = getenv(BINDER_PORT_STRING);
+    if (binder_address == NULL || binder_port_str == NULL) {
+        fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
+        return -1;
+    }
+    binder_port = atoi(binder_port_str);
+
+    // connect to binder
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+        fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
+        return -1;
+    }
+
+    // assemble a terminate message
+    if ( assemble_msg(&w_buffer,&w_buffer_len,MSG_TERMINATE) < 0 ) {
+        fprintf(stderr,"Error : rpcTerminate() couldn't assemble terminate message\n");
+        return -1;
+    }
+
+    // send message
+    write_len = write_message(g_binder_fd, w_buffer, w_buffer_len);
+    free(w_buffer);
+    if ( write_len < w_buffer_len ) {
+        fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
+        return -1;
+    }
+
+    close(binder_fd);
+    return 0;
 }
 
 
@@ -240,49 +309,36 @@ int create_server_socket()
 } // create_server_socket
 
 
-int connect_to_binder()
+int connect_server_to_binder()
 {
 
-    struct sockaddr_in binder_addr;
-    unsigned int binder_addr_len = sizeof(binder_addr);
-    struct hostent* binder_hostinfo;
-    int binder_port;
+    // declare sock vars
+    int binder_fd;
     char* binder_address;
+    char* binder_port_str;
+    int binder_port;
 
-    // check binder environment information are set
-    if (getenv("BINDER_ADDRESS") == NULL || getenv("BINDER_PORT") == NULL) {
-        fprintf(stderr, "Please ensure BINDER_ADDRESS and BINDER_PORT environment variables are set\n");
+    // get environment variables
+    binder_address = getenv(BINDER_ADDRESS_STRING);
+    binder_port_str = getenv(BINDER_PORT_STRING);
+    if (binder_address == NULL || binder_port_str == NULL) {
+        fprintf(stderr, "Error : connect_server_to_binder() BINDER_ADDRESS and/or BINDER_PORT not set\n");
         return -1;
     }
-
-    binder_port = atoi(getenv("BINDER_PORT"));
-    binder_address = getenv("BINDER_ADDRESS");
-
-    // create binder connection socket
-    g_binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-    if (g_binder_fd < 0) {
-        fprintf(stderr, "ERROR creating binder connection socket on server: %s\n", strerror(errno));
-        return -1;
-    }
-
-    // prep binder connection socket info to connect to binder
-    binder_hostinfo = gethostbyname(binder_address);
-    memset(&binder_addr, '0', binder_addr_len);
-    memcpy(&binder_addr.sin_addr.s_addr, binder_hostinfo->h_addr , binder_hostinfo->h_length);
-    binder_addr.sin_family = AF_INET;
-    binder_addr.sin_port = htons(binder_port);
+    binder_port = atoi(binder_port_str);
 
     // connect to binder
-    if ( connect(g_binder_fd, (const struct sockaddr*)(&binder_addr), binder_addr_len) < 0 ) {
-        fprintf(stderr, "ERROR connecting to binder from server: %s\n", strerror(errno));
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+        fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
         return -1;
     }
 
-    DEBUG("CONNECTED to binder: %s\n", binder_hostinfo->h_name);
+    g_binder_fd = binder_fd;
+
+    // DEBUG("SERVER CONNECTED to binder: %s\n", binder_hostinfo->h_name);
 
     return 0;
-} // connect_to_binder
+} // connect_server_to_binder
 
 
 int extract_registration_results(char *msg, int* result) 
