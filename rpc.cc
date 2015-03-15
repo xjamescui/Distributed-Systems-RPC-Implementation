@@ -204,7 +204,7 @@ int rpcExecute()
 
                 extract_msg_len_type(&msg_len, &msg_type, connection_msg);
 
-                if (msg_type == MSG_TERMINATE ){
+                if (msg_type == MSG_TERMINATE ) {
                     running = false;
                     break; // terminate
                 }
@@ -344,7 +344,7 @@ int connect_server_to_binder()
 /**
  * Extract response from binder after a server method registration request is sent
  */
-int extract_registration_results(char *msg, int* result) 
+int extract_registration_results(char *msg, int* result)
 {
 
     unsigned int msg_len;
@@ -352,16 +352,16 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-        case MSG_REGISTER_SUCCESS:
-        case MSG_REGISTER_FAILURE:
-            // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, result) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-                return -1;
-            }
-            return 0;
-        default:
+    case MSG_REGISTER_SUCCESS:
+    case MSG_REGISTER_FAILURE:
+        // register success or failure
+        if (extract_msg(msg, msg_len, msg_type, result) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
             return -1;
+        }
+        return 0;
+    default:
+        return -1;
     }
 } // extract_registration_results
 
@@ -369,46 +369,42 @@ int extract_registration_results(char *msg, int* result)
  * Handle client RPC requests and invoke the corresponding server methods
  * - return execution success/failure feedback to client
  */
-void handle_client_message(char* msg, unsigned int client_fd) {
+void handle_client_message(char* msg, unsigned int client_fd)
+{
 
-    unsigned int msg_len;
     char msg_type;
-    unsigned int fct_name_len, arg_types_len;
+    unsigned int msg_len, fct_name_len, arg_types_len;
     int* arg_types;
     void** args;
-    char* fct_name = NULL; 
+    char* fct_name = NULL;
     char* response_msg = NULL;
     skeleton target_method;
     int method_return_code;
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
-    switch (msg_type) {
-        case MSG_EXECUTE:
+    if (msg_type == MSG_EXECUTE) {
 
-            // exact msg
-            if (extract_msg(msg, msg_len, msg_type, &fct_name_len, fct_name, &arg_types_len, arg_types, args) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-            }
+        // exact msg
+        if (extract_msg(msg, msg_len, msg_type, &fct_name_len, fct_name, &arg_types_len, arg_types, args) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
+        }
 
-            // run requested server procedure
-            g_skeleton_database->db_get(&target_method, fct_name, arg_types);
+        // run requested server procedure
+        g_skeleton_database->db_get(&target_method, fct_name, arg_types);
 
-            // respond with execution results
-            method_return_code = target_method(arg_types, args);
+        // respond with execution results
+        method_return_code = target_method(arg_types, args);
 
-            if (method_return_code == 0) {
-                // EXECUTE SUCCESS
-                assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_SUCCESS, fct_name_len, fct_name, arg_types_len, arg_types, args);
-            } else if (method_return_code < 0) {
-                // EXECUTE FAIL
-                assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1); // TODO: what should reason code be instead of -1?
-            }
+        if (method_return_code == 0) {
+            // EXECUTE SUCCESS
+            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_SUCCESS, fct_name_len, fct_name, arg_types_len, arg_types, args);
+        } else if (method_return_code < 0) {
+            // EXECUTE FAIL
+            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1); // TODO: what should reason code be instead of -1?
+        }
 
-            break;
-        default:
-            break;
-
-            // send response to client regarding RPC success/failure
-            write_message(client_fd, response_msg, msg_len);
+        // send response to client regarding RPC success/failure
+        write_message(client_fd, response_msg, msg_len);
     }
+
 } // handle_client_msg
