@@ -231,6 +231,7 @@ int connect_server_to_binder()
 {
 
     // declare sock vars
+    int binder_fd;
     char* binder_address;
     char* binder_port_str;
     int binder_port;
@@ -245,10 +246,12 @@ int connect_server_to_binder()
     binder_port = atoi(binder_port_str);
 
     // connect to binder
-    if ( connect_to_hostname_port(&g_binder_fd, binder_address, binder_port) < 0 ) {
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
         return -1;
     }
+
+    g_binder_fd = binder_fd;
 
     // DEBUG("SERVER CONNECTED to binder: %s\n", binder_hostinfo->h_name);
 
