@@ -8,7 +8,8 @@ using namespace std;
 
 SKEL_RECORD skel_f0, skel_f1, skel_f2, skel_f3, skel_f4;
 
-int main() {
+int main()
+{
 
     /* prepare server functions' signatures */
     int count0 = 3;
@@ -34,7 +35,7 @@ int main() {
     argTypes1[4] = (1 << ARG_INPUT) | (ARG_LONG << 16);
     argTypes1[5] = 0;
 
-    /* 
+    /*
      * the length in argTypes2[0] doesn't have to be 100,
      * the server doesn't know the actual length of this argument
      */
@@ -44,7 +45,7 @@ int main() {
     argTypes2[3] = 0;
 
     /*
-     * f3 takes an array of long. 
+     * f3 takes an array of long.
      */
     argTypes3[0] = (1 << ARG_OUTPUT) | (1 << ARG_INPUT) | (ARG_LONG << 16) | 11;
     argTypes3[1] = 0;

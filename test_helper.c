@@ -8,7 +8,8 @@
 #include <assert.h>
 #include <string.h>
 
-void assertTypeEquals(int type, bool is_in, bool is_out, char arg_type, unsigned int arg_size) {
+void assertTypeEquals(int type, bool is_in, bool is_out, char arg_type, unsigned int arg_size)
+{
 
     bool temp_is_in;
     bool temp_is_out;
@@ -26,7 +27,8 @@ void assertTypeEquals(int type, bool is_in, bool is_out, char arg_type, unsigned
     assert( temp_arg_size == arg_size );
 }
 
-int mystrcmp(const char* const a, const char* const b, const unsigned int length) { // return 0 if same, or 1 if not same
+int mystrcmp(const char* const a, const char* const b, const unsigned int length)   // return 0 if same, or 1 if not same
+{
     for ( unsigned int i = 0 ; i < length ; i += 1 ) {
         if ( a[i] != b[i] ) {
             return 1;
@@ -35,7 +37,8 @@ int mystrcmp(const char* const a, const char* const b, const unsigned int length
     return 0;
 }
 
-void test_short_messages() {
+void test_short_messages()
+{
 
     char* buffer = 0;
     unsigned int buffer_len;
@@ -106,7 +109,8 @@ void test_short_messages() {
 }
 
 
-void test_register() {
+void test_register()
+{
 
     // test assemble message
     char* buffer = 0;
@@ -123,7 +127,7 @@ void test_register() {
     unsigned int fct_name_len = 12;
     char fct_name[] = "abcd12341234";
     assemble_msg(&buffer,&buffer_len,
-        MSG_REGISTER,ip,port,fct_name_len,fct_name,2,arg_types);
+                 MSG_REGISTER,ip,port,fct_name_len,fct_name,2,arg_types);
 
     assert(buffer_len == (4 + 1 + 4 + 2 + 4 + fct_name_len + 4 + 8 ) );
 
@@ -142,7 +146,7 @@ void test_register() {
     int* arg_types2 = 0;
 
     extract_msg(buffer,buffer_len,
-        MSG_REGISTER,&ip2,&port2,&fct_name2_len,&fct_name2,&num_args,&arg_types2);
+                MSG_REGISTER,&ip2,&port2,&fct_name2_len,&fct_name2,&num_args,&arg_types2);
 
     assert(ip2 == ip);
     assert(port2 == port);
@@ -159,7 +163,8 @@ void test_register() {
 }
 
 
-void test_loc_request() {
+void test_loc_request()
+{
 
     // set up test
     char* buffer = 0;
@@ -187,7 +192,7 @@ void test_loc_request() {
 
     // test loc request
     assemble_msg(&buffer,&buffer_len,MSG_LOC_REQUEST,
-        fct_name_len,fct_name,arg_types_len,arg_types);
+                 fct_name_len,fct_name,arg_types_len,arg_types);
 
     assert(buffer_len == (4 + 1 + 4 + fct_name_len + 4 + 8 ) );
 
@@ -196,7 +201,7 @@ void test_loc_request() {
     assert(msg_type2 == MSG_LOC_REQUEST);
 
     extract_msg(buffer,buffer_len,MSG_LOC_REQUEST,
-        &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2);
+                &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2);
 
     assert(fct_name2_len == fct_name_len);
     assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
@@ -211,7 +216,7 @@ void test_loc_request() {
     // test loc request success
     buffer = NULL;
     assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,
-        ip,port);
+                 ip,port);
 
     assert(buffer_len == (4 + 1 + 4 + 2 ) );
 
@@ -220,7 +225,7 @@ void test_loc_request() {
     assert(msg_type2 == MSG_LOC_SUCCESS);
 
     extract_msg(buffer,buffer_len,MSG_LOC_SUCCESS,
-        &ip2,&port2);
+                &ip2,&port2);
 
     assert(ip2 == ip);
     assert(port2 == port);
@@ -232,7 +237,8 @@ void test_loc_request() {
 }
 
 
-void test_execute() {
+void test_execute()
+{
 
     // printf("test execute\n");
 
@@ -283,7 +289,7 @@ void test_execute() {
 
     // assemble
     assemble_msg(&buffer,&buffer_len,MSG_EXECUTE,
-        fct_name_len,fct_name,arg_types_len,arg_types,args);
+                 fct_name_len,fct_name,arg_types_len,arg_types,args);
 
     // check buffer_len
     // printf("buffer_len:%d\n",buffer_len);
@@ -299,7 +305,7 @@ void test_execute() {
     // extract
     // printf("execute extract\n");
     extract_msg(buffer,buffer_len,MSG_EXECUTE,
-        &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
+                &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
     assert(fct_name2_len == fct_name_len);
     assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
     assert(arg_types2 != NULL);
@@ -348,7 +354,7 @@ void test_execute() {
 
     // assemble
     assemble_msg(&buffer,&buffer_len,MSG_EXECUTE_SUCCESS,
-        fct_name_len,fct_name,arg_types_len,arg_types,args);
+                 fct_name_len,fct_name,arg_types_len,arg_types,args);
 
     // check buffer_len
     // printf("buffer_len:%d\n",buffer_len);
@@ -364,7 +370,7 @@ void test_execute() {
     // extract
     // fprintf(stderr,"execute extract\n");
     extract_msg(buffer,buffer_len,MSG_EXECUTE_SUCCESS,
-        &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
+                &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
     assert(fct_name2_len == fct_name_len);
     assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
     assert(arg_types2 != NULL);
@@ -407,7 +413,8 @@ void test_execute() {
 
 
 
-int main() {
+int main()
+{
 
     //            AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD
     int type1 = 0b11000000000000110000000000000111;

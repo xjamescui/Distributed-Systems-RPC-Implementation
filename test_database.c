@@ -6,7 +6,8 @@
 #include "binder_database.h"
 
 
-int main() {
+int main()
+{
 
     HOST host_1;
 
@@ -114,7 +115,7 @@ int main() {
     memcpy(sig_f.fct_name,"fct_f",sig_f.fct_name_len);
     sig_f.arg_types_len = 2;
     sig_f.arg_types = (int*)malloc(sig_f.arg_types_len*4);
-    sig_f.arg_types[0] = 1; 
+    sig_f.arg_types[0] = 1;
     sig_f.arg_types[1] = 2;
 
     SIGNATURE sig_g;

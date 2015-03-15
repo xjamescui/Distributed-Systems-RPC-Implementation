@@ -5,7 +5,7 @@
 
 using namespace std;
 
-SkeletonDatabase::SkeletonDatabase(){} // constructor
+SkeletonDatabase::SkeletonDatabase() {} // constructor
 
 /**
  * Insert a record into the database if it currently does not already exist in the db
@@ -14,13 +14,14 @@ SkeletonDatabase::SkeletonDatabase(){} // constructor
  * RECORD_PUT_SUCCESS
  * RECORD_PUT_DUPLICATE
  */
-int SkeletonDatabase::db_put(SKEL_RECORD record){
+int SkeletonDatabase::db_put(SKEL_RECORD record)
+{
 
-    if (!this->_db.empty()){
+    if (!this->_db.empty()) {
         // check for duplicate
         SKEL_RECORD* duplicate_record = NULL;
         this->find_record(&duplicate_record, record.fct_name, record.arg_types);
-        if (duplicate_record != NULL){
+        if (duplicate_record != NULL) {
             DEBUG("duplicate during db_put");
             return RECORD_PUT_DUPLICATE;
         }
@@ -41,14 +42,15 @@ int SkeletonDatabase::db_put(SKEL_RECORD record){
  * RECORD_FOUND
  * RECORD_NOT_FOUND
  */
-int SkeletonDatabase::db_get(skeleton *skel, char* fct_name, int* arg_types) {
+int SkeletonDatabase::db_get(skeleton *skel, char* fct_name, int* arg_types)
+{
 
     if (this->_db.empty()) return RECORD_NOT_FOUND;
 
     // find
     SKEL_RECORD* found_record = NULL;
     this->find_record(&found_record, fct_name, arg_types);
-    if (found_record == NULL){
+    if (found_record == NULL) {
         *skel = NULL;
         return RECORD_NOT_FOUND;
     }
@@ -63,7 +65,8 @@ int SkeletonDatabase::db_get(skeleton *skel, char* fct_name, int* arg_types) {
  * RECORD_DELETE_SUCCESS
  * RECORD_DELETE_FAIL
  */
-int SkeletonDatabase::db_delete(SKEL_RECORD record) {
+int SkeletonDatabase::db_delete(SKEL_RECORD record)
+{
     int deleteOpCode = RECORD_DELETE_FAIL;
     for (list<SKEL_RECORD>::iterator it=this->_db.begin(); it != this->_db.end(); ++it) {
         if (this->same_signature(&(*it), record.fct_name, record.arg_types)) {
@@ -79,7 +82,8 @@ int SkeletonDatabase::db_delete(SKEL_RECORD record) {
 /**
  * Prints out the contents of the database
  */
-void SkeletonDatabase::db_print(){
+void SkeletonDatabase::db_print()
+{
     int index = 0;
     unsigned int arg_types_len;
     DEBUG("Printing.. Skel DB size: %d\n ", (int)this->_db.size());
@@ -93,16 +97,18 @@ void SkeletonDatabase::db_print(){
         DEBUG("%lu\n", (long)(it->skel));
         index++;
     }
-} 
+}
 
-int SkeletonDatabase::db_size(){
+int SkeletonDatabase::db_size()
+{
     return this->_db.size();
 }
 
 /**
  * Finds a record in the database that matches the function name and arg types
  */
-void SkeletonDatabase::find_record( SKEL_RECORD **found, char* fct_name, int* arg_types){
+void SkeletonDatabase::find_record( SKEL_RECORD **found, char* fct_name, int* arg_types)
+{
 
     for (list<SKEL_RECORD>::iterator it=this->_db.begin(); it != this->_db.end(); ++it) {
         if (this->same_signature(&(*it), fct_name, arg_types)) {
@@ -115,13 +121,14 @@ void SkeletonDatabase::find_record( SKEL_RECORD **found, char* fct_name, int* ar
 /**
  * Checks if a record has the wanted signature (function name and argument types)
  */
-bool SkeletonDatabase::same_signature(const SKEL_RECORD *record, char* fct_name, int* arg_types) {
+bool SkeletonDatabase::same_signature(const SKEL_RECORD *record, char* fct_name, int* arg_types)
+{
 
     // compare function names
     unsigned int name_len = strlen(record->fct_name);
     if (name_len != strlen(fct_name)) {
         return false;
-    } else{
+    } else {
         for (unsigned int i = 0; i < name_len; i++) {
             if (record->fct_name[i] != fct_name[i]) {
                 return false;
@@ -135,8 +142,8 @@ bool SkeletonDatabase::same_signature(const SKEL_RECORD *record, char* fct_name,
     if (record_arg_types_len != arg_types_len) {
         return false;
     } else {
-        for (unsigned int i = 0; i < arg_types_len; i++){
-            if (record->arg_types[i] != arg_types[i]){
+        for (unsigned int i = 0; i < arg_types_len; i++) {
+            if (record->arg_types[i] != arg_types[i]) {
                 return false;
             }
         }

@@ -25,12 +25,12 @@ ssize_t write_message(int fd, const char* const buffer, const unsigned int buffe
  * 2nd byte: 0000 0ZZZ  - Z: type
  * 3rd byte: SSSS SSSS  - S: size
  * 4th byte: SSSS SSSS  - S=0 if scalar
- *        
+ *
  * returns 0 if successful
  *         -1 if fails
  */
-int compute_type_int(int *type_int, const bool is_input, const bool is_output, 
-                      const unsigned int arg_type, const unsigned int arg_size );
+int compute_type_int(int *type_int, const bool is_input, const bool is_output,
+                     const unsigned int arg_type, const unsigned int arg_size );
 int type_is_input(bool *is_input, const int type);
 int type_is_output(bool *is_output, const int type);
 int type_arg_type(char *arg_type, const int type);

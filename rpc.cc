@@ -22,6 +22,8 @@ SkeletonDatabase* g_skeleton_database;
 
 int create_server_socket();
 int connect_to_binder();
+void handle_binder_message(char* msg, unsigned int binder_fd);
+void handle_client_message(char* msg, unsigned int client_fd);
 
 /**
  * create sockets and connect to the binder
@@ -30,7 +32,8 @@ int connect_to_binder();
  * 0  = success
  * <0 = error
  */
-int rpcInit() {
+int rpcInit()
+{
 
     int binderOpCode, serverOpCode;
 
@@ -47,15 +50,17 @@ int rpcInit() {
 } // rpcInit
 
 
-int rpcCall(char* name, int* argTypes, void** args) {
+int rpcCall(char* name, int* argTypes, void** args)
+{
     return -1;
 }
 
-int rpcCacheCall(char* name, int* argTypes, void** args) {
+int rpcCacheCall(char* name, int* argTypes, void** args)
+{
     return -1;
 }
 
-/** 
+/**
  * register a function on binder and add skeleton record into local database
  *
  * returns:
@@ -63,7 +68,8 @@ int rpcCacheCall(char* name, int* argTypes, void** args) {
  * >0 = warning
  * <0 = failure
  */
-int rpcRegister(char* name, int* argTypes, skeleton f) {
+int rpcRegister(char* name, int* argTypes, skeleton f)
+{
 
     unsigned int num_args, msg_len, name_len, write_len;
     char* msg = NULL;
@@ -88,33 +94,104 @@ int rpcRegister(char* name, int* argTypes, skeleton f) {
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0){
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0) {
         fprintf(stderr, "ERROR creating registration request message\n");
         free(msg);
         return -1;
     }
 
     // send registration message to binder
-    write_len = write_large(g_binder_fd,msg,msg_len);
+    write_len = write_message(g_binder_fd,msg,msg_len);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
         return -1;
     }
 
     return 0;
+} // rpcRegister
+
+/**
+ * Returns:
+ * 0 normal termination
+ * else abnormal termination
+ */
+int rpcExecute()
+{
+
+    int highest_fd, select_rv, client_fd;
+    fd_set active_fds, read_fds;
+    listen(g_server_fd, MAX_CLIENT_CONNECTIONS);
+
+    struct sockaddr_in client_addr;
+    unsigned int client_addr_len;
+
+    char* connection_msg = NULL;
+    ssize_t write_len;
+
+    while (1) {
+
+        read_fds = active_fds;
+        select_rv = select(highest_fd, &read_fds, NULL, NULL, NULL);
+
+        if (select_rv < 0) {
+            fprintf(stderr, "ERROR on select: %s\n", strerror(errno));
+            return -1;
+        }
+
+        // iterate through each socket
+        for (unsigned int connection_fd = 0; connection_fd <= highest_fd; connection_fd++) {
+
+            // this connection has no read requests
+            if (!FD_ISSET(connection_fd, &read_fds)) continue;
+
+            if (connection_fd == g_server_fd) {
+                // this is the server itself
+                client_fd = accept(g_server_fd, (struct sockaddr*) &client_addr, &client_addr_len);
+                if (client_fd < 0) {
+                    fprintf(stderr, "ERROR on accepting client: %s\n", strerror(errno));
+                } else {
+                    FD_SET(client_fd, &active_fds);
+                }
+
+            } else if (connection_fd == g_binder_fd) {
+                // this is the binder connection
+
+                if (read_message(connection_msg, connection_fd) < 0) {
+                    fprintf(stderr, "ERROR reading from binder socket: %s\n", strerror(errno));
+                    continue;
+                }
+
+                handle_binder_message(connection_msg, connection_fd);
+
+            } else {
+                // this is a client connection
+
+                if (read_message(connection_msg, connection_fd) < 0) {
+                    fprintf(stderr, "ERROR reading from client socket %d: %s\n", connection_fd, strerror(errno));
+                    continue;
+                }
+
+                handle_client_message(connection_msg, connection_fd);
+
+            }
+        }
+
+    }
+
+    FD_ZERO(&active_fds);
+    FD_ZERO(&read_fds);
+
+    return 0;
 }
 
-int rpcExecute() {
-
+int rpcTerminate()
+{
     return -1;
 }
 
-int rpcTerminate() {
-    return -1;
-}
 
-
-int create_server_socket() {
+int create_server_socket()
+{
 
     struct sockaddr_in server_addr;
     unsigned int server_addr_len = sizeof(server_addr);
@@ -139,7 +216,7 @@ int create_server_socket() {
 
     // set server ip and port to global variable
     g_server_port = server_addr.sin_port;
-    if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0){
+    if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0) {
         return -1;
     }
 
@@ -147,7 +224,8 @@ int create_server_socket() {
 } // create_server_socket
 
 
-int connect_to_binder() {
+int connect_to_binder()
+{
 
     struct sockaddr_in binder_addr;
     unsigned int binder_addr_len = sizeof(binder_addr);
@@ -189,3 +267,15 @@ int connect_to_binder() {
 
     return 0;
 } // connect_to_binder
+
+
+void handle_binder_message(char* msg, unsigned int binder_fd)
+{
+
+} // handle_binder_message
+
+
+void handle_client_message(char* msg, unsigned int client_fd)
+{
+
+} // handle_client_message
