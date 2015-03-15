@@ -2,7 +2,7 @@
 
 // PF_INET, SOCK_STREAM, IPPROTO_TCP, AF_INET, INADDR_ANY
 // socket, bind, listen, ntohs, htons, inet_ntoa
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -52,15 +52,15 @@ int handle_terminate(fd_set *active_fds, fd_set *server_fds);
  */
 
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
 
     int binder_fd = 0;
     struct sockaddr_in binder_addr;
     unsigned int binder_addr_len = sizeof(binder_addr);
 
     // socket()
-    if((binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
-    {
+    if((binder_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         fprintf(stderr,"Error : socket() failed\n");
         clean_and_exit(1);
     }
@@ -143,7 +143,8 @@ int main(int argc, char** argv) {
     clean_and_exit(exit_code);
 }
 
-void clean_and_exit(int exit_code) {
+void clean_and_exit(int exit_code)
+{
     db_drop();
     exit(exit_code);
 }
@@ -154,7 +155,8 @@ void clean_and_exit(int exit_code) {
  * BINDER_ADDRESS 129.97.167.41
  * BINDER_PORT 10000
  */
-int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len){
+int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len)
+{
     struct hostent* host;
 
     // call gethostname to get the full host name
@@ -168,7 +170,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
         return -1;
     }
     // refresh sock_addr to output the port number
-    if ( getsockname(sock_fd, (struct sockaddr *)&sock_addr, &sock_addr_len ) < 0 ){
+    if ( getsockname(sock_fd, (struct sockaddr *)&sock_addr, &sock_addr_len ) < 0 ) {
         fprintf(stderr,"Error : getsockname() failed\n");
         return -1;
     }
@@ -201,7 +203,8 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
  *
  */
 // handle incoming request
-int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running) {
+int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bool *running)
+{
     ssize_t read_len;
     unsigned int msg_len;
     char msg_type;
@@ -228,13 +231,15 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
             fprintf(stderr,"Error : handle_register() failed\n");
             return_code = -1;
         }
-    } break;
+    }
+    break;
     case MSG_LOC_REQUEST: {
         if ( handle_loc_request(connection_fd,rw_buffer,buffer_len,active_fds) < 0 ) {
             fprintf(stderr,"Error : handle_request() failed\n");
             return_code = -1;
         }
-    } break;
+    }
+    break;
     case MSG_TERMINATE: {
         free(rw_buffer);
         if ( handle_terminate(active_fds,server_fds) < 0 ) {
@@ -243,7 +248,8 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
         } else {
             running = false;
         }
-    } break;
+    }
+    break;
     default:
         fprintf(stderr,"ERROR: binder does not handle this request type:%x\n",msg_type&0xff);
         return_code = -1;
@@ -259,14 +265,16 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
  *   - add server socket to server_fds
  * returns -1 if either read/write fails
  */
-int is_valid_register(unsigned int ip, unsigned int port, 
-                        unsigned int fct_name_len, char* fct_name, 
-                        unsigned int arg_types_len, int* arg_types) {
+int is_valid_register(unsigned int ip, unsigned int port,
+                      unsigned int fct_name_len, char* fct_name,
+                      unsigned int arg_types_len, int* arg_types)
+{
     // TODO: check if fct_name_len < 64
     // TODO: check the argTypes
     return 0;
 }
-int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *server_fds) {
+int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *server_fds)
+{
 
     // declare vars
     ssize_t write_len;
@@ -281,9 +289,9 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
 
     // extract message
     extract_msg(buffer,buffer_len,MSG_REGISTER,
-        &server_ip,&server_port,
-        &fct_name_len,&fct_name,
-        &arg_types_len,&arg_types);
+                &server_ip,&server_port,
+                &fct_name_len,&fct_name,
+                &arg_types_len,&arg_types);
 
     free(buffer);
     buffer = 0;
@@ -328,10 +336,12 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
     switch (put_result) {
     case BINDER_DB_PUT_SIGNATURE_SUCCESS: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_NO_ERRORS);
-    } break;
+    }
+    break;
     case BINDER_DB_PUT_SIGNATURE_DUPLICATE: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS);
-    } break;
+    }
+    break;
     default:
         DEBUG("put result not handled yet %d",put_result);
         return -1;
@@ -357,7 +367,8 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
  *   - close client and remove it from active_fds
  * returns -1 if either fail to read/write
  */
-int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds) {
+int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds)
+{
 
     // read the message
     ssize_t write_len;
@@ -370,8 +381,8 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
 
     // extract message
     extract_msg(buffer,buffer_len,MSG_LOC_REQUEST,
-        &fct_name_len,&fct_name,
-        &arg_types_len,&arg_types);
+                &fct_name_len,&fct_name,
+                &arg_types_len,&arg_types);
 
     free(buffer);
     buffer = 0;
@@ -395,13 +406,16 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
     switch ( get_result ) {
     case BINDER_DB_GET_SIGNATURE_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,host.ip,host.port);
-    } break;
+    }
+    break;
     case BINDER_DB_GET_SIGNATURE_NOT_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
-    } break;
+    }
+    break;
     case BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
-    } break;
+    }
+    break;
     default:
         DEBUG("get result not handled yet %d",get_result);
         return -1;
@@ -427,7 +441,8 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
  *    - close each server socket
  *    - remove each socket from server_fds and active_fds
  */
-int handle_terminate(fd_set *active_fds,fd_set *server_fds) {
+int handle_terminate(fd_set *active_fds,fd_set *server_fds)
+{
 
     char* rw_buffer = NULL;
     unsigned int rw_buffer_len;
