@@ -10,7 +10,7 @@
  *  returns # of chars read if successful
  *          -1 if fail
  */
-ssize_t read_message(char* buffer, int socket_fd);
+ssize_t read_message(char** buffer, int socket_fd);
 
 /** write() that can take a large buffer_len
  *  returns # of chars read if successful

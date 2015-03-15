@@ -23,7 +23,7 @@
 /**
  * Read message of buffer_len from socket fd into buffer
  */
-ssize_t read_message(char* buffer, int socket_fd)
+ssize_t read_message(char** buffer, int socket_fd)
 {
     unsigned int read_so_far = 0;
     ssize_t read_len;
@@ -31,8 +31,8 @@ ssize_t read_message(char* buffer, int socket_fd)
     char msg_type;
 
     // get message len and msg type in first 5 bytes
-    if (buffer != NULL) free(buffer);
-    buffer = (char*)malloc(5);
+    if (*buffer != NULL) free(*buffer);
+    *buffer = (char*)malloc(5);
     read_so_far = read(socket_fd, buffer ,5);
 
     if (read_so_far < 0) {
@@ -41,19 +41,19 @@ ssize_t read_message(char* buffer, int socket_fd)
     }
 
     // determine msg_len and msg type value
-    memcpy(&msg_len, &buffer[0], 4);
-    memcpy(&msg_type, &buffer[4], 1);
+    memcpy(&msg_len, &(*buffer)[0], 4);
+    memcpy(&msg_type, &(*buffer)[4], 1);
 
     // after determining msg length: put the message pieces back together
     msg_len = 5 + msg_len;
-    free(buffer);
-    buffer = (char*)malloc(msg_len);
-    memset(buffer,0,msg_len);
-    memcpy(&buffer[0], &msg_len, 4);
-    memcpy(&buffer[4], &msg_type, 1);
+    free(*buffer);
+    *buffer = (char*)malloc(msg_len);
+    memset(*buffer,0,msg_len);
+    memcpy(&(*buffer)[0], &msg_len, 4);
+    memcpy(&(*buffer)[4], &msg_type, 1);
 
     while ( read_so_far < msg_len ) {
-        read_len = read(socket_fd, &buffer[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
+        read_len = read(socket_fd, &(*buffer)[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
         if ( read_len < 0 ) {
             fprintf(stderr,"Error: Could only read %d of %d\n",read_so_far,msg_len);
             return -1;
