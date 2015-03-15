@@ -24,7 +24,7 @@
 /**
  * Read message of buffer_len from socket fd into buffer
  */
-ssize_t read_message(char* buffer, int socket_fd)
+ssize_t read_message(char** buffer, int socket_fd)
 {
     unsigned int read_so_far = 0;
     ssize_t read_len;
