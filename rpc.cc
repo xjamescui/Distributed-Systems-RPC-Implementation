@@ -305,3 +305,7 @@ int extract_registration_results(char *msg, int* result)
             return -1;
     }
 }
+
+void handle_client_message(char* msg, unsigned int client_fd) {
+
+}
