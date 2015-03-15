@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "rpc.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,33 +16,58 @@
 #include <sys/ioctl.h>  // SIOCGIFADDR, ioctl()
 
 /******************************************************************************
- * read and write large
- *
- *
+ * Read and Write Message
  *****************************************************************************/
-// div big chunk into smaller chunks and receive one by one
-ssize_t read_large(int fd, char* const buffer, const unsigned int buffer_len)
+
+
+/**
+ * Read message of buffer_len from socket fd into buffer
+ */
+ssize_t read_message(char* buffer, int socket_fd)
 {
     unsigned int read_so_far = 0;
     ssize_t read_len;
+    unsigned int msg_len;
+    char msg_type;
 
-    // clear buffer just in case
-    memset(buffer,0,buffer_len);
+    // get message len and msg type in first 5 bytes
+    if (buffer != NULL) free(buffer);
+    buffer = (char*)malloc(5);
+    read_so_far = read(socket_fd, buffer ,5);
 
-    while ( read_so_far < buffer_len ) {
-        read_len = read(fd, &buffer[read_so_far], MIN(MAX_RW_CHUNK_SIZE,buffer_len-read_so_far));
+    if (read_so_far < 0) {
+        fprintf(stderr,"Error reading first 5 bytes: %s\n" , strerror(errno));
+        return -1;
+    }
+
+    // determine msg_len and msg type value
+    memcpy(&msg_len, &buffer[0], 4);
+    memcpy(&msg_type, &buffer[4], 1);
+
+    // after determining msg length: put the message pieces back together
+    msg_len = 5 + msg_len;
+    free(buffer);
+    buffer = (char*)malloc(msg_len);
+    memset(buffer,0,msg_len);
+    memcpy(&buffer[0], &msg_len, 4);
+    memcpy(&buffer[4], &msg_type, 1);
+
+    while ( read_so_far < msg_len ) {
+        read_len = read(socket_fd, &buffer[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
         if ( read_len < 0 ) {
-            fprintf(stderr,"Error : Could only read %d of %d\n",read_so_far,buffer_len);
+            fprintf(stderr,"Error: Could only read %d of %d\n",read_so_far,msg_len);
             return -1;
         }
         read_so_far += read_len;
     }
-    DEBUG("read_large: read %d of %d",read_so_far,buffer_len);
+    DEBUG("read_message: read %d of %d", read_so_far, msg_len);
     return read_so_far;
 }
 
-// div big chunk into smaller chunks and send one by one
-ssize_t write_large(int fd, const char* const buffer, const unsigned int buffer_len)
+/**
+ * Write message(buffer) of buffer_len and send to socket fd
+ */
+ssize_t write_message(int fd, const char* const buffer, const unsigned int buffer_len)
 {
     unsigned int write_so_far = 0;
     ssize_t write_len;
@@ -54,7 +80,7 @@ ssize_t write_large(int fd, const char* const buffer, const unsigned int buffer_
         }
         write_so_far += write_len;
     }
-    DEBUG("write_large: sent %d of %d",write_so_far,buffer_len);
+    DEBUG("write_message: sent %d of %d",write_so_far,buffer_len);
     return write_so_far;
 }
 
@@ -64,8 +90,9 @@ ssize_t write_large(int fd, const char* const buffer, const unsigned int buffer_
  *
  *
  *****************************************************************************/
-int compute_type_int(int *type_int, const bool is_input, const bool is_output, 
-                      const char arg_type, const unsigned int arg_size ){
+int compute_type_int(int *type_int, const bool is_input, const bool is_output,
+                     const char arg_type, const unsigned int arg_size )
+{
     *type_int = 0;
     if ( is_input ) *type_int = *type_int | 1 << ARG_INPUT ;
     if ( is_output ) *type_int = *type_int | 1 << ARG_OUTPUT ;
@@ -75,22 +102,26 @@ int compute_type_int(int *type_int, const bool is_input, const bool is_output,
     return 0;
 }
 
-int type_is_input(bool *is_input, const int type){
+int type_is_input(bool *is_input, const int type)
+{
     *is_input = ( type >> ARG_INPUT );
     return 0;
 }
 
-int type_is_output(bool *is_output, const int type){
+int type_is_output(bool *is_output, const int type)
+{
     *is_output = ( type >> ARG_OUTPUT );
     return 0;
 }
 
-int type_arg_type(char *arg_type, const int type){
+int type_arg_type(char *arg_type, const int type)
+{
     *arg_type = (type >> 16) & 0x000000FF;
     return 0;
 }
 
-int type_arg_size(unsigned int *arg_size, const int type){
+int type_arg_size(unsigned int *arg_size, const int type)
+{
     *arg_size = type & 0x0000FFFF;
     return 0;
 }
@@ -99,7 +130,8 @@ int type_arg_size(unsigned int *arg_size, const int type){
  * calculate the total length of an argType
  * ex: double[4] will return 32
  */
-int type_arg_total_length(const int type) {
+int type_arg_total_length(const int type)
+{
 
     char arg_type;
     unsigned int total_number;
@@ -109,14 +141,27 @@ int type_arg_total_length(const int type) {
 
     unsigned int individual_size;
     switch ( arg_type ) {
-    case ARG_CHAR : individual_size=sizeof(char) ; break;
-    case ARG_SHORT : individual_size=sizeof(short int) ; break;
-    case ARG_INT : individual_size=sizeof(int) ; break;
-    case ARG_LONG : individual_size=sizeof(long int); break;
-    case ARG_DOUBLE : individual_size=sizeof(double) ; break;
-    case ARG_FLOAT : individual_size=sizeof(float) ; break;
+    case ARG_CHAR :
+        individual_size=sizeof(char) ;
+        break;
+    case ARG_SHORT :
+        individual_size=sizeof(short int) ;
+        break;
+    case ARG_INT :
+        individual_size=sizeof(int) ;
+        break;
+    case ARG_LONG :
+        individual_size=sizeof(long int);
+        break;
+    case ARG_DOUBLE :
+        individual_size=sizeof(double) ;
+        break;
+    case ARG_FLOAT :
+        individual_size=sizeof(float) ;
+        break;
     default:
-        individual_size = -1; break;
+        individual_size = -1;
+        break;
     }
 
     if ( total_number == 0 ) {
@@ -126,7 +171,8 @@ int type_arg_total_length(const int type) {
     }
 }
 
-bool type_is_array(const int type) {
+bool type_is_array(const int type)
+{
     unsigned int size;
     type_arg_size(&size,type);
     return size > 0 ? true : false;
@@ -137,7 +183,8 @@ bool type_is_array(const int type) {
  * - must be either input or output or both
  * - type must be one of the defines one
  */
-bool type_is_valid(const int type) {
+bool type_is_valid(const int type)
+{
 
     // check if it's one of input/output (i.e. return false if it's not input and not output)
     if ( ( (type>>24) & 0xC0 ) == 0 ) {
@@ -172,7 +219,7 @@ bool type_is_valid(const int type) {
  *
  *****************************************************************************/
 // prints the buffer in hex form
-void print_buffer(const char* const buffer, int buffer_len) 
+void print_buffer(const char* const buffer, int buffer_len)
 {
     int i;
     fprintf(stderr,"\tvv\tvv\tvv\tvv");
@@ -201,7 +248,8 @@ bool starts_with(const char *pre, const char *str)
 }
 
 // function to return eth0 or etho000 ip addr
-int get_ip_from_socket(unsigned int *ip, int socket_fd) {
+int get_ip_from_socket(unsigned int *ip, int socket_fd)
+{
     unsigned int i;
     struct ifreq ifreqs[20];
     struct ifconf ic;
@@ -214,9 +262,9 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     }
 
     for (i = 0; i < ic.ifc_len/sizeof(struct ifreq); ++i) {
-        if ( starts_with("eth0",ifreqs[i].ifr_name) ){
+        if ( starts_with("eth0",ifreqs[i].ifr_name) ) {
             DEBUG("%s: %s", ifreqs[i].ifr_name,
-                       inet_ntoa(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr));
+                  inet_ntoa(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr));
             *ip = htonl(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr) ;
             return 0;
         }
@@ -224,11 +272,52 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
     return 0;
 }
 
+/******************************************************************************
+ * connect to given ip and port
+ *
+ *
+ *****************************************************************************/
+int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned int port )
+{
+
+    int sock_fd;
+    struct sockaddr_in temp_socket_addr;
+    unsigned int temp_socket_addr_len = sizeof(temp_socket_addr);
+
+    // socket()
+    if ( ( sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0 ) {
+        fprintf(stderr, "Error : connect_to_ip_port socket() failed: %s\n", strerror(errno));
+        return -1;
+    }
+
+    // char* ip_addr = (char*)&ip;
+    // for( int i = 0 ; i < 4 ; i += 1 ) {
+    //     DEBUG("%u ",ip_addr[i] & 0xff);
+    // }
+    // DEBUG("\n");
+    // DEBUG("previous line should start with 127\n");
+
+    // prepare connect()
+    memset(&temp_socket_addr, '\0', temp_socket_addr_len);
+    temp_socket_addr.sin_family = AF_INET;
+    memcpy(&temp_socket_addr.sin_addr, &ip, 4); // set ip
+    temp_socket_addr.sin_port = htons(port); // set port
+
+    // connect()
+    if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
+        fprintf(stderr,"Error : connect_to_ip_port connect() failed : %s\n",strerror(errno));
+        return -1;
+    }
+
+    // set the return socket
+    *out_sock_fd = sock_fd;
+    return 0;
+}
 
 /******************************************************************************
  * Variable param function to assemble and extract messages
  *
- * 
+ *
  *
  * assemble will free and alloc buffer again
  *
@@ -238,7 +327,8 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd) {
  * 0 = success
  * TODO: error is negative?
  *****************************************************************************/
-int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... ) {
+int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... )
+{
 
     va_list vl;             // declare a list of args
     va_start(vl,msg_type);  // starts after msg_type
@@ -248,8 +338,10 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     /**
      * messages with just type + error code
      */
-    case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE :
-    case MSG_LOC_FAILURE : case MSG_EXECUTE_FAILURE : {
+    case MSG_REGISTER_SUCCESS :
+    case MSG_REGISTER_FAILURE :
+    case MSG_LOC_FAILURE :
+    case MSG_EXECUTE_FAILURE : {
         // length, type, result
         int register_result = va_arg(vl,int);
 
@@ -266,7 +358,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[4],&msg_type,1);          // set type
         memcpy(&(*buffer)[5],&register_result,4);   // set result
 
-    } break;
+    }
+    break;
 
     /**
      * register
@@ -309,7 +402,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[15+fct_name_len],&arg_types_len,4); // set arg_types_len
         memcpy(&(*buffer)[19+fct_name_len],arg_types,arg_types_len*4); // set argTypes
 
-    } break;
+    }
+    break;
 
     /**
      * loc request
@@ -346,7 +440,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[9+fct_name_len],&arg_types_len,4); // set arg_types_len
         memcpy(&(*buffer)[13+fct_name_len],arg_types,arg_types_len*4); // set argTypes
 
-    } break;
+    }
+    break;
     case MSG_LOC_SUCCESS : {
         // length, type, ip, port
         unsigned int ip = va_arg(vl,unsigned int);
@@ -373,12 +468,14 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[5],&ip,4);                // set ip
         memcpy(&(*buffer)[9],&port,2);              // set port
 
-    } break;
+    }
+    break;
 
     /**
      * execute and execute success
      */
-     case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
+    case MSG_EXECUTE :
+    case MSG_EXECUTE_SUCCESS : {
         // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
         unsigned int fct_name_len = va_arg(vl,unsigned int);
         char* fct_name = va_arg(vl,char*);
@@ -422,7 +519,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
             buffer_current_index += single_arg_type_len;
         }
 
-     } break;
+    }
+    break;
 
 
     /**
@@ -439,7 +537,8 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         unsigned int msg_len = (*buffer_len) - 5;
         memcpy(&(*buffer)[0],&msg_len,4);           // set length
         memcpy(&(*buffer)[4],&msg_type,1);          // set type
-    } break;
+    }
+    break;
 
     /**
      * unknown?????
@@ -455,14 +554,16 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 }
 
 
-int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer) {
+int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer)
+{
     // message: LLLLT[...]
     memcpy(msg_len,&buffer[0],4);
     memcpy(msg_type,&buffer[4],1);
     return 0;
 }
 
-int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...) {
+int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...)
+{
     if ( buffer == 0 ) {
         DEBUG("extract_msg() : cannot extract an empty buffer");
         return -1;
@@ -476,14 +577,17 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     /**
      * messages with just type + error code
      */
-    case MSG_REGISTER_SUCCESS : case MSG_REGISTER_FAILURE : 
-    case MSG_LOC_FAILURE : case MSG_EXECUTE_FAILURE : {
+    case MSG_REGISTER_SUCCESS :
+    case MSG_REGISTER_FAILURE :
+    case MSG_LOC_FAILURE :
+    case MSG_EXECUTE_FAILURE : {
         // length, type, result
         int *register_result = va_arg(vl,int*);
 
         memcpy(register_result,&buffer[5],4);           // extract result
 
-    } break;
+    }
+    break;
 
     /**
      * register
@@ -516,7 +620,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         *arg_types = (int*)malloc((*arg_types_len)*4);
         memcpy(*arg_types,&buffer[19+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
-    } break;
+    }
+    break;
 
     /**
      * loc request
@@ -544,7 +649,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         *arg_types = (int*)malloc((*arg_types_len)*4);
         memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
-    } break;
+    }
+    break;
     case MSG_LOC_SUCCESS : {
         // len, type, ip, port, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int *ip = va_arg(vl,unsigned int*);
@@ -557,19 +663,21 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         memcpy(ip,&buffer[5],4);                        // extract ip
         memcpy(port,&buffer[9],2);                      // extract port
 
-    } break;
+    }
+    break;
 
     /**
      * execute and execute success
      */
-    case MSG_EXECUTE : case MSG_EXECUTE_SUCCESS : {
+    case MSG_EXECUTE :
+    case MSG_EXECUTE_SUCCESS : {
         // length, type, fct_name_len, fct_name, arg_types_len, arg_types, args
         unsigned int *fct_name_len = va_arg(vl,unsigned int*);
         char **fct_name = va_arg(vl,char**);
         unsigned int *arg_types_len = va_arg(vl,unsigned int*);
         int **arg_types = va_arg(vl,int**);
         void ***args = va_arg(vl,void***);
-        
+
         if ( *fct_name != NULL ) {
             free(*fct_name);
         }
@@ -601,7 +709,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
             buffer_current_index += single_arg_type_len;
         }
 
-    } break;
+    }
+    break;
 
     /**
      * unknown?????
@@ -616,12 +725,13 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     return 0;
 }
 
-unsigned int arg_types_length(int* argTypes) {
+unsigned int arg_types_length(int* argTypes)
+{
 
     unsigned int len = 0;
-    while (*argTypes != 0){
-      argTypes += 1;
-      len += 1;
+    while (*argTypes != 0) {
+        argTypes += 1;
+        len += 1;
     }
     return len;
 }

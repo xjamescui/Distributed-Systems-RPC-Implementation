@@ -10,13 +10,13 @@
  *  returns # of chars read if successful
  *          -1 if fail
  */
-ssize_t read_large(int fd, char* const buffer, const unsigned int buffer_len);
+ssize_t read_message(char* buffer, int socket_fd);
 
 /** write() that can take a large buffer_len
  *  returns # of chars read if successful
  *          -1 if fail
  */
-ssize_t write_large(int fd, const char* const buffer, const unsigned int buffer_len);
+ssize_t write_message(int fd, const char* const buffer, const unsigned int buffer_len);
 
 
 /**
@@ -55,6 +55,12 @@ unsigned int arg_types_length(int* argTypes);
  *
  */
 int get_ip_from_socket(unsigned int *ip, int socket_fd);
+
+/**
+ * connect to a given IP and port
+ *
+ */
+int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned int port );
 
 /**
  * function to assemble or read the message described in protocol section 5
