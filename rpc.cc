@@ -318,6 +318,7 @@ int create_server_socket()
 
     struct sockaddr_in server_addr;
     unsigned int server_addr_len = sizeof(server_addr);
+    int server_fd;
 
     // prep client listener socket info for binding
     memset(&server_addr, '0', server_addr_len);
@@ -325,11 +326,13 @@ int create_server_socket()
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
     // create client listener socket
-    g_server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (g_server_fd < 0) {
+    server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (server_fd < 0) {
         fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
         return -1;
     }
+
+    g_server_fd = server_fd;
 
     // bind client listener socket
     if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
@@ -342,6 +345,7 @@ int create_server_socket()
     if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0) {
         return -1;
     }
+
 
     return 0;
 } // create_server_socket
