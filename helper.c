@@ -33,7 +33,7 @@ ssize_t read_message(char** buffer, int socket_fd)
 
     // get message len and msg type in first 5 bytes
     if (buffer != NULL) free(buffer);
-    buffer = (char*)malloc(5);
+    buffer = (char**)malloc(5);
     read_so_far = read(socket_fd, buffer ,5);
 
     if (read_so_far < 0) {
@@ -48,7 +48,7 @@ ssize_t read_message(char** buffer, int socket_fd)
     // after determining msg length: put the message pieces back together
     msg_len = 5 + msg_len;
     free(buffer);
-    buffer = (char*)malloc(msg_len);
+    buffer = (char**)malloc(msg_len);
     memset(buffer,0,msg_len);
     memcpy(&buffer[0], &msg_len, 4);
     memcpy(&buffer[4], &msg_type, 1);
