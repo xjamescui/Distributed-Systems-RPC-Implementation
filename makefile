@@ -64,3 +64,6 @@ clean:
 	@echo "making $@ ..."
 	$(CC) $(CFLAGS) $< -o $@
 
+rpc.o: rpc.cc SkeletonDatabase.cc helper.c
+	@echo "making $@ ..."
+	$(CC) $(CFLAGS) $< -o $@ -lpthread

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
+#include <list>
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
@@ -14,15 +16,21 @@
 
 #define MAX_CLIENT_CONNECTIONS 100
 
+using namespace std;
 
 unsigned int g_binder_fd;
 unsigned int g_server_fd, g_server_port, g_server_ip;
 SkeletonDatabase* g_skeleton_database;
 
 
+// threads
+list<pthread_t> g_client_threads; // running client threads
+pthread_mutex_t g_client_thread_lock = PTHREAD_MUTEX_INITIALIZER;
+
+
 int create_server_socket();
 int extract_registration_results(char *msg, int* result);
-void handle_client_message(char* msg, unsigned int client_fd);
+void* handle_client_message(void * hidden_args);
 int connect_server_to_binder();
 
 /**
@@ -156,7 +164,10 @@ int rpcExecute()
     int select_rv, client_fd;
     fd_set active_fds, read_fds;
 
+    FD_ZERO(&active_fds);
+    FD_ZERO(&read_fds);
     FD_SET(g_server_fd, &active_fds);
+    FD_SET(g_binder_fd, &active_fds);
 
     listen(g_server_fd, MAX_CLIENT_CONNECTIONS);
 
@@ -217,13 +228,40 @@ int rpcExecute()
                     continue;
                 }
 
-                handle_client_message(connection_msg, connection_fd);
+                // create a new thread to process requests from this client
+                void** thread_args = new void*[2];
+                thread_args[0] = (void *) connection_msg;
+                thread_args[1] = (void *) new int(connection_fd);
+
+
+                pthread_t client_thread;
+                int bad_code;
+                bad_code = pthread_create(&client_thread, NULL, handle_client_message, (void *)thread_args);
+
+                if (bad_code) {
+                    // failed to create new thread
+                    fprintf(stderr, "ERROR: failed to create a thread for client\n");
+                    return -1;
+                }
+
+                pthread_mutex_lock( &g_client_thread_lock);
+                // add this thread to list of all running threads
+                g_client_threads.push_back(client_thread);
+                pthread_mutex_unlock( &g_client_thread_lock);
             }
         } // for
     } // while
 
     FD_ZERO(&active_fds);
     FD_ZERO(&read_fds);
+
+    // wait for all client threads to finish
+    for (list<pthread_t>::iterator it = g_client_threads.begin(); it != g_client_threads.end(); ++it) {
+        pthread_join((*it), NULL);
+    }
+
+    pthread_mutex_destroy(&g_client_thread_lock);
+
 
     return 0;
 }
@@ -352,30 +390,35 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-    case MSG_REGISTER_SUCCESS:
-    case MSG_REGISTER_FAILURE:
-        // register success or failure
-        if (extract_msg(msg, msg_len, msg_type, result) < 0) {
-            fprintf(stderr, "ERROR extracting msg\n");
+        case MSG_REGISTER_SUCCESS:
+        case MSG_REGISTER_FAILURE:
+            // register success or failure
+            if (extract_msg(msg, msg_len, msg_type, result) < 0) {
+                fprintf(stderr, "ERROR extracting msg\n");
+                return -1;
+            }
+            return 0;
+        default:
             return -1;
-        }
-        return 0;
-    default:
-        return -1;
     }
 } // extract_registration_results
 
 /**
- * Handle client RPC requests and invoke the corresponding server methods
+ * Thread task: handles client RPC requests and invoke the corresponding server methods
  * - return execution success/failure feedback to client
  */
-void handle_client_message(char* msg, unsigned int client_fd)
+void* handle_client_message(void * hidden_args)// char* msg, unsigned int client_fd
 {
+
+    // parse arguments
+    void** argsArray = (void**) hidden_args;
+    char* msg = (char *)(argsArray[0]);
+    unsigned int client_fd = *((unsigned int*)(argsArray[1]));
 
     char msg_type;
     unsigned int msg_len, fct_name_len, arg_types_len;
-    int* arg_types;
-    void** args;
+    int* arg_types; // rpc function arg types
+    void** args; // rpc function args
     char* fct_name = NULL;
     char* response_msg = NULL;
     skeleton target_method;
@@ -385,6 +428,7 @@ void handle_client_message(char* msg, unsigned int client_fd)
     if (msg_type == MSG_EXECUTE) {
 
         // exact msg
+
         if (extract_msg(msg, msg_len, msg_type, &fct_name_len, fct_name, &arg_types_len, arg_types, args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
         }
