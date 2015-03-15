@@ -13,6 +13,7 @@
 
 #include <arpa/inet.h>  // inet_ntoa()
 #include <net/if.h>     // IFNAMSIZ
+#include <netdb.h>      // gethostbyname()
 #include <sys/ioctl.h>  // SIOCGIFADDR, ioctl()
 
 /******************************************************************************
@@ -23,7 +24,7 @@
 /**
  * Read message of buffer_len from socket fd into buffer
  */
-ssize_t read_message(char* buffer, int socket_fd)
+ssize_t read_message(char** buffer, int socket_fd)
 {
     unsigned int read_so_far = 0;
     ssize_t read_len;
@@ -273,7 +274,7 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
 }
 
 /******************************************************************************
- * connect to given ip and port
+ * connect to given ip/hostname and port
  *
  *
  *****************************************************************************/
@@ -306,6 +307,37 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned i
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
         fprintf(stderr,"Error : connect_to_ip_port connect() failed : %s\n",strerror(errno));
+        return -1;
+    }
+
+    // set the return socket
+    *out_sock_fd = sock_fd;
+    return 0;
+}
+int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned int port )
+{
+
+    int sock_fd;
+    struct sockaddr_in temp_socket_addr;
+    unsigned int temp_socket_addr_len = sizeof(temp_socket_addr);
+    struct hostent* temp_hostinfo;
+
+    // socket()
+    if ( ( sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0 ) {
+        fprintf(stderr, "Error : connect_to_hostname_port socket() failed: %s\n", strerror(errno));
+        return -1;
+    }
+
+    temp_hostinfo = gethostbyname(hostname);
+
+    memset(&temp_socket_addr, '0', temp_socket_addr_len);
+    temp_socket_addr.sin_family = AF_INET;
+    memcpy(&temp_socket_addr.sin_addr.s_addr, temp_hostinfo->h_addr , temp_hostinfo->h_length);
+    temp_socket_addr.sin_port = htons(port);
+
+    // connect()
+    if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
+        fprintf(stderr,"Error : connect_to_hostname_port connect() failed : %s\n",strerror(errno));
         return -1;
     }
 
