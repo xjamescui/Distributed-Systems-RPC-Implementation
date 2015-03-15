@@ -401,7 +401,7 @@ void handle_client_message(char* msg, unsigned int client_fd) {
                 assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_SUCCESS, fct_name_len, fct_name, arg_types_len, arg_types, args);
             } else if (method_return_code < 0) {
                 // EXECUTE FAIL
-                assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1);
+                assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1); // TODO: what should reason code be instead of -1?
             }
 
             break;
