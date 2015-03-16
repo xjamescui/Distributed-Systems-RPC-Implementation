@@ -89,7 +89,7 @@ void SkeletonDatabase::db_print()
     DEBUG("Printing.. Skel DB size: %d\n ", (int)this->_db.size());
     for (list<SKEL_RECORD>::iterator it = this->_db.begin(); it != this->_db.end(); ++it) {
         arg_types_len = arg_types_length(it->arg_types);
-        DEBUG("Record %d: %s: ", index, it->fct_name, arg_types_len);
+        DEBUG("Record %d: %s: ", index, it->fct_name /*, arg_types_len*/);
         for (unsigned int i = 0; i < arg_types_len; i++) {
             DEBUG("%d ", it->arg_types[i]);
         }

@@ -17,9 +17,10 @@ CLIENT_OBJECTS = $(CLIENT_SOURCES:.c=.o)
 EXECUTABLES = server client
 
 # list of rpc sources and objects
-RPC_SOURCES = rpc.cc helper.c SkeletonDatabase.cc
+RPC_SOURCES = helper.c
+RPC_CPP_SOURCES = rpc.cc SkeletonDatabase.cc
 RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
-RPC_CPP_OBJECTS = $(RPC_SOURCES:.cc=.o)
+RPC_CPP_OBJECTS = $(RPC_CPP_SOURCES:.cc=.o)
 RPC_ARCHIVE = librpc.a
 
 # list of binder sources and objects
@@ -64,6 +65,6 @@ clean:
 	@echo "making $@ ..."
 	$(CC) $(CFLAGS) $< -o $@
 
-rpc.o: rpc.cc SkeletonDatabase.cc helper.c
+rpc.o: $(RPC_SOURCES) $(RPC_CPP_SOURCES)
 	@echo "making $@ ..."
 	$(CC) $(CFLAGS) $< -o $@ -lpthread
