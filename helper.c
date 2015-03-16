@@ -651,7 +651,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         *fct_name = (char*)malloc(*fct_name_len);
         memcpy(*fct_name,&buffer[15],*fct_name_len);    // extract fct name
         memcpy(arg_types_len,&buffer[15+(*fct_name_len)],4); // extract arg_types_len
-        *arg_types = (int*)malloc((*arg_types_len)*4);
+        *arg_types = (int*)malloc(((*arg_types_len)+1)*4);
+        memset(*arg_types,0,((*arg_types_len)+1)*4);
         memcpy(*arg_types,&buffer[19+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
     }
@@ -680,7 +681,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         *fct_name = (char*)malloc(*fct_name_len);
         memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
         memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
-        *arg_types = (int*)malloc((*arg_types_len)*4);
+        *arg_types = (int*)malloc(((*arg_types_len)+1)*4); // alloc one more
+        memset(*arg_types,0,((*arg_types_len)+1)*4);
         memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
 
     }
@@ -728,7 +730,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         *fct_name = (char*)malloc(*fct_name_len);
         memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
         memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
-        *arg_types = (int*)malloc((*arg_types_len)*4);
+        *arg_types = (int*)malloc((*arg_types_len+1)*4); // alloc one more
+        memset(*arg_types,0,(*arg_types_len+1)*4);
         memcpy(*arg_types,&buffer[13+(*fct_name_len)],(*arg_types_len)*4); // extract argTypes
         *args = (void**)malloc((*arg_types_len)*sizeof(void*));
 

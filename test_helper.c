@@ -111,15 +111,18 @@ void test_short_messages()
 
 void test_register()
 {
+    // printf("test register\n");
 
     // test assemble message
     char* buffer = 0;
     unsigned int buffer_len;
-    int* arg_types = (int*) malloc(2*sizeof(int));
+    int* arg_types = (int*) malloc(3*sizeof(int));
     int type1 = 0x1234;
     int type2 = 0x5678;
     arg_types[0] = type1;
     arg_types[1] = type2;
+    arg_types[2] = 0;
+
 
     unsigned int ip = 0xaaaa;
     unsigned int port = 0x00bb;
@@ -155,6 +158,7 @@ void test_register()
     assert(arg_types2 != NULL);
     assert(arg_types2[0] == type1);
     assert(arg_types2[1] == type2);
+    assert(arg_types2[2] == 0);
 
     free(buffer);
     free(arg_types);
@@ -165,6 +169,7 @@ void test_register()
 
 void test_loc_request()
 {
+    // printf("test loc request\n");
 
     // set up test
     char* buffer = 0;
@@ -174,9 +179,10 @@ void test_loc_request()
     char fct_name[] = "abcd12341234";
 
     unsigned int arg_types_len = 2;
-    int* arg_types = (int*) malloc(2*sizeof(int));
+    int* arg_types = (int*) malloc(3*sizeof(int));
     arg_types[0] = 0x1234;
     arg_types[1] = 0x5678;
+    arg_types[2] = 0;
 
     unsigned int ip = 0xaaaa;
     unsigned int port = 0x00bb;
@@ -208,6 +214,7 @@ void test_loc_request()
     assert(arg_types2 != NULL);
     assert(arg_types2[0] == arg_types[0]);
     assert(arg_types2[1] == arg_types[1]);
+    assert(arg_types2[2] == 0);
 
     free(fct_name2);
     free(arg_types2);
@@ -250,12 +257,14 @@ void test_execute()
     char fct_name[] = "abcd12341234";
 
     unsigned int arg_types_len = 4;
-    int* arg_types = (int*) malloc(4*sizeof(int));
+    int* arg_types = (int*) malloc(5*sizeof(int));
     //               AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD
     arg_types[0] = 0b11000000000000110000000000000010; // array of 2 ints
     arg_types[1] = 0b11000000000001010000000000000000; // double
     arg_types[2] = 0b11000000000001010000000000000010; // array of 2 doubles
     arg_types[3] = 0b11000000000000010000000000000000; // char
+    arg_types[4] = 0;
+
 
     void** args = (void**)malloc(4*sizeof(void*));
 
@@ -313,6 +322,7 @@ void test_execute()
     assert(arg_types2[1] == arg_types[1]);
     assert(arg_types2[2] == arg_types[2]);
     assert(arg_types2[3] == arg_types[3]);
+    assert(arg_types2[4] == 0);
     assert(args != NULL);
     assert(args2[0] != NULL);
     assert(args2[1] != NULL);
@@ -378,6 +388,7 @@ void test_execute()
     assert(arg_types2[1] == arg_types[1]);
     assert(arg_types2[2] == arg_types[2]);
     assert(arg_types2[3] == arg_types[3]);
+    assert(arg_types2[4] == 0);
     assert(args != NULL);
     assert(args2[0] != NULL);
     assert(args2[1] != NULL);
