@@ -344,7 +344,6 @@ int create_server_socket()
         return -1;
     }
 
-
     return 0;
 } // create_server_socket
 
@@ -429,8 +428,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     extract_msg_len_type(&msg_len, &msg_type, msg);
     if (msg_type == MSG_EXECUTE) {
 
-        // exact msg
-
+        // extract msg
         if (extract_msg(msg, msg_len, msg_type, &fct_name_len, fct_name, &arg_types_len, arg_types, args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
         }
