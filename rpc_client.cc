@@ -25,11 +25,22 @@ int send_execute_to_server(int server_fd,
 
 int rpcCall(char* name, int* argTypes, void** args)
 {
+    int opCode;
+
     // declare sock vars
     int binder_fd;
     char* binder_address;
     char* binder_port_str;
     int binder_port;
+
+    // server stuff
+    int server_fd;
+    unsigned int server_ip;
+    unsigned int server_port;
+
+    // get the length of name and argTypes, since it will be used couple of times
+    unsigned int name_len = strlen(name);
+    unsigned int argTypesLen = arg_types_length(argTypes);
 
     // get environment variables
     binder_address = getenv(BINDER_ADDRESS_STRING);
@@ -46,26 +57,15 @@ int rpcCall(char* name, int* argTypes, void** args)
         return -1;
     }
 
-    // done with binder, close it
-    close(binder_fd);
-
-    // now query server
-    int server_fd;
-    unsigned int server_ip;
-    unsigned int server_port;
-
-    int opCode;
-
-    unsigned int name_len = strlen(name);
-    unsigned int argTypesLen = arg_types_length(argTypes);
-
-
     // get ip and port from binder
     if ( (opCode = ask_binder_for_host(binder_fd,&server_ip,&server_port,name_len,name,argTypesLen,argTypes)) < 0 ) {
         // fprintf(stderr, "Error : rpcCall() cannot get host\n");
         DEBUG("Error : rpcCall() cannot get host %d\n",opCode);
         return opCode;
     }
+
+    // done with binder, close it
+    close(binder_fd);
 
     // connect to server
     if ( connect_to_ip_port(&server_fd, server_ip, server_port) < 0 ) {
@@ -135,37 +135,14 @@ int rpcTerminate()
 }
 
 /**
- * Extract response from binder after a server method registration request is sent
- */
-int extract_registration_results(char *msg, int* result)
-{
-
-    unsigned int msg_len;
-    char msg_type;
-
-    extract_msg_len_type(&msg_len, &msg_type, msg);
-    switch (msg_type) {
-    case MSG_REGISTER_SUCCESS:
-    case MSG_REGISTER_FAILURE:
-        // register success or failure
-        if (extract_msg(msg, msg_len, msg_type, result) < 0) {
-            fprintf(stderr, "ERROR extracting msg\n");
-            return -1;
-        }
-        return 0;
-    default:
-        return -1;
-    }
-} // extract_registration_results
-
-/**
  * rpcCall helper functions
  *
  *
  */
 int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
                         unsigned int name_len, char *name,
-                        unsigned int arg_types_len, int *arg_types) {
+                        unsigned int arg_types_len, int *arg_types)
+{
 
     // for the buffer
     char* rw_buffer;
@@ -180,7 +157,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
 
     // assemble
     assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_REQUEST,
-        name_len,name,arg_types_len,arg_types);
+                 name_len,name,arg_types_len,arg_types);
 
     // send loc request to binder
     write_len = write_message(binder_fd,rw_buffer,rw_buffer_len);
@@ -209,13 +186,15 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
         free(rw_buffer);
         *ip = server_ip;
         *port = server_port;
-    } break;
+    }
+    break;
     case MSG_LOC_FAILURE : {
         extract_msg(rw_buffer,rw_buffer_len,MSG_LOC_FAILURE,&result);
         free(rw_buffer);
         return result; // TODO : check if this is really what we want to return
-    } break;
-    default: 
+    }
+    break;
+    default:
         fprintf(stderr, "Error : asking for server ip and port, got invalid type %x\n",msg_type);
         free(rw_buffer);
         return -1;
@@ -225,8 +204,9 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
     return 0;
 }
 int send_execute_to_server(int server_fd,
-   unsigned int name_len, char *name,
-   unsigned int arg_types_len, int *arg_types, void** args) {
+                           unsigned int name_len, char *name,
+                           unsigned int arg_types_len, int *arg_types, void** args)
+{
 
     // for the buffer
     char* rw_buffer;
@@ -270,26 +250,36 @@ int send_execute_to_server(int server_fd,
     switch ( msg_type ) {
     case MSG_EXECUTE_SUCCESS: {
         extract_msg(rw_buffer,rw_buffer_len,MSG_EXECUTE_SUCCESS,
-            &reply_name_len,&reply_name,&reply_arg_types_len,&reply_arg_types,&reply_args);
+                    &reply_name_len,&reply_name,&reply_arg_types_len,&reply_arg_types,&reply_args);
         free(rw_buffer);
-    } break;    
+    }
+    break;
     case MSG_EXECUTE_FAILURE: {
         extract_msg(rw_buffer,rw_buffer_len,MSG_EXECUTE_FAILURE,&result);
         free(rw_buffer);
         return result;
-    } break;
-    default: 
+    }
+    break;
+    default:
         free(rw_buffer);
         fprintf(stderr, "Error : asking for server execute, got invalid type %x\n",msg_type);
         return -1;
     }
-
 
     // copy args over
     copy_args_step_by_step(reply_arg_types, args, reply_args);
 
     // TODO: Free everything
     // extract: reply_name, reply_arg_types, reply_args
+    free(reply_name);
+    for ( unsigned int i = 0 ; i < reply_arg_types_len ; i += 1 ) {
+        if ( type_is_array(reply_arg_types[i]) ) {
+            free(reply_args[i]);
+        }
+    }
+    free(reply_arg_types);
+    free(reply_args);
+
 
     return 0;
 }
