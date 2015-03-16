@@ -135,9 +135,6 @@ int main(int argc, char** argv)
         } // for
     } // while
 
-    // close binder port
-    close(binder_fd);
-
     clean_and_exit(exit_code);
 }
 
@@ -240,11 +237,10 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     break;
     case MSG_TERMINATE: {
         free(rw_buffer);
+        running = false;
         if ( handle_terminate(active_fds,server_fds) < 0 ) {
             fprintf(stderr,"Error : handle_terminate() failed, terminate command not executed\n");
             return_code = -1;
-        } else {
-            running = false;
         }
     }
     break;
@@ -459,6 +455,9 @@ int handle_terminate(fd_set *active_fds,fd_set *server_fds)
             }
             close(i);
             FD_CLR(i,server_fds);
+            FD_CLR(i,active_fds);
+        } else if ( FD_ISSET(i,active_fds) ) { // if it's client or binder itself
+            close(i);
             FD_CLR(i,active_fds);
         }
     }
