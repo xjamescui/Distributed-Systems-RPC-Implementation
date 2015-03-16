@@ -224,7 +224,6 @@ int rpcExecute()
 
     pthread_mutex_destroy(&g_client_thread_lock);
 
-
     return 0;
 }
 
@@ -309,16 +308,16 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-        case MSG_REGISTER_SUCCESS:
-        case MSG_REGISTER_FAILURE:
-            // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-                return -1;
-            }
-            return 0;
-        default:
+    case MSG_REGISTER_SUCCESS:
+    case MSG_REGISTER_FAILURE:
+        // register success or failure
+        if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
             return -1;
+        }
+        return 0;
+    default:
+        return -1;
     }
 } // extract_registration_results
 
