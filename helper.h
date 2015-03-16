@@ -71,6 +71,13 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
 int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* const buffer);
 int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...);
 
+/**
+ * step by step copy void** args into another void** args
+ * (not changing pointers, assuming it's already allocated)
+ */
+int copy_args_step_by_step(const unsigned int arg_types_len, const int* const arg_types,
+  void** to_args, const void** const from_args);
+
 
 
 

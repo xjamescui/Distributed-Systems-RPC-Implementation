@@ -17,7 +17,8 @@ CLIENT_OBJECTS = $(CLIENT_SOURCES:.c=.o)
 EXECUTABLES = server client
 
 # list of rpc sources and objects
-RPC_SOURCES = rpc.cc helper.c SkeletonDatabase.cc
+RPC_SOURCES = helper.c
+RPC_CPP_SOURCES = rpc_client.cc rpc_server.cc SkeletonDatabase.cc
 RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
 RPC_CPP_OBJECTS = $(RPC_SOURCES:.cc=.o)
 RPC_ARCHIVE = librpc.a
