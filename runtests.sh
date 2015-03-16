@@ -6,9 +6,9 @@ set -e
 echo "==test_helper=="
 make helper.o
 g++ -g test_helper.c helper.o -o test_helper
-./test_helper
+# ./test_helper
 # gdb ./test_helper
-# valgrind --leak-check=full --track-origins=yes ./test_helper
+valgrind --leak-check=full --track-origins=yes ./test_helper
 rm test_helper
 make clean
 echo "==test_helper passed!=="
