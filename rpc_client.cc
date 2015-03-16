@@ -145,7 +145,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
 {
 
     // for the buffer
-    char* rw_buffer;
+    char* rw_buffer = NULL;
     unsigned int rw_buffer_len;
     ssize_t read_len, write_len;
 
@@ -209,7 +209,7 @@ int send_execute_to_server(int server_fd,
 {
 
     // for the buffer
-    char* rw_buffer;
+    char* rw_buffer = NULL;
     unsigned int rw_buffer_len;
     ssize_t read_len, write_len;
 
