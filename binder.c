@@ -237,7 +237,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     break;
     case MSG_TERMINATE: {
         free(rw_buffer);
-        running = false;
+        *running = false;
         if ( handle_terminate(active_fds,server_fds) < 0 ) {
             fprintf(stderr,"Error : handle_terminate() failed, terminate command not executed\n");
             return_code = -1;
