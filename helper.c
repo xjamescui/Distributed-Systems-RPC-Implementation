@@ -790,7 +790,6 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
     for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
         single_arg_total_len = type_arg_total_length(arg_types[i]);
         if ( single_arg_total_len == 0 ) return -1;
-        DEBUG("len=%d",single_arg_total_len);
         memcpy(to_args[i],from_args[i],single_arg_total_len);
     }
 

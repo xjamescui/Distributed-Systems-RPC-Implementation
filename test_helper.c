@@ -243,11 +243,7 @@ void test_loc_request()
 
 }
 
-
-void test_execute()
-{
-
-    // printf("test execute\n");
+void test_execute_with_execute_type(char type) {
 
     // set up test
     char* buffer = 0;
@@ -265,24 +261,17 @@ void test_execute()
     arg_types[3] = 0b11000000000000010000000000000000; // char
     arg_types[4] = 0;
 
-
     void** args = (void**)malloc(4*sizeof(void*));
 
     int int_a[2] = {0x10,0x20};
     double double_a = 5000.02;
     double double_b[2] = { 5000.02 , 5000.02 };
-    int char_a = 'z';
+    char char_a = 'z';
 
     args[0] = (void*)int_a;
     args[1] = (void*)&double_a;
     args[2] = (void*)double_b;
     args[3] = (void*)&char_a;
-
-    // printf("expected\n");
-    // print_buffer((char*)int_a,8);
-    // print_buffer((char*)&double_a,8);
-    // print_buffer((char*)&double_b[0],16);
-    // print_buffer((char*)&char_a,1);
 
     // things to be extracted
     unsigned int msg_len2;
@@ -293,11 +282,20 @@ void test_execute()
     int* arg_types2 = NULL;
     void** args2 = NULL;
 
-    // test execute
-    // printf("execute assemble\n");
+    // things that get checked with the original values
+    int *int_a2 = (int*)malloc(2*sizeof(int));
+    double double_a2;
+    double* double_b2 = (double*)malloc(2*sizeof(double));
+    char char_a2 = 'z';
+
+    void** args3 = (void**)malloc(4*sizeof(void*));
+    args3[0] = (void*)int_a2;
+    args3[1] = (void*)&double_a2;
+    args3[2] = (void*)double_b2;
+    args3[3] = (void*)&char_a2;
 
     // assemble
-    assemble_msg(&buffer,&buffer_len,MSG_EXECUTE,
+    assemble_msg(&buffer,&buffer_len,type,
                  fct_name_len,fct_name,arg_types_len,arg_types,args);
 
     // check buffer_len
@@ -308,12 +306,12 @@ void test_execute()
     // printf("execute extract len type\n");
     extract_msg_len_type(&msg_len2,&msg_type2,buffer);
     assert(msg_len2 == buffer_len - 5);
-    assert(msg_type2 == MSG_EXECUTE);
+    assert(msg_type2 == type);
     // print_buffer(buffer,buffer_len);
 
     // extract
     // printf("execute extract\n");
-    extract_msg(buffer,buffer_len,MSG_EXECUTE,
+    extract_msg(buffer,buffer_len,type,
                 &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
     assert(fct_name2_len == fct_name_len);
     assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
@@ -328,6 +326,7 @@ void test_execute()
     assert(args2[1] != NULL);
     assert(args2[2] != NULL);
     assert(args2[3] != NULL);
+
     // printf("%x =? %x\n",((int*)args2[0])[0],int_a[0]);
 
     // printf("%x =? %x\n",((int*)args2[0])[0],((int*)args[0])[0]);
@@ -337,6 +336,7 @@ void test_execute()
     // printf("%f =? %f\n",((double*)args2[2])[1],((double*)args[2])[1]);
     // printf("%c =? %c\n",((char*)args2[3])[0],((char*)args[3])[0]);
 
+    // THIS IS A BAD CHECK {
     assert( ((int*)args2[0]) != ((int*)args[0]) ); // make sure it's not the same array
     assert( ((int*)args2[0])[0] == ((int*)args[0])[0] );
     assert( ((int*)args2[0])[1] == ((int*)args[0])[1] );
@@ -344,81 +344,45 @@ void test_execute()
     assert( ((double*)args2[2])[0] == ((double*)args[2])[0] );
     assert( ((double*)args2[2])[1] == ((double*)args[2])[1] );
     assert( ((char*)args2[3])[0] == ((char*)args[3])[0] );
+    // }
 
+    copy_args_step_by_step(arg_types2,args3,args2);
+
+    assert(int_a2[0] = int_a[0]);
+    assert(int_a2[1] = int_a[1]);
+    assert(double_a2 = double_a);
+    assert(double_b2[0] = double_b[0]);
+    assert(double_b2[1] = double_b[1]);
+    assert(char_a2 = char_a);
+
+    // cleanup
     free(buffer);
-    buffer = NULL;
     free(fct_name2);
-    fct_name2 = NULL;
     free(arg_types2);
-    arg_types2 = NULL;
     free(args2[0]);
     free(args2[1]);
     free(args2[2]);
     free(args2[3]);
     free(args2);
-    args2 = NULL;
 
+    free(int_a2);
+    free(double_b2);
+    free(args3);
 
-    // test MSG_EXECUTE_SUCCESS
-    // same as MSG_EXECUTE
-
-    // assemble
-    assemble_msg(&buffer,&buffer_len,MSG_EXECUTE_SUCCESS,
-                 fct_name_len,fct_name,arg_types_len,arg_types,args);
-
-    // check buffer_len
-    // printf("buffer_len:%d\n",buffer_len);
-    assert(buffer_len == (4 + 1 + 4 + fct_name_len + 4 + 16 + 33 ) );
-
-    // extract len + type
-    // fprintf(stderr,"execute extract len type\n");
-    extract_msg_len_type(&msg_len2,&msg_type2,buffer);
-    assert(msg_len2 == buffer_len - 5);
-    assert(msg_type2 == MSG_EXECUTE_SUCCESS);
-    // print_buffer(buffer,buffer_len);
-
-    // extract
-    // fprintf(stderr,"execute extract\n");
-    extract_msg(buffer,buffer_len,MSG_EXECUTE_SUCCESS,
-                &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2,&args2);
-    assert(fct_name2_len == fct_name_len);
-    assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
-    assert(arg_types2 != NULL);
-    assert(arg_types2[0] == arg_types[0]);
-    assert(arg_types2[1] == arg_types[1]);
-    assert(arg_types2[2] == arg_types[2]);
-    assert(arg_types2[3] == arg_types[3]);
-    assert(arg_types2[4] == 0);
-    assert(args != NULL);
-    assert(args2[0] != NULL);
-    assert(args2[1] != NULL);
-    assert(args2[2] != NULL);
-    assert(args2[3] != NULL);
-
-    assert( ((int*)args2[0]) != ((int*)args[0]) ); // make sure it's not the same array
-    assert( ((int*)args2[0])[0] == ((int*)args[0])[0] );
-    assert( ((int*)args2[0])[1] == ((int*)args[0])[1] );
-    assert( ((double*)args2[1])[0] == ((double*)args[1])[0] );
-    assert( ((double*)args2[2])[0] == ((double*)args[2])[0] );
-    assert( ((double*)args2[2])[1] == ((double*)args[2])[1] );
-    assert( ((char*)args2[3])[0] == ((char*)args[3])[0] );
-
-    free(buffer);
-    buffer = NULL;
-    free(fct_name2);
-    fct_name2 = NULL;
-    free(arg_types2);
-    arg_types2 = NULL;
-    free(args2[0]);
-    free(args2[1]);
-    free(args2[2]);
-    free(args2[3]);
-    free(args2);
-    args2 = NULL;
-
-    // clean the setup
     free(arg_types);
     free(args);
+
+}
+
+
+
+void test_execute()
+{
+
+    // printf("test execute\n");
+    test_execute_with_execute_type(MSG_EXECUTE);
+
+    test_execute_with_execute_type(MSG_EXECUTE_SUCCESS);
 
 }
 
