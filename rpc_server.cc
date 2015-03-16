@@ -72,7 +72,10 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 {
 
     // not connected to binder
-    if (g_binder_fd < 0) return -1;
+    if (g_binder_fd < 0){
+        fprintf(stderr, "ERROR: cannot execute rpcRegister because server is not connected to binder\n");
+        return -1;
+    }
 
     unsigned int num_args, msg_len, name_len, write_len;
     char* msg = NULL;
@@ -94,7 +97,6 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     g_skeleton_database->db_print(); // TODO remove later
 
     if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
-
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
