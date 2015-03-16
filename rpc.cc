@@ -394,7 +394,7 @@ int extract_registration_results(char *msg, int* result)
         case MSG_REGISTER_SUCCESS:
         case MSG_REGISTER_FAILURE:
             // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, result) < 0) {
+            if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
                 fprintf(stderr, "ERROR extracting msg\n");
                 return -1;
             }
@@ -429,7 +429,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     if (msg_type == MSG_EXECUTE) {
 
         // extract msg
-        if (extract_msg(msg, msg_len, msg_type, &fct_name_len, fct_name, &arg_types_len, arg_types, args) < 0) {
+        if (extract_msg(msg, msg_len, msg_type, &fct_name_len, &fct_name, &arg_types_len, &arg_types, &args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
         }
 
