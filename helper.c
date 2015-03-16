@@ -314,6 +314,8 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned i
     *out_sock_fd = sock_fd;
     return 0;
 }
+
+
 int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned int port )
 {
 
@@ -757,6 +759,9 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     return 0;
 }
 
+/**
+ * Get the length of argTypes array, knowing that the last element is 0
+ */
 unsigned int arg_types_length(int* argTypes)
 {
     unsigned int len = 0;

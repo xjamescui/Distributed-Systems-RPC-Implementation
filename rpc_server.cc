@@ -224,6 +224,9 @@ int rpcExecute()
 
     pthread_mutex_destroy(&g_client_thread_lock);
 
+    close(g_binder_fd);
+    close(g_server_fd);
+
     return 0;
 }
 
