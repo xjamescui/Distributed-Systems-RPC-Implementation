@@ -411,6 +411,79 @@ void test_execute()
 
 }
 
+int test_copy_args() {
+
+    int char_array_len = 100;
+
+    // setup the args (taken from given client)
+    float a_float = 3.14159;
+    double a_double = 1234.1001;
+    int args_count = 3;
+    char *char_array = (char *)malloc(char_array_len * sizeof(char));
+    memcpy(char_array,"abcdefg",7);
+    int argTypes[args_count + 1];
+    void **args;
+
+    argTypes[0] = (1 << ARG_OUTPUT) | (ARG_CHAR << 16) | char_array_len;
+    argTypes[1] = (1 << ARG_INPUT) | (ARG_FLOAT << 16);
+    argTypes[2] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16);
+    argTypes[3] = 0;
+
+    args = (void **)malloc(args_count * sizeof(void *));
+    args[0] = (void *)char_array;
+    args[1] = (void *)&a_float;
+    args[2] = (void *)&a_double;
+
+    // allocate new buffer
+    char *new_char_array = (char *)malloc(char_array_len * sizeof(char));
+    memset(new_char_array,0,char_array_len);
+    float new_a_float = 0;
+    double new_a_double = 0;
+    void** new_args;
+
+    new_args = (void **)malloc(args_count * sizeof(void *));
+    new_args[0] = (void *)new_char_array;
+    new_args[1] = (void *)&new_a_float;
+    new_args[2] = (void *)&new_a_double;
+
+    // printf("pointer address?\n");
+    // printf("new_char_array = %p\n",(void*)&new_char_array);
+    // printf("new_a_float    = %p\n",(void*)&new_a_float);
+    // printf("new_a_double   = %p\n",(void*)&new_a_double);
+    // printf("1              = %p\n",(void*)new_args[0]);
+    // printf("2              = %p\n",(void*)new_args[1]);
+    // printf("3              = %p\n",(void*)new_args[2]);
+
+    // printf("expected\n");
+    // print_buffer((char*)args[0],100);
+    // print_buffer((char*)args[1],16);
+    // print_buffer((char*)args[2],16);
+
+    // copy
+    assert(copy_args_step_by_step(argTypes,new_args,args) == 0);
+
+    // printf("actual\n");
+    // print_buffer((char*)new_args[0],100);
+    // print_buffer((char*)new_args[1],16);
+    // print_buffer((char*)new_args[2],16);
+
+    // new_args[1] = (void*)malloc(sizeof(float));
+    // *(float*)new_args[1] = 123;
+    // printf("%f == %f \n", new_a_float, a_float);
+
+    // check if they are the same
+    assert( mystrcmp(new_char_array,char_array,char_array_len) == 0 );
+    assert( new_a_float == a_float );
+    assert( new_a_double == a_double );
+
+    // cleanup
+    free(char_array);
+    free(args);
+    free(new_char_array);
+    free(new_args);
+
+}
+
 
 
 int main()
@@ -436,7 +509,7 @@ int main()
     assert(type_is_valid(type_invalid1) == false);
     assert(type_is_valid(type_invalid2) == false);
     assert(type_is_valid(type_invalid3) == false);
-    assert(type_arg_total_length(type_invalid2) < 0);
+    assert(type_arg_total_length(type_invalid2) == 0);
 
     for ( int i = 0 ; i < 5 ; i += 1 ) {
         test_short_messages();
@@ -444,6 +517,8 @@ int main()
         test_loc_request();
         test_execute();
     }
+
+    test_copy_args();
 
     return 0;
 }
