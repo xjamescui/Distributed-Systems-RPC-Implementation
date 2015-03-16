@@ -141,11 +141,7 @@ int rpcExecute()
 
     listen(g_server_fd, MAX_CLIENT_CONNECTIONS);
 
-    struct sockaddr_in client_addr;
-    unsigned int client_addr_len;
-
     char* connection_msg = NULL;
-    ssize_t write_len;
     bool running = true;
 
     while (running) {
@@ -164,7 +160,7 @@ int rpcExecute()
             // this connection has no read requests
             if (!FD_ISSET(connection_fd, &read_fds)) continue;
 
-            if (connection_fd == g_server_fd) {
+            if (connection_fd == (unsigned int)g_server_fd) {
                 // this is the server itself
                 client_fd = accept(g_server_fd, NULL, NULL);
                 if (client_fd < 0) {
@@ -173,7 +169,7 @@ int rpcExecute()
                     FD_SET(client_fd, &active_fds);
                 }
 
-            } else if (connection_fd == g_binder_fd) {
+            } else if (connection_fd == (unsigned int)g_binder_fd) {
                 // this is the binder connection
 
                 char msg_type;
@@ -388,4 +384,5 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
         write_message(client_fd, response_msg, msg_len);
     }
 
+    return NULL;
 } // handle_client_msg
