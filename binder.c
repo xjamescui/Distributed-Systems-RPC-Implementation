@@ -211,7 +211,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
 
     // read()
     rw_buffer = NULL;
-    read_len = read_message(rw_buffer,connection_fd);
+    read_len = read_message(&rw_buffer,connection_fd);
     if ( read_len < 0 ) {
         fprintf(stderr,"Error : handle_request() couldn't read from socket\n");
         return -1;

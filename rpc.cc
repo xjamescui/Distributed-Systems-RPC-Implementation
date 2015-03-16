@@ -177,8 +177,8 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     }
 
     msg = NULL;
-    read_message(msg, g_binder_fd);
-    extract_registration_results(msg,&register_result);
+    read_message(&msg, g_binder_fd);
+    extract_registration_results(msg,&register_result); // wait for binder response
     free(msg);
 
     return register_result;
@@ -203,7 +203,6 @@ int rpcExecute()
     unsigned int client_addr_len;
 
     char* connection_msg = NULL;
-    ssize_t write_len;
     bool running = true;
 
     while (running) {
@@ -236,14 +235,14 @@ int rpcExecute()
 
                 char msg_type;
                 unsigned int msg_len;
-                if (read_message(connection_msg, connection_fd) < 0) {
+                if (read_message(&connection_msg, connection_fd) < 0) {
                     fprintf(stderr, "ERROR reading from binder socket: %s\n", strerror(errno));
                     continue;
                 }
 
                 extract_msg_len_type(&msg_len, &msg_type, connection_msg);
 
-                if (msg_type == MSG_TERMINATE ){
+                if (msg_type == MSG_TERMINATE ) {
                     running = false;
                     break; // terminate
                 }
@@ -251,7 +250,7 @@ int rpcExecute()
             } else {
                 // this is a client connection
 
-                if (read_message(connection_msg, connection_fd) < 0) {
+                if (read_message(&connection_msg, connection_fd) < 0) {
                     fprintf(stderr, "ERROR reading from client socket %d: %s\n", connection_fd, strerror(errno));
                     continue;
                 }
@@ -380,7 +379,10 @@ int connect_server_to_binder()
 } // connect_server_to_binder
 
 
-int extract_registration_results(char *msg, int* result) 
+/**
+ * Extract response from binder after a server method registration request is sent
+ */
+int extract_registration_results(char *msg, int* result)
 {
 
     unsigned int msg_len;
@@ -388,29 +390,62 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-        case MSG_REGISTER_SUCCESS:
-        case MSG_REGISTER_FAILURE:
-            // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, result) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-                return -1;
-            }
-            return 0;
-        default:
+    case MSG_REGISTER_SUCCESS:
+    case MSG_REGISTER_FAILURE:
+        // register success or failure
+        if (extract_msg(msg, msg_len, msg_type, result) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
             return -1;
+        }
+        return 0;
+    default:
+        return -1;
     }
-}
+} // extract_registration_results
 
-void handle_client_message(char* msg, unsigned int client_fd) {
+/**
+ * Handle client RPC requests and invoke the corresponding server methods
+ * - return execution success/failure feedback to client
+ */
+void handle_client_message(char* msg, unsigned int client_fd)
+{
+    char msg_type;
+    unsigned int msg_len, fct_name_len, arg_types_len;
+    int* arg_types;
+    void** args;
+    char* fct_name = NULL;
+    char* response_msg = NULL;
+    skeleton target_method;
+    int method_return_code;
 
-}
+    extract_msg_len_type(&msg_len, &msg_type, msg);
+    if (msg_type == MSG_EXECUTE) {
 
+        // exact msg
+        if (extract_msg(msg, msg_len, msg_type, &fct_name_len, &fct_name, &arg_types_len, &arg_types, &args) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
+        }
+        free(msg);
 
+        // run requested server procedure
+        g_skeleton_database->db_get(&target_method, fct_name, arg_types);
 
+        // respond with execution results
+        method_return_code = target_method(arg_types, args);
 
+        if (method_return_code == 0) {
+            // EXECUTE SUCCESS
+            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_SUCCESS, fct_name_len, fct_name, arg_types_len, arg_types, args);
+        } else if (method_return_code < 0) {
+            // EXECUTE FAIL
+            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1); // TODO: what should reason code be instead of -1?
+        }
 
+        // send response to client regarding RPC success/failure
+        write_message(client_fd, response_msg, msg_len);
+    }
 
-
+} // handle_client_msg
 
 /**
  * rpcCall helper functions
@@ -547,9 +582,3 @@ int send_execute_to_server(int server_fd,
 
     return 0;
 }
-
-
-
-
-
-
