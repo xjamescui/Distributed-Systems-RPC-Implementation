@@ -24,8 +24,9 @@ int connect_server_to_binder();
 int extract_registration_results(char *msg, int* result);
 void* handle_client_message(void * hidden_args);
 
-unsigned int g_binder_fd;
-unsigned int g_server_fd, g_server_port, g_server_ip;
+int g_binder_fd = -1;
+int g_server_fd = -1;
+unsigned int g_server_port, g_server_ip;
 SkeletonDatabase* g_skeleton_database;
 
 // threads
@@ -70,6 +71,12 @@ int rpcInit()
 int rpcRegister(char* name, int* argTypes, skeleton f)
 {
 
+    // not connected to binder
+    if (g_binder_fd < 0){
+        fprintf(stderr, "ERROR: cannot execute rpcRegister because server is not connected to binder\n");
+        return -1;
+    }
+
     unsigned int num_args, msg_len, name_len, write_len;
     char* msg = NULL;
     SKEL_RECORD skel_record;
@@ -90,7 +97,6 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     g_skeleton_database->db_print(); // TODO remove later
 
     if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
-
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes

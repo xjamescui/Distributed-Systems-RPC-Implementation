@@ -34,7 +34,7 @@ ssize_t read_message(char** buffer, int socket_fd)
     // get message len and msg type in first 5 bytes
     if (*buffer != NULL) free(*buffer);
     *buffer = (char*)malloc(5);
-    read_so_far = read(socket_fd, buffer ,5);
+    read_so_far = read(socket_fd, *buffer ,5);
 
     if (read_so_far < 0) {
         fprintf(stderr,"Error reading first 5 bytes: %s\n" , strerror(errno));
