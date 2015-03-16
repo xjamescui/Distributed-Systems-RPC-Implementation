@@ -166,7 +166,7 @@ int rpcExecute()
 
             if (connection_fd == g_server_fd) {
                 // this is the server itself
-                client_fd = accept(g_server_fd, (struct sockaddr*) &client_addr, &client_addr_len);
+                client_fd = accept(g_server_fd, NULL, NULL);
                 if (client_fd < 0) {
                     fprintf(stderr, "ERROR on accepting client: %s\n", strerror(errno));
                 } else {
@@ -247,6 +247,7 @@ int create_server_socket()
     memset(&server_addr, '0', server_addr_len);
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = 0;
 
     // create client listener socket
     server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -268,6 +269,15 @@ int create_server_socket()
     if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0) {
         return -1;
     }
+
+    // prints out ip and port for debug purpose
+    unsigned char ipb1 = (g_server_ip >> 24) & 0xFF;
+    unsigned char ipb2 = (g_server_ip >> 16) & 0xFF;
+    unsigned char ipb3 = (g_server_ip >> 8) & 0xFF;
+    unsigned char ipb4 = (g_server_ip >> 0) & 0xFF;
+
+    DEBUG("server addr:%u.%u.%u.%u",ipb1, ipb2, ipb3, ipb4);
+    DEBUG("server port:%d",ntohs(g_server_port));
 
     return 0;
 } // create_server_socket

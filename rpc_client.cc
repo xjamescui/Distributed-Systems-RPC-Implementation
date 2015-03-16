@@ -25,6 +25,9 @@ int send_execute_to_server(int server_fd,
 
 int rpcCall(char* name, int* argTypes, void** args)
 {
+
+    DEBUG("rpcCall %s",name);
+
     int opCode;
 
     // declare sock vars
@@ -67,11 +70,25 @@ int rpcCall(char* name, int* argTypes, void** args)
     // done with binder, close it
     close(binder_fd);
 
+    DEBUG("calling server");
+
+    server_ip = htonl(server_ip);
+    server_port = htons(server_port);
+
+    DEBUG("ip:\n");
+    char* ip_addr = (char*)&server_ip;
+    for( int i = 0 ; i < 4 ; i += 1 ) {
+        DEBUG("%u ",ip_addr[i] & 0xff);
+    }
+    DEBUG("port:%u\n",ntohs(server_port));
+
     // connect to server
     if ( connect_to_ip_port(&server_fd, server_ip, server_port) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%x\n",server_ip,server_port);
         return -1;
     }
+
+    DEBUG("connect success!");
 
     // execute the message
     if ( (opCode = send_execute_to_server(server_fd, name_len, name, argTypesLen, argTypes, args)) < 0 ) {
@@ -145,7 +162,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
 {
 
     // for the buffer
-    char* rw_buffer;
+    char* rw_buffer = NULL;
     unsigned int rw_buffer_len;
     ssize_t read_len, write_len;
 
@@ -209,7 +226,7 @@ int send_execute_to_server(int server_fd,
 {
 
     // for the buffer
-    char* rw_buffer;
+    char* rw_buffer = NULL;
     unsigned int rw_buffer_len;
     ssize_t read_len, write_len;
 
