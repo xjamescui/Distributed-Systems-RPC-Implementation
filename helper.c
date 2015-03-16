@@ -759,6 +759,9 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     return 0;
 }
 
+/**
+ * Get the length of argTypes array, knowing that the last element is 0
+ */
 unsigned int arg_types_length(int* argTypes)
 {
 
