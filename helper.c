@@ -161,7 +161,7 @@ int type_arg_total_length(const int type)
         individual_size=sizeof(float) ;
         break;
     default:
-        individual_size = -1;
+        individual_size = 0;
         break;
     }
 
@@ -759,7 +759,6 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
 
 unsigned int arg_types_length(int* argTypes)
 {
-
     unsigned int len = 0;
     while (*argTypes != 0) {
         argTypes += 1;
@@ -768,3 +767,24 @@ unsigned int arg_types_length(int* argTypes)
     return len;
 }
 
+/**
+ * step by step copy void** args into another void** args
+ * (not changing pointers, assuming it's already allocated)
+ */
+int copy_args_step_by_step(int const *arg_types, void** const to_args, void const *const *const from_args)
+{
+    unsigned int arg_types_len = arg_types_length((int*)arg_types);
+
+
+    // DEBUG("#types=%d",arg_types_len);
+
+    int single_arg_total_len = 0;
+    for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
+        single_arg_total_len = type_arg_total_length(arg_types[i]);
+        if ( single_arg_total_len == 0 ) return -1;
+        DEBUG("len=%d",single_arg_total_len);
+        memcpy(to_args[i],from_args[i],single_arg_total_len);
+    }
+
+    return 0;
+}

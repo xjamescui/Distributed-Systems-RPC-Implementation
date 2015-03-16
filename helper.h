@@ -75,9 +75,7 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
  * step by step copy void** args into another void** args
  * (not changing pointers, assuming it's already allocated)
  */
-int copy_args_step_by_step(const unsigned int arg_types_len, const int* const arg_types,
-  void** to_args, const void** const from_args);
-
+int copy_args_step_by_step(int const *arg_types, void** const to_args, void const *const *const from_args);
 
 
 
