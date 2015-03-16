@@ -24,8 +24,9 @@ int connect_server_to_binder();
 int extract_registration_results(char *msg, int* result);
 void* handle_client_message(void * hidden_args);
 
-unsigned int g_binder_fd;
-unsigned int g_server_fd, g_server_port, g_server_ip;
+int g_binder_fd = -1;
+int g_server_fd = -1;
+unsigned int g_server_port, g_server_ip;
 SkeletonDatabase* g_skeleton_database;
 
 // threads
@@ -69,6 +70,9 @@ int rpcInit()
  */
 int rpcRegister(char* name, int* argTypes, skeleton f)
 {
+
+    // not connected to binder
+    if (g_binder_fd < 0) return -1;
 
     unsigned int num_args, msg_len, name_len, write_len;
     char* msg = NULL;
