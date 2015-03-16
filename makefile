@@ -20,7 +20,7 @@ EXECUTABLES = server client
 RPC_SOURCES = helper.c
 RPC_CPP_SOURCES = rpc_client.cc rpc_server.cc SkeletonDatabase.cc
 RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
-RPC_CPP_OBJECTS = $(RPC_SOURCES:.cc=.o)
+RPC_CPP_OBJECTS = $(RPC_CPP_SOURCES:.cc=.o)
 RPC_ARCHIVE = librpc.a
 
 # list of binder sources and objects
@@ -44,12 +44,12 @@ $(BINDER_EXECUTABLE): $(BINDER_OBJECTS)
 # make the given client
 client: $(CLIENT_OBJECTS) $(RPC_ARCHIVE)
 	@echo "making $@ ... running the given command"
-	g++ -L. client1.o -lrpc -o client
+	g++ -L. client1.o -lrpc -lpthread -o client
 
 # make the given server
 server: $(SERVER_OBJECTS) $(RPC_ARCHIVE)
 	@echo "making $@ ... running the given command"
-	g++ -L. server_functions.o server_function_skels.o server.o -lrpc -o server
+	g++ -L. server_functions.o server_function_skels.o server.o -lrpc -lpthread -o server
 
 # make clean
 clean:
@@ -64,4 +64,3 @@ clean:
 %.o: %.cc debug.h defines.h
 	@echo "making $@ ..."
 	$(CC) $(CFLAGS) $< -o $@
-
