@@ -450,8 +450,7 @@ int handle_terminate(fd_set *active_fds,fd_set *server_fds)
         if ( FD_ISSET(i,server_fds) ) {
             write_len = write_message(i,rw_buffer,rw_buffer_len);
             if ( write_len < rw_buffer_len ) {
-                fprintf(stderr,"Error : couldn't terminate server at socket %d\n",i);
-                continue;
+                fprintf(stderr,"Error : couldn't send terminate message to server at socket %d\n",i);
             }
             close(i);
             FD_CLR(i,server_fds);
