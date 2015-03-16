@@ -233,10 +233,8 @@ int rpcExecute()
                 thread_args[0] = (void *) connection_msg;
                 thread_args[1] = (void *) new int(connection_fd);
 
-
                 pthread_t client_thread;
-                int bad_code;
-                bad_code = pthread_create(&client_thread, NULL, handle_client_message, (void *)thread_args);
+                int bad_code = pthread_create(&client_thread, NULL, handle_client_message, (void *)thread_args);
 
                 if (bad_code) {
                     // failed to create new thread
