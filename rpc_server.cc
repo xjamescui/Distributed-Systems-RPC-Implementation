@@ -6,32 +6,33 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <pthread.h>
-#include <list>
 #include "debug.h"
-#include "defines.h"
 #include "helper.h"
 #include "rpc.h"
 #include "SkeletonDatabase.h"
+#include <pthread.h>
+#include <list>
+
 
 #define MAX_CLIENT_CONNECTIONS 100
 
 using namespace std;
 
+
+int create_server_socket();
+int connect_server_to_binder();
+int extract_registration_results(char *msg, int* result);
+void* handle_client_message(void * hidden_args);
+
 unsigned int g_binder_fd;
 unsigned int g_server_fd, g_server_port, g_server_ip;
 SkeletonDatabase* g_skeleton_database;
-
 
 // threads
 list<pthread_t> g_client_threads; // running client threads
 pthread_mutex_t g_client_thread_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
-int create_server_socket();
-int extract_registration_results(char *msg, int* result);
-void* handle_client_message(void * hidden_args);
-int connect_server_to_binder();
 
 /**
  * create sockets and connect to the binder
@@ -57,44 +58,6 @@ int rpcInit()
     return 0;
 } // rpcInit
 
-
-int rpcCall(char* name, int* argTypes, void** args)
-{
-    // declare sock vars
-    int binder_fd;
-    char* binder_address;
-    char* binder_port_str;
-    int binder_port;
-
-    // declare vars for buffer
-    char* w_buffer = NULL;
-    unsigned int w_buffer_len;
-    ssize_t write_len;
-
-    // get environment variables
-    binder_address = getenv(BINDER_ADDRESS_STRING);
-    binder_port_str = getenv(BINDER_PORT_STRING);
-    if (binder_address == NULL || binder_port_str == NULL) {
-        fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return -1;
-    }
-    binder_port = atoi(binder_port_str);
-
-    // connect to binder
-    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
-        fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
-        return -1;
-    }
-
-    //
-
-    return -1;
-}
-
-int rpcCacheCall(char* name, int* argTypes, void** args)
-{
-    return -1;
-}
 
 /**
  * register a function on binder and add skeleton record into local database
@@ -152,6 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     return register_result;
 } // rpcRegister
+
 
 /**
  * Returns:
@@ -260,56 +224,8 @@ int rpcExecute()
 
     pthread_mutex_destroy(&g_client_thread_lock);
 
-
     return 0;
 }
-
-int rpcTerminate()
-{
-    // declare sock vars
-    int binder_fd;
-    char* binder_address;
-    char* binder_port_str;
-    int binder_port;
-
-    // declare vars for buffer
-    char* w_buffer = NULL;
-    unsigned int w_buffer_len;
-    ssize_t write_len;
-
-    // get environment variables
-    binder_address = getenv(BINDER_ADDRESS_STRING);
-    binder_port_str = getenv(BINDER_PORT_STRING);
-    if (binder_address == NULL || binder_port_str == NULL) {
-        fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return -1;
-    }
-    binder_port = atoi(binder_port_str);
-
-    // connect to binder
-    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
-        fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
-        return -1;
-    }
-
-    // assemble a terminate message
-    if ( assemble_msg(&w_buffer,&w_buffer_len,MSG_TERMINATE) < 0 ) {
-        fprintf(stderr,"Error : rpcTerminate() couldn't assemble terminate message\n");
-        return -1;
-    }
-
-    // send message
-    write_len = write_message(g_binder_fd, w_buffer, w_buffer_len);
-    free(w_buffer);
-    if ( write_len < w_buffer_len ) {
-        fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
-        return -1;
-    }
-
-    close(binder_fd);
-    return 0;
-}
-
 
 int create_server_socket()
 {
@@ -380,6 +296,7 @@ int connect_server_to_binder()
 } // connect_server_to_binder
 
 
+
 /**
  * Extract response from binder after a server method registration request is sent
  */
@@ -391,18 +308,19 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-        case MSG_REGISTER_SUCCESS:
-        case MSG_REGISTER_FAILURE:
-            // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-                return -1;
-            }
-            return 0;
-        default:
+    case MSG_REGISTER_SUCCESS:
+    case MSG_REGISTER_FAILURE:
+        // register success or failure
+        if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
             return -1;
+        }
+        return 0;
+    default:
+        return -1;
     }
 } // extract_registration_results
+
 
 /**
  * Thread task: handles client RPC requests and invoke the corresponding server methods
