@@ -123,7 +123,7 @@ int rpcTerminate()
     }
 
     // send message
-    write_len = write_message(g_binder_fd, w_buffer, w_buffer_len);
+    write_len = write_message(binder_fd, w_buffer, w_buffer_len);
     free(w_buffer);
     if ( write_len < w_buffer_len ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
@@ -192,7 +192,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
     }
 
     // wait for answer
-    read_len = read_message(&rw_buffer,g_binder_fd);
+    read_len = read_message(&rw_buffer,binder_fd);
     if ( read_len < 0 ) {
         fprintf(stderr, "Error : couldn't read reply of loc request\n");
         return -1;
