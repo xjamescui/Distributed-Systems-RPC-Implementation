@@ -135,6 +135,7 @@ int main(int argc, char** argv)
         } // for
     } // while
 
+    close(binder_fd);
     clean_and_exit(exit_code);
 }
 
