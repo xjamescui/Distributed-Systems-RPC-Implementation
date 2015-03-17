@@ -21,8 +21,6 @@
 #include "helper.h"
 #include "binder_database.h"
 
-#define DEBUG_BINDER_PORT 10000
-
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len);
 
@@ -63,14 +61,10 @@ int main(int argc, char** argv)
         fprintf(stderr,"Error : socket() failed\n");
         clean_and_exit(1);
     }
-    memset(&binder_addr, '0', binder_addr_len);
+    memset(&binder_addr, 0, binder_addr_len);
     binder_addr.sin_family = AF_INET;
     binder_addr.sin_addr.s_addr = INADDR_ANY;
-#ifdef _ENABLE_DEBUG_
-    binder_addr.sin_port = htons(DEBUG_BINDER_PORT);
-#else
     binder_addr.sin_port = 0;
-#endif
 
     // bind()
     if ( bind(binder_fd, (const struct sockaddr *)(&binder_addr), binder_addr_len) < 0 ) {
@@ -185,7 +179,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
 
     fprintf(stdout,"BINDER_ADDRESS %u.%u.%u.%u\n",ipb1, ipb2, ipb3, ipb4);
     fprintf(stdout,"BINDER_PORT %d\n",ntohs(sock_addr.sin_port));
-
+    fflush(stdout);
     return 0;
 }
 
