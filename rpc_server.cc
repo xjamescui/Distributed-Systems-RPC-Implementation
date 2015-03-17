@@ -96,7 +96,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     g_skeleton_database->db_print(); // TODO remove later
 
-    if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning
+    /* if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning */
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
@@ -119,6 +119,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     extract_registration_results(msg,&register_result); // wait for binder response
     free(msg);
 
+    DEBUG("registration result is: %d\n", register_result);
     return register_result;
 } // rpcRegister
 
@@ -261,7 +262,13 @@ int create_server_socket()
     }
 
     // set server ip and port to global variable
+    if (getsockname(g_server_fd, (struct sockaddr *)&server_addr, &server_addr_len) == -1){
+        fprintf(stderr, "ERROR getsockname on server\n");
+        return -1;
+    }
+
     g_server_port = server_addr.sin_port;
+
     if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0) {
         return -1;
     }
@@ -273,7 +280,9 @@ int create_server_socket()
     unsigned char ipb4 = (g_server_ip >> 0) & 0xFF;
 
     DEBUG("server addr:%u.%u.%u.%u",ipb1, ipb2, ipb3, ipb4);
+    DEBUG("server addr:%x",htonl(g_server_ip));
     DEBUG("server port:%d",ntohs(g_server_port));
+    DEBUG("(network)server port:%x",g_server_port);
 
     return 0;
 } // create_server_socket
@@ -361,6 +370,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     extract_msg_len_type(&msg_len, &msg_type, msg);
     if (msg_type == MSG_EXECUTE) {
 
+        DEBUG("HANDLING CLIENT MESSAGE!\n");
         // extract msg
         if (extract_msg(msg, msg_len, msg_type, &fct_name_len, &fct_name, &arg_types_len, &arg_types, &args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
