@@ -15,6 +15,7 @@
 
 #include <string.h>
 
+#include "rpc.h"
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
