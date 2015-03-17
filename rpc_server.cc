@@ -100,7 +100,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
-    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, htons(g_server_port), name_len, name, num_args, argTypes) < 0) {
+    if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0) {
         fprintf(stderr, "ERROR creating registration request message\n");
         free(msg);
         return -1;
