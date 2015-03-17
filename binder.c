@@ -19,7 +19,7 @@
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
-#include "binder_database.h"
+#include "host_database.h"
 
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len);
@@ -335,11 +335,11 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
 
     // send reply
     switch (put_result) {
-    case BINDER_DB_PUT_SIGNATURE_SUCCESS: {
+    case HOST_DB_PUT_SIGNATURE_SUCCESS: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_NO_ERRORS);
     }
     break;
-    case BINDER_DB_PUT_SIGNATURE_DUPLICATE: {
+    case HOST_DB_PUT_SIGNATURE_DUPLICATE: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS);
     }
     break;
@@ -405,15 +405,15 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
 
     // make reply
     switch ( get_result ) {
-    case BINDER_DB_GET_SIGNATURE_FOUND : {
+    case HOST_DB_GET_SIGNATURE_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,host.ip,host.port);
     }
     break;
-    case BINDER_DB_GET_SIGNATURE_NOT_FOUND : {
+    case HOST_DB_GET_SIGNATURE_NOT_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
     }
     break;
-    case BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
+    case HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
     }
     break;

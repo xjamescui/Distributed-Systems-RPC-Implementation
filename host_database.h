@@ -1,5 +1,5 @@
-#ifndef BINDER_DATABASE_H
-#define BINDER_DATABASE_H
+#ifndef HOST_DATABASE_H
+#define HOST_DATABASE_H
 
 #include "defines.h"
 
@@ -21,7 +21,7 @@ typedef struct _HOST_ {
 typedef struct _DB_NODE_ {
     SIGNATURE sig;          // one signature
     HOST* hosts_root;       // a queue of hosts
-    _DB_NODE_* next;          // pointer to next DB_NODE
+    _DB_NODE_* next;        // pointer to next DB_NODE
 } DB_NODE;
 
 extern DB_NODE* g_db_nodes_root;
@@ -32,6 +32,6 @@ int db_delete_host(const HOST &host, SIGNATURE sig);
 int db_drop();
 
 int db_print();
-int db_size(unsigned int *size);
+unsigned int db_size();
 
-#endif // BINDER_DATABASE_H
+#endif // HOST_DATABASE_H

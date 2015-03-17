@@ -14,8 +14,8 @@ make clean
 echo "==test_helper passed!=="
 
 echo "==test_database=="
-make binder_database.o
-g++ test_database.c binder_database.o -o test_database
+make host_database.o
+g++ test_database.c host_database.o -o test_database
 valgrind --leak-check=full --track-origins=yes ./test_database
 rm test_database
 make clean

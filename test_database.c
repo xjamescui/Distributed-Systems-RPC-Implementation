@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "binder_database.h"
+#include "host_database.h"
 
 
 int main()
@@ -21,14 +21,10 @@ int main()
     sig.arg_types[0] = 1;
     sig.arg_types[1] = 2;
 
-    unsigned int size;
-
     // get empty
     // printf("test get empty\n");
-    db_size(&size);
-    assert(size == 0);
-    assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
-    assert(db_size(&size) == 0 && size == 0);
+    assert(db_get(&host_1,sig) == HOST_DB_GET_SIGNATURE_NOT_FOUND);
+    assert(db_size() == 0);
 
     // insert it and try again
     HOST host_2;
@@ -47,12 +43,12 @@ int main()
     sig2.arg_types[1] = 2;
 
     // printf("test put duplicate\n");
-    assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_put(host_2,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_size(&size) == 0 && size == 1);
+    assert(db_put(host_2,sig2) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_2,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_put(host_2,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_put(host_2,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_put(host_2,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_size() == 1);
 
 
     // try 2 hosts
@@ -62,42 +58,42 @@ int main()
     host_3.port = 0x33;
 
     // printf("test put non-duplicate\n");
-    assert(db_put(host_3,sig2) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_size(&size) ==0 && size == 2);
+    assert(db_put(host_3,sig2) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_size() == 2);
 
-    assert(db_put(host_3,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_put(host_3,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_put(host_3,sig2) == BINDER_DB_PUT_SIGNATURE_DUPLICATE);
-    assert(db_size(&size) ==0 && size == 2);
+    assert(db_put(host_3,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_put(host_3,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_put(host_3,sig2) == HOST_DB_PUT_SIGNATURE_DUPLICATE);
+    assert(db_size() == 2);
 
     // get
     // printf("test get not found\n");
-    assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
-    assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
-    assert(db_get(&host_1,sig) == BINDER_DB_GET_SIGNATURE_NOT_FOUND);
+    assert(db_get(&host_1,sig) == HOST_DB_GET_SIGNATURE_NOT_FOUND);
+    assert(db_get(&host_1,sig) == HOST_DB_GET_SIGNATURE_NOT_FOUND);
+    assert(db_get(&host_1,sig) == HOST_DB_GET_SIGNATURE_NOT_FOUND);
 
     // printf("test get found\n");
-    assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig2) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_2.sock_fd && host_1.ip == host_2.ip && host_1.port == host_2.port );
-    assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig2) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_3.sock_fd && host_1.ip == host_3.ip && host_1.port == host_3.port );
-    assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig2) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_2.sock_fd && host_1.ip == host_2.ip && host_1.port == host_2.port );
-    assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig2) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_3.sock_fd && host_1.ip == host_3.ip && host_1.port == host_3.port );
 
     // delete then get
     // printf("test get found , host not found\n");
-    assert(db_delete_host(host_2,sig) == BINDER_DB_DELETE_SIGNATURE_NOT_FOUND);
-    assert(db_delete_host(host_2,sig2) == BINDER_DB_DELETE_HOST_SUCCESS);
-    assert(db_delete_host(host_2,sig2) == BINDER_DB_DELETE_HOST_NOT_FOUND);
-    assert(db_delete_host(host_3,sig2) == BINDER_DB_DELETE_HOST_SUCCESS);
-    assert(db_get(&host_1,sig2) == BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS);
+    assert(db_delete_host(host_2,sig) == HOST_DB_DELETE_SIGNATURE_NOT_FOUND);
+    assert(db_delete_host(host_2,sig2) == HOST_DB_DELETE_HOST_SUCCESS);
+    assert(db_delete_host(host_2,sig2) == HOST_DB_DELETE_HOST_NOT_FOUND);
+    assert(db_delete_host(host_3,sig2) == HOST_DB_DELETE_HOST_SUCCESS);
+    assert(db_get(&host_1,sig2) == HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS);
 
     // test drop
     // printf("test drop\n");
     assert(db_drop() == 0);
-    assert(db_size(&size) ==0 && size == 0);
+    assert(db_size() == 0);
 
     free(sig.fct_name);
     free(sig.arg_types);
@@ -144,30 +140,30 @@ int main()
     host_b.ip = 0xbb11;
     host_b.port = 0xbb22;
 
-    assert(db_put(host_a,sig_f) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_put(host_a,sig_g) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_put(host_a,sig_h) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_put(host_b,sig_f) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_put(host_b,sig_g) == BINDER_DB_PUT_SIGNATURE_SUCCESS);
-    assert(db_size(&size) ==0 && size == 5);
+    assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_a,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_a,sig_h) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_b,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_b,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_size() == 5);
 
     // db_print();
 
-    assert(db_get(&host_1,sig_f) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig_f) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_a.sock_fd && host_1.ip == host_a.ip && host_1.port == host_a.port );
     // db_print();
-    assert(db_get(&host_1,sig_h) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig_h) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_a.sock_fd && host_1.ip == host_a.ip && host_1.port == host_a.port );
     // db_print();
-    assert(db_get(&host_1,sig_g) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig_g) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_b.sock_fd && host_1.ip == host_b.ip && host_1.port == host_b.port );
     // db_print();
-    assert(db_get(&host_1,sig_f) == BINDER_DB_GET_SIGNATURE_FOUND);
+    assert(db_get(&host_1,sig_f) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(host_1.sock_fd == host_a.sock_fd && host_1.ip == host_a.ip && host_1.port == host_a.port );
     // db_print();
 
     assert(db_drop() == 0);
-    assert(db_size(&size) ==0 && size == 0);
+    assert(db_size() == 0);
 
     free(sig_f.fct_name);
     free(sig_f.arg_types);

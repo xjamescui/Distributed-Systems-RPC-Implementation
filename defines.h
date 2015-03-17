@@ -57,27 +57,29 @@
 #define MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND         -1
 #define MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS          -2
 
+ 
+
 
 
 
 /******************************************************************
- * For binder database                                            *
+ * For host database with round robin algorithm                   *
  *                                                                *
  ******************************************************************/
 // put
-#define BINDER_DB_PUT_SIGNATURE_SUCCESS         0
-#define BINDER_DB_PUT_SIGNATURE_DUPLICATE       1
-#define BINDER_DB_PUT_SIGNATURE_FAIL            -1
+#define HOST_DB_PUT_SIGNATURE_SUCCESS           0
+#define HOST_DB_PUT_SIGNATURE_DUPLICATE         1
+#define HOST_DB_PUT_SIGNATURE_FAIL              -1
 
 // get
-#define BINDER_DB_GET_SIGNATURE_FOUND           0
-#define BINDER_DB_GET_SIGNATURE_NOT_FOUND       -1
-#define BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS    -2
+#define HOST_DB_GET_SIGNATURE_FOUND             0
+#define HOST_DB_GET_SIGNATURE_NOT_FOUND         -1
+#define HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS      -2
 
 // delete
-#define BINDER_DB_DELETE_HOST_SUCCESS           0
-#define BINDER_DB_DELETE_HOST_NOT_FOUND         1
-#define BINDER_DB_DELETE_SIGNATURE_NOT_FOUND    2
+#define HOST_DB_DELETE_HOST_SUCCESS             0
+#define HOST_DB_DELETE_HOST_NOT_FOUND           1
+#define HOST_DB_DELETE_SIGNATURE_NOT_FOUND      2
 
 
 // Skeleton Database
