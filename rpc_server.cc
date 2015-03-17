@@ -295,7 +295,9 @@ int connect_server_to_binder()
     int binder_fd;
     char* binder_address;
     char* binder_port_str;
-    int binder_port;
+    unsigned int binder_port;
+    unsigned short binder_port_short;
+
 
     // get environment variables
     binder_address = getenv(BINDER_ADDRESS_STRING);
@@ -305,9 +307,11 @@ int connect_server_to_binder()
         return -1;
     }
     binder_port = atoi(binder_port_str);
+    binder_port_short = binder_port;
+    binder_port_short = htons(binder_port_short);
 
     // connect to binder
-    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
         return -1;
     }

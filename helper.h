@@ -61,8 +61,8 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd);
  * connect to a given ip/hostname and port
  *
  */
-int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned int port );
-int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned int port );
+int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned short port );
+int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned short port );
 
 /**
  * function to assemble or read the message described in protocol section 5
