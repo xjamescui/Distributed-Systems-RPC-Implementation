@@ -266,7 +266,7 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
         if ( starts_with("eth0",ifreqs[i].ifr_name) ) {
             DEBUG("%s: %s", ifreqs[i].ifr_name,
                   inet_ntoa(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr));
-            *ip = htonl(((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr) ;
+            *ip = ((struct sockaddr_in*)&ifreqs[i].ifr_addr)->sin_addr.s_addr ;
             return 0;
         }
     }

@@ -177,6 +177,7 @@ int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned i
         fprintf(stderr,"Error : couldn't get IP address for this server\n");
         return -1;
     }
+    ipv4 = htonl(ipv4);
     ipb1 = (ipv4 >> 24) & 0xFF;
     ipb2 = (ipv4 >> 16) & 0xFF;
     ipb3 = (ipv4 >> 8) & 0xFF;
