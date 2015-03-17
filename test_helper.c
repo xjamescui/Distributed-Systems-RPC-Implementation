@@ -394,7 +394,8 @@ int test_copy_args() {
     float a_float = 3.14159;
     double a_double = 1234.1001;
     int args_count = 3;
-    char *char_array = (char *)malloc(char_array_len * sizeof(char));
+    char *char_array = (char *)malloc((char_array_len) * sizeof(char));
+    memset(char_array,0,char_array_len);
     memcpy(char_array,"abcdefg",7);
     int argTypes[args_count + 1];
     void **args;

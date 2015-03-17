@@ -21,4 +21,4 @@ sed -e "s/BINDER_ADDRESS.*/BINDER_ADDRESS=$BINDER_IP/" -e "s/BINDER_PORT=.*/BIND
 
 echo "press any key to terminate binder"
 read terminate
-killall binder
+pkill -u `id -u` binder

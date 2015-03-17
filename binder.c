@@ -21,8 +21,6 @@
 #include "helper.h"
 #include "binder_database.h"
 
-#define DEBUG_BINDER_PORT 0
-
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len);
 
@@ -66,11 +64,7 @@ int main(int argc, char** argv)
     memset(&binder_addr, '0', binder_addr_len);
     binder_addr.sin_family = AF_INET;
     binder_addr.sin_addr.s_addr = INADDR_ANY;
-#ifdef _ENABLE_DEBUG_
-    binder_addr.sin_port = htons(DEBUG_BINDER_PORT);
-#else
     binder_addr.sin_port = 0;
-#endif
 
     // bind()
     if ( bind(binder_fd, (const struct sockaddr *)(&binder_addr), binder_addr_len) < 0 ) {

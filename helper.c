@@ -652,7 +652,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         memcpy(ip,&buffer[5],4);                        // extract ip
         memcpy(port,&buffer[9],2);                      // extract port
         memcpy(fct_name_len,&buffer[11],4);             // extract fct name len
-        *fct_name = (char*)malloc(*fct_name_len);
+        *fct_name = (char*)malloc((*fct_name_len)+1);
+        memset(*fct_name,0,((*fct_name_len)+1));
         memcpy(*fct_name,&buffer[15],*fct_name_len);    // extract fct name
         memcpy(arg_types_len,&buffer[15+(*fct_name_len)],4); // extract arg_types_len
         *arg_types = (int*)malloc(((*arg_types_len)+1)*4);
@@ -682,7 +683,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         // LLLLTFFFFfff......fAAAAaaa.aaa.aaa.
         // 01234567890123456789012345678901234
         memcpy(fct_name_len,&buffer[5],4);              // extract fct name len
-        *fct_name = (char*)malloc(*fct_name_len);
+        *fct_name = (char*)malloc((*fct_name_len)+1);
+        memset(*fct_name,0,((*fct_name_len)+1));
         memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
         memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
         *arg_types = (int*)malloc(((*arg_types_len)+1)*4); // alloc one more
@@ -731,7 +733,8 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         // LLLLTFFFFfff......fAAAAaaa.aaa.aaa.
         // 01234567890123456789012345678901234
         memcpy(fct_name_len,&buffer[5],4);              // extract fct name len
-        *fct_name = (char*)malloc(*fct_name_len);
+        *fct_name = (char*)malloc((*fct_name_len)+1);
+        memset(*fct_name,0,((*fct_name_len)+1));
         memcpy(*fct_name,&buffer[9],*fct_name_len);     // extract fct name
         memcpy(arg_types_len,&buffer[9+(*fct_name_len)],4);  // extract arg_types_len
         *arg_types = (int*)malloc((*arg_types_len+1)*4); // alloc one more

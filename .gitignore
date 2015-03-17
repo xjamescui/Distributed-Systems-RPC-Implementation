@@ -7,3 +7,5 @@ binder
 server
 client
 test_helper
+runserver.sh
+runclient.sh
