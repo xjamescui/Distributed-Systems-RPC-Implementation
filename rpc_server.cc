@@ -307,10 +307,10 @@ int connect_server_to_binder()
         return -1;
     }
     binder_port = atoi(binder_port_str);
-
-    // connect to binder
     binder_port_short = binder_port;
     binder_port_short = htons(binder_port_short);
+
+    // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
         return -1;
