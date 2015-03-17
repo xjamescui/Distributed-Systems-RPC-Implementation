@@ -20,7 +20,7 @@
 #include "helper.h"
 #include "binder_database.h"
 
-#define DEBUG_BINDER_PORT 0 //10000
+#define DEBUG_BINDER_PORT 10000
 
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len);
