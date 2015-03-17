@@ -16,6 +16,9 @@ BINDER_PORT=${BINDER_AND_PORT_ARR[3]}
 echo $BINDER_IP
 echo $BINDER_PORT
 
+git update-index --assume-unchanged runserver.sh
+git update-index --assume-unchanged runclient.sh
+
 sed -e "s/BINDER_ADDRESS.*/BINDER_ADDRESS=$BINDER_IP/" -e "s/BINDER_PORT=.*/BINDER_PORT=$BINDER_PORT/" orig_runserver.sh > runserver.sh
 sed -e "s/BINDER_ADDRESS.*/BINDER_ADDRESS=$BINDER_IP/" -e "s/BINDER_PORT=.*/BINDER_PORT=$BINDER_PORT/" orig_runclient.sh > runclient.sh
 
