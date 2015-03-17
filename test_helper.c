@@ -100,8 +100,8 @@ void test_short_messages()
     // print_buffer(buffer,buffer_len);
     extract_msg_len_type(&msg_len,&msg_type,buffer);
     assert(msg_len == buffer_len - 5);
-    assert(msg_type == MSG_EXECUTE_FAILURE);
-    extract_msg(buffer,msg_len,MSG_EXECUTE_FAILURE,&result2);
+    assert(msg_type == MSG_LOC_CACHE_FAILURE);
+    extract_msg(buffer,msg_len,MSG_LOC_CACHE_FAILURE,&result2);
     assert(result2 == result);
     free(buffer);
     buffer = 0;
@@ -427,7 +427,8 @@ void test_loc_cache_request() {
     assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_REQUEST,
                  fct_name_len,fct_name,arg_types_len,arg_types);
 
-    assert(buffer_len == (4 + 1 + 4 + fct_name_len + 4 + 25 + 4 + 8 ) );
+    // print_buffer(buffer,buffer_len);
+    assert(buffer_len == (4 + 1 + 4 + fct_name_len + 4 + arg_types_len*4 ) );
 
     // extract len + type
     // printf("execute extract len type\n");
@@ -461,8 +462,8 @@ void test_loc_cache_success() {
     unsigned int buffer_len;
 
     unsigned int hosts_len = 3;
-    int ips[] = { 0xAAAAAAAA , 0xBBBBBBBB , 0xCCCCCCCC };
-    int ports[] = { 0x1111 , 0x2222 , 0x3333 };
+    unsigned int ips[] = { 0xAAAAAAAA , 0xBBBBBBBB , 0xCCCCCCCC };
+    unsigned int ports[] = { 0x1111 , 0x2222 , 0x3333 };
 
     // assemble
     assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_SUCCESS,
@@ -474,8 +475,8 @@ void test_loc_cache_success() {
     unsigned int msg_len2;
     char msg_type2;
     unsigned int hosts_len2;
-    int* ips2 = NULL;
-    int* ports2 = NULL;
+    unsigned int* ips2 = NULL;
+    unsigned int* ports2 = NULL;
 
     extract_msg_len_type(&msg_len2,&msg_type2,buffer);
     assert(msg_len2 == buffer_len - 5);
