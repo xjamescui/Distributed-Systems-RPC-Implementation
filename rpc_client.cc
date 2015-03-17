@@ -83,13 +83,13 @@ int rpcCall(char* name, int* argTypes, void** args)
     ipb2 = (ntohip >> 16) & 0xFF;
     ipb3 = (ntohip >> 8) & 0xFF;
     ipb4 = (ntohip >> 0) & 0xFF;
-    DEBUG("calling server: %u.%u.%u.%u:%u \n",ipb1,ipb2,ipb3,ipb4,ntohs(server_port));
+    DEBUG("calling server: %u.%u.%u.%u:%u",ipb1,ipb2,ipb3,ipb4,ntohs(server_port));
     // }
 
     // connect to server
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
-        fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%x\n",server_ip,server_port);
+        fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
         return -1;
     }
 

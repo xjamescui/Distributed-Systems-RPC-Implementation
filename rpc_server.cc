@@ -147,8 +147,12 @@ int rpcExecute()
 
     while (running) {
 
+        DEBUG("SELECT ... ");
+
         read_fds = active_fds;
         select_rv = select(FD_SETSIZE, &read_fds, NULL, NULL, NULL);
+
+        DEBUG("SELECTED!");
 
         if (select_rv < 0) {
             fprintf(stderr, "ERROR on select: %s\n", strerror(errno));
@@ -156,7 +160,7 @@ int rpcExecute()
         }
 
         // iterate through each socket
-        for (unsigned int connection_fd = 0; connection_fd <= FD_SETSIZE; connection_fd++) {
+        for (unsigned int connection_fd = 0; connection_fd < FD_SETSIZE; connection_fd+=1 ) {
 
             // this connection has no read requests
             if (!FD_ISSET(connection_fd, &read_fds)) continue;
@@ -274,13 +278,13 @@ int create_server_socket()
     }
 
     // prints out ip and port for debug purpose
-    unsigned char ipb1 = (g_server_ip >> 24) & 0xFF;
-    unsigned char ipb2 = (g_server_ip >> 16) & 0xFF;
-    unsigned char ipb3 = (g_server_ip >> 8) & 0xFF;
-    unsigned char ipb4 = (g_server_ip >> 0) & 0xFF;
+    unsigned int hton_ip = htonl(g_server_ip);
+    unsigned char ipb1 = (hton_ip >> 24) & 0xFF;
+    unsigned char ipb2 = (hton_ip >> 16) & 0xFF;
+    unsigned char ipb3 = (hton_ip >> 8) & 0xFF;
+    unsigned char ipb4 = (hton_ip >> 0) & 0xFF;
 
     DEBUG("server addr:%u.%u.%u.%u",ipb1, ipb2, ipb3, ipb4);
-    DEBUG("server addr:%x",htonl(g_server_ip));
     DEBUG("server port:%d",ntohs(g_server_port));
     DEBUG("(network)server port:%x",g_server_port);
 
@@ -364,8 +368,8 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
     char msg_type;
     unsigned int msg_len, fct_name_len, arg_types_len;
-    int* arg_types; // rpc function arg types
-    void** args; // rpc function args
+    int* arg_types = NULL; // rpc function arg types
+    void** args = NULL; // rpc function args
     char* fct_name = NULL;
     char* response_msg = NULL;
     skeleton target_method;
@@ -374,7 +378,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     extract_msg_len_type(&msg_len, &msg_type, msg);
     if (msg_type == MSG_EXECUTE) {
 
-        DEBUG("HANDLING CLIENT MESSAGE!\n");
+        DEBUG("HANDLING CLIENT MESSAGE!");
         // extract msg
         if (extract_msg(msg, msg_len, msg_type, &fct_name_len, &fct_name, &arg_types_len, &arg_types, &args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
@@ -396,7 +400,14 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
         // send response to client regarding RPC success/failure
         write_message(client_fd, response_msg, msg_len);
+        DEBUG("DONE HANDLING CLIENT MESSAGE!");
+
     }
+
+    close(client_fd);
+    // TODO: remove clientfd from active sockets
+
+    // TODO: free stuff
 
     return NULL;
 } // handle_client_msg

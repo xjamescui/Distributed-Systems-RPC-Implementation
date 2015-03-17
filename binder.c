@@ -95,12 +95,15 @@ int main(int argc, char** argv)
     while ( running ) {
         // block until one fd is ready
         temp_fds = active_fds;
+        DEBUG("SELECT ...");
         if ( select(FD_SETSIZE, &temp_fds, NULL, NULL, NULL) < 0) {
             fprintf(stderr,"Error : select() failed\n");
             exit_code = 1;
             running = false;
             break;
         }
+        DEBUG("SELECTED!");
+
 
         // check who's ready
         for ( int i = 0 ; i < FD_SETSIZE ; i += 1 ) {
@@ -130,12 +133,17 @@ int main(int argc, char** argv)
         } // for
     } // while
 
+    DEBUG("SELECT LOOP OVER");
+
     clean_and_exit(exit_code);
+
+    return 0;
 }
 
 void clean_and_exit(int exit_code)
 {
     db_drop();
+    DEBUG("BINDER EXITING WITH %d",exit_code);
     exit(exit_code);
 }
 
