@@ -302,7 +302,7 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned i
     memset(&temp_socket_addr, '\0', temp_socket_addr_len);
     temp_socket_addr.sin_family = AF_INET;
     memcpy(&temp_socket_addr.sin_addr, &ip, 4); // set ip
-    temp_socket_addr.sin_port = htons(port); // set port
+    temp_socket_addr.sin_port = port; // set port
 
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
@@ -335,7 +335,7 @@ int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const
     memset(&temp_socket_addr, '0', temp_socket_addr_len);
     temp_socket_addr.sin_family = AF_INET;
     memcpy(&temp_socket_addr.sin_addr.s_addr, temp_hostinfo->h_addr , temp_hostinfo->h_length);
-    temp_socket_addr.sin_port = htons(port);
+    temp_socket_addr.sin_port = port;
 
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
