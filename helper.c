@@ -287,7 +287,7 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned s
     ipb2 = (ntohip >> 16) & 0xFF;
     ipb3 = (ntohip >> 8) & 0xFF;
     ipb4 = (ntohip >> 0) & 0xFF;
-    DEBUG("connect_to_ip_port: %u.%u.%u.%u:%u \n",ipb1,ipb2,ipb3,ipb4,ntohs(port));
+    DEBUG("connect_to_ip_port(): %u.%u.%u.%u:%u",ipb1,ipb2,ipb3,ipb4,ntohs(port));
 
     int sock_fd;
     struct sockaddr_in temp_socket_addr;
@@ -321,7 +321,7 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned s
 int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned short port )
 {
 
-    DEBUG("connect_to_hostname_port: %s:%u \n",hostname,ntohs(port));
+    DEBUG("connect_to_hostname_port(): %s:%u",hostname,ntohs(port));
 
     int sock_fd;
     struct sockaddr_in temp_socket_addr;

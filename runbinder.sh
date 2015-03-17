@@ -6,7 +6,7 @@ nohup ./binder | tee addr.temp &
 sleep 2
 
 echo "Getting addr and port"
-BINDER_AND_PORT=`tail -n 2 addr.temp`
+BINDER_AND_PORT=`tail -n 50 addr.temp | grep BINDER`
 echo $BINDER_AND_PORT
 
 echo "updating runserver.sh and runclient.sh"
