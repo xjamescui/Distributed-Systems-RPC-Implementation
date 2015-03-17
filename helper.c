@@ -278,8 +278,16 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
  *
  *
  *****************************************************************************/
-int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned int port )
+int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned short port )
 {
+
+    unsigned int ntohip = ntohl(ip);
+    unsigned char ipb1,ipb2,ipb3,ipb4;
+    ipb1 = (ntohip >> 24) & 0xFF;
+    ipb2 = (ntohip >> 16) & 0xFF;
+    ipb3 = (ntohip >> 8) & 0xFF;
+    ipb4 = (ntohip >> 0) & 0xFF;
+    DEBUG("connect_to_ip_port: %u.%u.%u.%u:%u \n",ipb1,ipb2,ipb3,ipb4,ntohs(port));
 
     int sock_fd;
     struct sockaddr_in temp_socket_addr;
@@ -291,18 +299,12 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned i
         return -1;
     }
 
-    // char* ip_addr = (char*)&ip;
-    // for( int i = 0 ; i < 4 ; i += 1 ) {
-    //     DEBUG("%u ",ip_addr[i] & 0xff);
-    // }
-    // DEBUG("\n");
-    // DEBUG("previous line should start with 127\n");
-
     // prepare connect()
-    memset(&temp_socket_addr, '\0', temp_socket_addr_len);
+    memset(&temp_socket_addr, 0, temp_socket_addr_len);
     temp_socket_addr.sin_family = AF_INET;
     memcpy(&temp_socket_addr.sin_addr, &ip, 4); // set ip
-    temp_socket_addr.sin_port = port; // set port
+    memcpy(&temp_socket_addr.sin_port, &port, 2); // set port
+
 
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
@@ -316,8 +318,10 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned i
 }
 
 
-int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned int port )
+int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const unsigned short port )
 {
+
+    DEBUG("connect_to_hostname_port: %s:%u \n",hostname,ntohs(port));
 
     int sock_fd;
     struct sockaddr_in temp_socket_addr;
@@ -332,10 +336,10 @@ int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const
 
     temp_hostinfo = gethostbyname(hostname);
 
-    memset(&temp_socket_addr, '0', temp_socket_addr_len);
+    memset(&temp_socket_addr, 0, temp_socket_addr_len);
     temp_socket_addr.sin_family = AF_INET;
     memcpy(&temp_socket_addr.sin_addr.s_addr, temp_hostinfo->h_addr , temp_hostinfo->h_length);
-    temp_socket_addr.sin_port = port;
+    memcpy(&temp_socket_addr.sin_port, &port, 2); // set port
 
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
@@ -566,7 +570,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         *buffer_len += 1;                           // type = char
 
         *buffer = (char*)malloc(*buffer_len);
-        memset(*buffer,'0',*buffer_len);
+        memset(*buffer,'\0',*buffer_len);
 
         unsigned int msg_len = (*buffer_len) - 5;
         memcpy(&(*buffer)[0],&msg_len,4);           // set length

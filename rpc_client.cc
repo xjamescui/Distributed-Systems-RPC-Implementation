@@ -34,12 +34,15 @@ int rpcCall(char* name, int* argTypes, void** args)
     int binder_fd;
     char* binder_address;
     char* binder_port_str;
-    int binder_port;
+    unsigned int binder_port;
+    unsigned int binder_port_short;
 
     // server stuff
     int server_fd;
     unsigned int server_ip;
     unsigned int server_port;
+    unsigned short server_port_short;
+
 
     // get the length of name and argTypes, since it will be used couple of times
     unsigned int name_len = strlen(name);
@@ -53,9 +56,11 @@ int rpcCall(char* name, int* argTypes, void** args)
         return -1;
     }
     binder_port = atoi(binder_port_str);
+    binder_port_short = binder_port;
+    binder_port_short = htons(binder_port_short);
 
     // connect to binder
-    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to binder\n");
         return -1;
     }
@@ -82,7 +87,8 @@ int rpcCall(char* name, int* argTypes, void** args)
     // }
 
     // connect to server
-    if ( connect_to_ip_port(&server_fd, server_ip, server_port) < 0 ) {
+    server_port_short = server_port;
+    if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%x\n",server_ip,server_port);
         return -1;
     }
@@ -110,7 +116,8 @@ int rpcTerminate()
     int binder_fd;
     char* binder_address;
     char* binder_port_str;
-    int binder_port;
+    unsigned int binder_port;
+    unsigned short binder_port_short;
 
     // declare vars for buffer
     char* w_buffer = NULL;
@@ -125,9 +132,11 @@ int rpcTerminate()
         return -1;
     }
     binder_port = atoi(binder_port_str);
+    binder_port_short = binder_port;
+    binder_port_short = htons(binder_port_short);
 
     // connect to binder
-    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port) < 0 ) {
+    if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
         return -1;
     }
