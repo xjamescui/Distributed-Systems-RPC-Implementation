@@ -241,7 +241,7 @@ int create_server_socket()
     int server_fd;
 
     // prep client listener socket info for binding
-    memset(&server_addr, '0', server_addr_len);
+    memset(&server_addr, 0, server_addr_len);
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = 0;

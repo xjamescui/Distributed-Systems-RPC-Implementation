@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         fprintf(stderr,"Error : socket() failed\n");
         clean_and_exit(1);
     }
-    memset(&binder_addr, '0', binder_addr_len);
+    memset(&binder_addr, 0, binder_addr_len);
     binder_addr.sin_family = AF_INET;
     binder_addr.sin_addr.s_addr = INADDR_ANY;
     binder_addr.sin_port = 0;
