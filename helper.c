@@ -819,7 +819,7 @@ void print_received_message(char const *const buffer) {
     buffer_len = msg_len + 5;
 
 
-    sprintf(to_print,"request:0x%x ",(unsigned char)(msg_type&0xff));
+    sprintf(to_print,"message:0x%x ",(unsigned char)(msg_type&0xff));
 
     switch ( msg_type ) {
     case MSG_REGISTER: {

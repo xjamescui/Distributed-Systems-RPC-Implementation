@@ -35,7 +35,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     char* binder_address;
     char* binder_port_str;
     unsigned int binder_port;
-    unsigned int binder_port_short;
+    unsigned short binder_port_short;
 
     // server stuff
     int server_fd;
