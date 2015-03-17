@@ -802,6 +802,7 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
  */
 void print_received_message(char const *const buffer) {
 
+#ifdef _ENABLE_DEBUG_
     char to_print[1000] = { 0 };
 
     unsigned int buffer_len;
@@ -909,5 +910,5 @@ void print_received_message(char const *const buffer) {
     }
     
     DEBUG("%s",to_print);
-
+#endif
 }
