@@ -26,7 +26,7 @@
  */
 ssize_t read_message(char** buffer, int socket_fd)
 {
-    unsigned int read_so_far = 0;
+    ssize_t read_so_far = 0;
     ssize_t read_len;
     unsigned int msg_len;
     char msg_type;
@@ -56,12 +56,12 @@ ssize_t read_message(char** buffer, int socket_fd)
     while ( read_so_far < msg_len ) {
         read_len = read(socket_fd, &(*buffer)[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
         if ( read_len < 0 ) {
-            fprintf(stderr,"Error: Could only read %d of %d\n",read_so_far,msg_len);
+            fprintf(stderr,"Error: Could only read %ld of %d\n",read_so_far,msg_len);
             return -1;
         }
         read_so_far += read_len;
     }
-    DEBUG("read_message: read %d of %d", read_so_far, msg_len);
+    DEBUG("read_message: read %ld of %d", read_so_far, msg_len);
     return read_so_far;
 }
 
