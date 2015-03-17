@@ -218,6 +218,8 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     extract_msg_len_type(&msg_len,&msg_type,rw_buffer);
     buffer_len = msg_len + 5;
 
+    print_received_message(rw_buffer);
+
     // handle specific request according to its message code
     int return_code = 0;
     switch ( msg_type ) {

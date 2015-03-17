@@ -795,3 +795,119 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
 
     return 0;
 }
+
+
+/**
+ * a debug function to print out the message
+ */
+void print_received_message(char const *const buffer) {
+
+    char to_print[1000] = { 0 };
+
+    unsigned int buffer_len;
+    unsigned int msg_len;
+    char msg_type;
+
+    // stuff to get extracted
+
+    extract_msg_len_type(&msg_len,&msg_type,buffer);
+    buffer_len = msg_len + 5;
+
+
+    sprintf(to_print,"request:0x%x ",(unsigned char)(msg_type&0xff));
+
+    switch ( msg_type ) {
+    case MSG_REGISTER: {
+        unsigned int ip;
+        unsigned int port;
+        unsigned int fct_name_len;
+        char* fct_name = NULL;
+        unsigned int arg_types_len;
+        int* arg_types = NULL;
+
+        extract_msg(buffer,buffer_len,msg_type,
+                    &ip,&port,&fct_name_len,&fct_name,&arg_types_len,&arg_types);
+
+        unsigned char ipb1, ipb2, ipb3, ipb4;
+        ipb1 = (ip >> 24) & 0xFF;
+        ipb2 = (ip >> 16) & 0xFF;
+        ipb3 = (ip >> 8) & 0xFF;
+        ipb4 = (ip >> 0) & 0xFF;
+        sprintf(to_print,"%s%u.%u.%u.%u:%u %s(",to_print,ipb1, ipb2, ipb3, ipb4, port, fct_name);
+
+        char single_arg_type_type;
+        unsigned int single_arg_type_size;
+
+        for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
+            if ( i != 0 ) sprintf(to_print,"%s, ",to_print);
+
+            type_arg_type(&single_arg_type_type,arg_types[i]);
+            switch(single_arg_type_type) {
+            case ARG_CHAR : { sprintf(to_print,"%schar",to_print); } break;
+            case ARG_SHORT : { sprintf(to_print,"%sshort",to_print); } break;
+            case ARG_INT : { sprintf(to_print,"%sint",to_print); } break;
+            case ARG_LONG : { sprintf(to_print,"%slong",to_print); } break;
+            case ARG_DOUBLE : { sprintf(to_print,"%sdouble",to_print); } break;
+            case ARG_FLOAT : { sprintf(to_print,"%sfloat",to_print); } break;
+            }
+
+            type_arg_size(&single_arg_type_size,arg_types[i]);
+            if ( type_is_array(arg_types[i]) ) {
+                sprintf(to_print,"%s[%d]",to_print,single_arg_type_size);
+            }
+        }
+        sprintf(to_print,"%s)",to_print);
+
+
+        free(fct_name);
+        free(arg_types);
+        
+    } break;
+    case MSG_LOC_REQUEST: {
+        unsigned int fct_name_len;
+        char* fct_name = NULL;
+        unsigned int arg_types_len;
+        int* arg_types = NULL;
+
+        extract_msg(buffer,buffer_len,msg_type,
+                    &fct_name_len,&fct_name,&arg_types_len,&arg_types);
+
+        sprintf(to_print,"%s %s(",to_print,fct_name);
+
+        char single_arg_type_type;
+        unsigned int single_arg_type_size;
+
+        for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
+            if ( i != 0 ) sprintf(to_print,"%s, ",to_print);
+
+            type_arg_type(&single_arg_type_type,arg_types[i]);
+            switch(single_arg_type_type) {
+            case ARG_CHAR : { sprintf(to_print,"%schar",to_print); } break;
+            case ARG_SHORT : { sprintf(to_print,"%sshort",to_print); } break;
+            case ARG_INT : { sprintf(to_print,"%sint",to_print); } break;
+            case ARG_LONG : { sprintf(to_print,"%slong",to_print); } break;
+            case ARG_DOUBLE : { sprintf(to_print,"%sdouble",to_print); } break;
+            case ARG_FLOAT : { sprintf(to_print,"%sfloat",to_print); } break;
+            }
+
+            type_arg_size(&single_arg_type_size,arg_types[i]);
+            if ( type_is_array(arg_types[i]) ) {
+                sprintf(to_print,"%s[%d]",to_print,single_arg_type_size);
+            }
+        }
+        sprintf(to_print,"%s)",to_print);
+        free(fct_name);
+        free(arg_types);
+
+    } break;
+    case MSG_TERMINATE: {
+        sprintf(to_print,"(MSG_TERMINATE)");
+    } break;
+    default:
+        DEBUG("print_received_message can't print unknown type");
+        return;
+    }
+    
+    DEBUG("%s",to_print);
+
+}
