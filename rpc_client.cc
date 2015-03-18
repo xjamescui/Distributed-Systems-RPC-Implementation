@@ -120,8 +120,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
- * ASSEMBLE_MSG_FAIL
- * RPC_WRITE_BINDER_FAIL
+ * RPC_WRITE_TO_BINDER_FAIL
  *
  */
 int rpcTerminate()
@@ -163,7 +162,7 @@ int rpcTerminate()
     free(w_buffer);
     if ( write_len < w_buffer_len ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
-        return RPC_WRITE_BINDER_FAIL;
+        return RPC_WRITE_TO_BINDER_FAIL;
     }
 
     close(binder_fd);
@@ -173,8 +172,8 @@ int rpcTerminate()
 /**
  * rpcCall helper functions
  *
- * WRITE_MSG_FAIL
- * READ_MSG_FAIL
+ * RPC_WRITE_TO_BINDER_FAIL
+ * RPC_READ_FROM_BINDER_FAIL
  * MSG_TYPE_NOT_SUPPORTED
  *
  */
@@ -204,14 +203,14 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
     rw_buffer = NULL;
     if ( write_len < rw_buffer_len ) {
         fprintf(stderr, "Error : couldn't send loc request\n");
-        return WRITE_MSG_FAIL;
+        return RPC_WRITE_TO_BINDER_FAIL;
     }
 
     // wait for answer
     read_len = read_message(&rw_buffer,binder_fd);
     if ( read_len < 0 ) {
         fprintf(stderr, "Error : couldn't read reply of loc request\n");
-        return READ_MSG_FAIL;
+        return RPC_READ_FROM_BINDER_FAIL;
     }
 
     // extract length and type
@@ -247,8 +246,8 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
  *  Send execute request to server
  *
  *  error codes:
- *  WRITE_MSG_FAIL
- *  READ_MSG_FAIL
+ *  RPC_WRITE_TO_SERVER_FAIL
+ *  RPC_READ_FROM_SERVER_FAIL
  *  MSG_TYPE_NOT_SUPPORTED
  */
 int send_execute_to_server(int server_fd,
@@ -281,14 +280,14 @@ int send_execute_to_server(int server_fd,
     rw_buffer = NULL;
     if ( write_len < rw_buffer_len) {
         fprintf(stderr, "Error : couldn't send execute\n");
-        return WRITE_MSG_FAIL;
+        return RPC_WRITE_TO_SERVER_FAIL;
     }
 
     // wait for answer
     read_len = read_message(&rw_buffer,server_fd);
     if ( read_len < 0 ) {
         fprintf(stderr, "Error : couldn't read reply of loc request\n");
-        return READ_MSG_FAIL;
+        return RPC_READ_FROM_SERVER_FAIL;
     }
 
     // extract len and type
