@@ -24,8 +24,8 @@ int connect_server_to_binder();
 int extract_registration_results(char *msg, int* result);
 void* handle_client_message(void * hidden_args);
 
-int g_binder_fd = SOCKET_UNINITIALIZED;
-int g_server_fd = SOCKET_UNINITIALIZED;
+int g_binder_fd = RPC_SOCKET_UNINITIALIZED;
+int g_server_fd = RPC_SOCKET_UNINITIALIZED;
 fd_set g_active_fds;
 
 unsigned int g_server_port, g_server_ip;
@@ -74,9 +74,9 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 {
 
     // not connected to binder
-    if (g_binder_fd == SOCKET_UNINITIALIZED){
+    if (g_binder_fd == RPC_SOCKET_UNINITIALIZED){
         fprintf(stderr, "ERROR: cannot execute rpcRegister because server is not connected to binder\n");
-        return SOCKET_UNINITIALIZED; // error
+        return RPC_SOCKET_UNINITIALIZED; // error
     }
 
     unsigned int num_args, msg_len, name_len, write_len;

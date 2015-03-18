@@ -97,6 +97,8 @@
  *                                                                *
  ******************************************************************/
 
+#define RPC_SOCKET_UNINITIALIZED                -1
+
 #define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
 #define RPC_SERVER_INIT_SUCCESS                  0
 #define RPC_EXTRACT_REGISTRATION_RESULTS_SUCCESS 0
