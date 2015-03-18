@@ -8,7 +8,7 @@ ARFLAGS = -cvq
 # list of given client/server files files
 GIVEN_SOURCES = client1.c server.c server_function_skels.c server_functions.c
 SERVER_SOURCES = server.c server_function_skels.c server_functions.c
-CLIENT_SOURCES = client1.c
+CLIENT_SOURCES = client1.c client2.c
 
 GIVEN_OBJECTS = $(GIVEN_SOURCES:.c=.o)
 SERVER_OBJECTS = $(SERVER_SOURCES:.c=.o)
@@ -45,6 +45,7 @@ $(BINDER_EXECUTABLE): $(BINDER_OBJECTS)
 client: $(CLIENT_OBJECTS) $(RPC_ARCHIVE)
 	@echo "making $@ ... running the given command"
 	g++ -L. client1.o -lrpc -lpthread -o client
+	g++ -L. client2.o -lrpc -lpthread -o client
 
 # make the given server
 server: $(SERVER_OBJECTS) $(RPC_ARCHIVE)
