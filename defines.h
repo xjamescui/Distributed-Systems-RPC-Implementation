@@ -122,7 +122,7 @@
  ******************************************************************/
 
 #define ENVR_VARIABLES_NOT_SET           -1
-#define INVALID_SIZE                     -1
+#define ARG_TYPE_INVALID_SIZE            -1
 #define IOCTL_ERROR                      -1 
 
 // threads

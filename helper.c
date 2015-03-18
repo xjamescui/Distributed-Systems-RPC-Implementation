@@ -101,7 +101,7 @@ ssize_t write_message(int fd, const char* const buffer, const unsigned int buffe
 
 /**
  * error codes:
- * INVALID_SIZE
+ * ARG_TYPE_INVALID_SIZE
  */
 int compute_type_int(int *type_int, const bool is_input, const bool is_output,
                      const char arg_type, const unsigned int arg_size )
@@ -110,7 +110,7 @@ int compute_type_int(int *type_int, const bool is_input, const bool is_output,
     if ( is_input ) *type_int = *type_int | 1 << ARG_INPUT ;
     if ( is_output ) *type_int = *type_int | 1 << ARG_OUTPUT ;
     *type_int = *type_int | arg_type << 16 ;
-    if ( ( arg_size & 0xFFFF0000 ) != 0 ) return INVALID_SIZE;
+    if ( ( arg_size & 0xFFFF0000 ) != 0 ) return ARG_TYPE_INVALID_SIZE;
     *type_int = *type_int | arg_size ;
     return 0;
 }
@@ -625,7 +625,7 @@ int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* cons
 int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...)
 {
     if ( buffer == 0 ) {
-        DEBUG("extract_msg() : cannot extract an empty buffer");
+        fprintf(stderr, "extract_msg() : cannot extract from a null buffer");
         return EXTRACT_MSG_FAIL;
     }
 
@@ -809,7 +809,7 @@ unsigned int arg_types_length(int* argTypes)
  * (not changing pointers, assuming it's already allocated)
  *
  * error codes:
- * INVALID_SIZE
+ * ARG_TYPE_INVALID_SIZE
  */
 int copy_args_step_by_step(int const *arg_types, void** const to_args, void const *const *const from_args)
 {
@@ -821,7 +821,7 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
     int single_arg_total_len = 0;
     for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
         single_arg_total_len = type_arg_total_length(arg_types[i]);
-        if ( single_arg_total_len == 0 ) return INVALID_SIZE;
+        if ( single_arg_total_len == 0 ) return ARG_TYPE_INVALID_SIZE;
         memcpy(to_args[i],from_args[i],single_arg_total_len);
     }
 
