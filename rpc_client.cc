@@ -472,7 +472,6 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
     char msg_type;
     unsigned int *server_ips;
     unsigned int *server_ports;
-    int result;
 
     // assemble
     assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_CACHE_REQUEST,
@@ -525,7 +524,7 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
         switch(result){
         case MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND :
         case MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS :
-            return RPC_CALL_SIGNATURE_NO_HOSTS;
+            return RPC_CALL_NO_HOSTS;
         }
     }
     break;

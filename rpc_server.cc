@@ -35,6 +35,7 @@ SkeletonDatabase* g_skeleton_database;
 // threads
 list<pthread_t> g_client_threads; // running client threads
 pthread_mutex_t g_client_thread_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_active_fd_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 
@@ -195,9 +196,9 @@ int rpcExecute()
                 if (client_fd < 0) {
                     fprintf(stderr, "ERROR on accepting client: %s\n", strerror(errno));
                 } else {
-                    pthread_mutex_lock( &g_client_thread_lock);
+                    pthread_mutex_lock( &g_active_fd_lock);
                     FD_SET(client_fd, &g_active_fds);
-                    pthread_mutex_unlock( &g_client_thread_lock);
+                    pthread_mutex_unlock( &g_active_fd_lock);
                 }
 
             } else if (connection_fd == (unsigned int)g_binder_fd) {
@@ -212,9 +213,9 @@ int rpcExecute()
                   // binder is closed
                   close(connection_fd);
 
-                  pthread_mutex_lock( &g_client_thread_lock);
+                  pthread_mutex_lock( &g_active_fd_lock);
                   FD_CLR(connection_fd, &g_active_fds);
-                  pthread_mutex_unlock( &g_client_thread_lock);
+                  pthread_mutex_unlock( &g_active_fd_lock);
 
                   break;
                 }
@@ -270,6 +271,7 @@ int rpcExecute()
     }
 
     pthread_mutex_destroy(&g_client_thread_lock);
+    pthread_mutex_destroy(&g_active_fd_lock);
 
     close(g_binder_fd);
     close(g_server_fd);
@@ -462,9 +464,9 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
     }
 
-    pthread_mutex_lock( &g_client_thread_lock);
+    pthread_mutex_lock( &g_active_fd_lock);
     FD_CLR(client_fd, &g_active_fds);
-    pthread_mutex_unlock( &g_client_thread_lock);
+    pthread_mutex_unlock( &g_active_fd_lock);
 
     close(client_fd);
 
