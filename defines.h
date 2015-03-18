@@ -45,9 +45,9 @@
  * error codes                                                    *
  *                                                                *
  ******************************************************************/
-#define MSG_REGISTER_SUCCESS_NO_ERRORS              0
+#define MSG_REGISTER_SUCCESS_NO_ERRORS               0
 
-#define MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS      1
+#define MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS       1
 
 #define MSG_REGISTER_FAILURE_INVALID_SERVER_PORT    -1
 #define MSG_REGISTER_FAILURE_INVALID_SERVER_IP      -2
@@ -65,19 +65,19 @@
  *                                                                *
  ******************************************************************/
 // put
-#define HOST_DB_PUT_SIGNATURE_SUCCESS           0
-#define HOST_DB_PUT_SIGNATURE_DUPLICATE         1
+#define HOST_DB_PUT_SIGNATURE_SUCCESS            0
+#define HOST_DB_PUT_SIGNATURE_DUPLICATE          1
 #define HOST_DB_PUT_SIGNATURE_FAIL              -1
 
 // get
-#define HOST_DB_GET_SIGNATURE_FOUND             0
+#define HOST_DB_GET_SIGNATURE_FOUND              0
 #define HOST_DB_GET_SIGNATURE_NOT_FOUND         -1
 #define HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS      -2
 
 // delete
-#define HOST_DB_DELETE_HOST_SUCCESS             0
-#define HOST_DB_DELETE_HOST_NOT_FOUND           1
-#define HOST_DB_DELETE_SIGNATURE_NOT_FOUND      2
+#define HOST_DB_DELETE_HOST_SUCCESS              0
+#define HOST_DB_DELETE_HOST_NOT_FOUND            1
+#define HOST_DB_DELETE_SIGNATURE_NOT_FOUND       2
 
 
 // Skeleton Database
@@ -106,6 +106,10 @@
 #define RPC_SOCKET_UNINITIALIZED                -1
 
 #define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
+#define RPC_SERVER_CREATE_SOCKET_FAIL           -1
+#define RPC_SERVER_BIND_SOCKET_FAIL             -2
+#define RPC_SERVER_GET_SOCK_NAME_FAIL           -3
+
 #define RPC_SERVER_INIT_SUCCESS                  0
 #define RPC_SERVER_SHUTDOWN_SUCCESS              0
 
@@ -114,7 +118,12 @@
 
 #define RPC_CONNECTION_SELECT_FAIL              -1
 
-#define RPC_WRITE_BINDER_FAIL                   -1
+#define RPC_WRITE_TO_BINDER_FAIL                -1
+#define RPC_READ_FROM_BINDER_FAIL               -2
+
+#define RPC_WRITE_TO_SERVER_FAIL                -1
+#define RPC_READ_FROM_SERVER_FAIL               -2
+
 
 
 /******************************************************************
