@@ -8,8 +8,6 @@
 
 /** read() that can take a large buffer_len
  *  returns # of chars read if successful
- *          READ_MESSAGE_ERROR if read returns negative
- *          READ_MESSAGE_ZERO_LENGTH if it's zero length (socket is dead)
  */
 ssize_t read_message(char** buffer, int socket_fd);
 

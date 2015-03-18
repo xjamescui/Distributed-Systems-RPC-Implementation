@@ -57,9 +57,7 @@
 #define MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND         -1
 #define MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS          -2
 
- 
-
-
+#define MSG_TYPE_NOT_SUPPORTED                      -1
 
 
 /******************************************************************
@@ -83,20 +81,71 @@
 
 
 // Skeleton Database
-#define RECORD_PUT_SUCCESS      0
-#define RECORD_PUT_DUPLICATE    1
-#define RECORD_PUT_FAIL         -1
+#define SKEL_RECORD_PUT_SUCCESS        0
+#define SKEL_RECORD_PUT_DUPLICATE      1
+#define SKEL_RECORD_PUT_FAIL          -1
 
-#define RECORD_FOUND            0
-#define RECORD_NOT_FOUND         -1
+#define SKEL_RECORD_FOUND              0
+#define SKEL_RECORD_NOT_FOUND         -1
 
-#define RECORD_DELETE_SUCCESS   0
-#define RECORD_DELETE_FAIL      -1
+#define SKEL_RECORD_DELETE_SUCCESS     0
+#define SKEL_RECORD_DELETE_FAIL       -1
+
+// Skeleton method return codes
+#define SKEL_EXEC_SUCCESS        0
+#define SKEL_EXEC_FAIL          -1
 
 
 /******************************************************************
- * From functions in helper.c                                     *
+ * RPC-specific                                                   *
  *                                                                *
  ******************************************************************/
-#define READ_MESSAGE_ERROR          -1
-#define READ_MESSAGE_ZERO_LENGTH    -2
+
+#define RPC_ENVR_VARIABLES_NOT_SET              -1
+
+#define RPC_SOCKET_UNINITIALIZED                -1
+
+#define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
+#define RPC_SERVER_INIT_SUCCESS                  0
+#define RPC_SERVER_SHUTDOWN_SUCCESS              0
+
+#define RPC_CONNECT_TO_BINDER_FAIL              -1
+#define RPC_CONNECT_TO_SERVER_FAIL              -2
+
+#define RPC_CONNECTION_SELECT_FAIL              -1
+
+#define RPC_WRITE_BINDER_FAIL                   -1
+
+
+/******************************************************************
+ * socket                                                         *
+ *                                                                *
+ ******************************************************************/
+
+#define SOCKET_CREATE_FAIL               -1
+#define SOCKET_BIND_FAIL                 -2
+#define SOCKET_CONNECT_FAIL              -3
+#define SOCKET_GET_SOCK_NAME_FAIL        -4
+
+
+#define ASSEMBLE_MSG_FAIL                -1
+#define EXTRACT_MSG_FAIL                 -2
+
+#define READ_MSG_FAIL                    -1 
+#define READ_MSG_ZERO_LENGTH             -2
+
+#define WRITE_MSG_FAIL                   -1 
+
+
+#define GET_IP_FROM_SOCKET_FAIL          -1
+
+/******************************************************************
+ * etc.                                                           *
+ *                                                                *
+ ******************************************************************/
+
+#define ARG_TYPE_INVALID_SIZE            -1
+#define IOCTL_ERROR                      -1 
+
+// threads
+#define PTHREAD_CREATE_FAIL              -1

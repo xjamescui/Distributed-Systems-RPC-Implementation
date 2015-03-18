@@ -25,8 +25,7 @@ echo "==test_skeleton_database=="
 make
 make SkeletonDatabase.o
 g++ -Wall -g test_skeleton_database.cc SkeletonDatabase.o server_functions.o server_function_skels.o helper.o -o test_skeleton_database
-# valgrind --leak-check=full --track-origins=yes ./test_skeleton_database
-./test_skeleton_database
+valgrind --leak-check=full --track-origins=yes ./test_skeleton_database
 rm test_skeleton_database
 make clean
 echo "==test_skeleton_database passed!=="
