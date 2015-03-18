@@ -240,14 +240,14 @@ int rpcExecute()
     delete g_skeleton_database;
 
     return RPC_SERVER_SHUTDOWN_SUCCESS;
-}
+} // rpcExecute
 
 
 /**
  * error codes:
- * SOCKET_CREATE_FAIL
- * SOCKET_BIND_FAIL
- * SOCKET_GET_SOCK_NAME_FAIL
+ * RPC_SERVER_CREATE_SOCKET_FAIL
+ * RPC_SERVER_BIND_SOCKET_FAIL
+ * RPC_SERVER_GET_SOCK_NAME_FAIL
  * GET_IP_FROM_SOCKET_FAIL
  */
 int create_server_socket()
@@ -267,7 +267,7 @@ int create_server_socket()
     server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_fd < 0) {
         fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
-        return SOCKET_CREATE_FAIL; 
+        return RPC_SERVER_CREATE_SOCKET_FAIL; 
     }
 
     g_server_fd = server_fd;
@@ -275,13 +275,13 @@ int create_server_socket()
     // bind client listener socket
     if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
         fprintf(stderr,"ERROR binding client listener socket: %s\n", strerror(errno));
-        return SOCKET_BIND_FAIL;
+        return RPC_SERVER_BIND_SOCKET_FAIL;
     }
 
     // set server ip and port to global variable
     if (getsockname(g_server_fd, (struct sockaddr *)&server_addr, &server_addr_len) == -1){
         fprintf(stderr, "ERROR getsockname on server\n");
-        return SOCKET_GET_SOCK_NAME_FAIL;
+        return RPC_SERVER_GET_SOCK_NAME_FAIL;
     }
 
     g_server_port = server_addr.sin_port;
