@@ -125,7 +125,7 @@ int rpcCall(char* name, int* argTypes, void** args)
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
  * RPC_CALL_SIGNATURE_NO_HOSTS
- * or failure code from 
+ * or failure code from the actual function
  */
 int rpcCacheCall(char* name, int* argTypes, void** args)
 {
@@ -201,7 +201,11 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
         // call get again, there is at least one
         get_code = ClientCacheDatabase::Instance()->get(&host,sig);
         if ( get_code < 0 ) {
+<<<<<<< HEAD
             fprintf(stderr, "Error : rpcCacheCall() cannot execute %d\n",opCode);
+=======
+            fprintf(stderr, "Error : rpcCacheCall() should not reach here %d\n",get_code);
+>>>>>>> 1cc5949841b915235d43ff0b55318f400f608c40
             return RPC_CALL_INTERNAL_DB_ERROR;
         }
 
