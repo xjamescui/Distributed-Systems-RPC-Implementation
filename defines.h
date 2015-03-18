@@ -33,9 +33,6 @@
 #define MSG_EXECUTE_SUCCESS     0x31
 #define MSG_EXECUTE_FAILURE     0x32
 
-// execute failure reason codes
-
-
 #define MSG_TERMINATE           0x70
 
 #define MAX_RW_CHUNK_SIZE       16348
