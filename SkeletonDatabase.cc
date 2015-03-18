@@ -11,8 +11,8 @@ SkeletonDatabase::SkeletonDatabase() {} // constructor
  * Insert a record into the database if it currently does not already exist in the db
  *
  * Returns:
- * RECORD_PUT_SUCCESS
- * RECORD_PUT_DUPLICATE
+ * SKEL_RECORD_PUT_SUCCESS
+ * SKEL_RECORD_PUT_DUPLICATE
  */
 int SkeletonDatabase::db_put(SKEL_RECORD record)
 {
@@ -23,14 +23,14 @@ int SkeletonDatabase::db_put(SKEL_RECORD record)
         this->find_record(&duplicate_record, record.fct_name, record.arg_types);
         if (duplicate_record != NULL) {
             DEBUG("duplicate during db_put");
-            return RECORD_PUT_DUPLICATE;
+            return SKEL_RECORD_PUT_DUPLICATE;
         }
 
     }
 
     // insert
     this->_db.push_back(record);
-    return RECORD_PUT_SUCCESS;
+    return SKEL_RECORD_PUT_SUCCESS;
 
 } // db_put
 
@@ -39,39 +39,39 @@ int SkeletonDatabase::db_put(SKEL_RECORD record)
  * Retrieve the skeleton that matches the given function name and argument types
  *
  * Returns:
- * RECORD_FOUND
- * RECORD_NOT_FOUND
+ * SKEL_RECORD_FOUND
+ * SKEL_RECORD_NOT_FOUND
  */
 int SkeletonDatabase::db_get(skeleton *skel, char* fct_name, int* arg_types)
 {
 
-    if (this->_db.empty()) return RECORD_NOT_FOUND;
+    if (this->_db.empty()) return SKEL_RECORD_NOT_FOUND;
 
     // find
     SKEL_RECORD* found_record = NULL;
     this->find_record(&found_record, fct_name, arg_types);
     if (found_record == NULL) {
         *skel = NULL;
-        return RECORD_NOT_FOUND;
+        return SKEL_RECORD_NOT_FOUND;
     }
 
     if (skel != NULL) *skel = found_record->skel;
-    return RECORD_FOUND;
+    return SKEL_RECORD_FOUND;
 } // db_get
 
 
 /**
  * Returns:
- * RECORD_DELETE_SUCCESS
- * RECORD_DELETE_FAIL
+ * SKEL_RECORD_DELETE_SUCCESS
+ * SKEL_RECORD_DELETE_FAIL
  */
 int SkeletonDatabase::db_delete(SKEL_RECORD record)
 {
-    int deleteOpCode = RECORD_DELETE_FAIL;
+    int deleteOpCode = SKEL_RECORD_DELETE_FAIL;
     for (list<SKEL_RECORD>::iterator it=this->_db.begin(); it != this->_db.end(); ++it) {
         if (this->same_signature(&(*it), record.fct_name, record.arg_types)) {
             this->_db.erase(it);
-            deleteOpCode = RECORD_DELETE_SUCCESS;
+            deleteOpCode = SKEL_RECORD_DELETE_SUCCESS;
             break;
         }
     }

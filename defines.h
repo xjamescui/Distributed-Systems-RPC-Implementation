@@ -80,18 +80,18 @@
 
 
 // Skeleton Database
-#define RECORD_PUT_SUCCESS      0
-#define RECORD_PUT_DUPLICATE    1
-#define RECORD_PUT_FAIL         -1
+#define SKEL_RECORD_PUT_SUCCESS        0
+#define SKEL_RECORD_PUT_DUPLICATE      1
+#define SKEL_RECORD_PUT_FAIL          -1
 
-#define RECORD_FOUND            0
-#define RECORD_NOT_FOUND         -1
+#define SKEL_RECORD_FOUND              0
+#define SKEL_RECORD_NOT_FOUND         -1
 
-#define RECORD_DELETE_SUCCESS   0
-#define RECORD_DELETE_FAIL      -1
+#define SKEL_RECORD_DELETE_SUCCESS     0
+#define SKEL_RECORD_DELETE_FAIL       -1
 
 // Skeleton method return codes
-#define SKEL_EXEC_SUCCESS       0
+#define SKEL_EXEC_SUCCESS        0
 #define SKEL_EXEC_FAIL          -1
 
 

@@ -98,7 +98,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     g_skeleton_database->db_print(); // TODO remove later
 
-    if (dbOpCode == RECORD_PUT_DUPLICATE) {
+    if (dbOpCode == SKEL_RECORD_PUT_DUPLICATE) {
         fprintf(stdout, "%s already exists in the server database\n", name);
     } 
 
@@ -399,7 +399,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
         // run requested server procedure
         reason_code = g_skeleton_database->db_get(&target_method, fct_name, arg_types);
 
-        if (reason_code == RECORD_FOUND){
+        if (reason_code == SKEL_RECORD_FOUND){
             // respond with execution results
             reason_code = target_method(arg_types, args);
         }
