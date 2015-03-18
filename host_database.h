@@ -31,6 +31,8 @@ int db_get(HOST* host, SIGNATURE sig);
 int db_delete_host(const HOST &host, SIGNATURE sig);
 int db_drop();
 
+int db_get_all(unsigned int *hosts_len, unsigned int **ips, unsigned int **ports, SIGNATURE sig);
+
 int db_print();
 unsigned int db_size();
 

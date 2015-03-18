@@ -6,6 +6,19 @@
 #include "host_database.h"
 
 
+unsigned int intersect(unsigned int const *const array1, unsigned int const array1_len, unsigned int const *const array2, unsigned int const array2_len)
+{
+    unsigned int count = 0;
+    for( unsigned int  i = 0 ; i < array1_len ; i += 1 ) {
+        for(unsigned int  j = 0; j < array2_len ; j += 1 ) {
+            if( array1[i] == array2[j] ) {
+                count += 1;
+            }
+        }
+    }
+    return count;
+}
+
 int main()
 {
 
@@ -162,6 +175,24 @@ int main()
     assert(host_1.sock_fd == host_a.sock_fd && host_1.ip == host_a.ip && host_1.port == host_a.port );
     // db_print();
 
+    // test db_get_all
+    unsigned int hosts_len;
+    unsigned int *ips;
+    unsigned int *ports;
+    assert(db_get_all(&hosts_len,&ips,&ports,sig) == HOST_DB_GET_SIGNATURE_NOT_FOUND);
+    assert(db_get_all(&hosts_len,&ips,&ports,sig_f) == HOST_DB_GET_SIGNATURE_FOUND);
+    assert(hosts_len == 2);
+
+    unsigned int orig_ips[] = { host_a.ip, host_b.ip };
+    unsigned int orig_ports[] = { host_a.port, host_b.port };
+
+    assert(intersect(ips,hosts_len,orig_ips,2) == hosts_len);
+    assert(intersect(ports,hosts_len,orig_ports,2) == hosts_len);
+
+    free(ips);
+    free(ports);
+
+    // test db_drop
     assert(db_drop() == 0);
     assert(db_size() == 0);
 

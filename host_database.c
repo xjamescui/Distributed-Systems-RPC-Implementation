@@ -378,3 +378,50 @@ int db_print()
 
     return 0;
 }
+
+/**
+ * get_all
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+int db_get_all(unsigned int *hosts_len, unsigned int **ips, unsigned int **ports, SIGNATURE sig) 
+{
+    // find the sig
+    DB_NODE* found_node = NULL;
+    if ( get_db_node(&found_node,sig) == false ) {
+        return HOST_DB_GET_SIGNATURE_NOT_FOUND;
+    }
+
+    // calculate the size first
+    *hosts_len = 0;
+    HOST* temp_host = found_node->hosts_root;
+    while ( temp_host != NULL ) {
+        *hosts_len += 1;
+        temp_host = temp_host->next;
+    }
+
+    if ( *hosts_len == 0 ) {
+        return HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS;
+    }
+
+    *ips = (unsigned int*)malloc((*hosts_len)*sizeof(unsigned int));
+    *ports = (unsigned int*)malloc((*hosts_len)*sizeof(unsigned int));
+
+    // copy all hosts to ips and ports
+    temp_host = found_node->hosts_root;
+    unsigned int index = 0;
+    while ( temp_host != NULL ) {
+        (*ips)[index] = temp_host->ip;
+        (*ports)[index] = temp_host->port;
+
+        index += 1;
+        temp_host = temp_host->next;
+    }
+
+    return HOST_DB_GET_SIGNATURE_FOUND;
+}
+
