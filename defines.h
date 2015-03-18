@@ -97,7 +97,7 @@
  *                                                                *
  ******************************************************************/
 
-#define SOCKET_UNINITIALIZED             -1
+#define SOCKET_UNINITIALIZED             -1 //TODO give unique values later if needed
 #define SOCKET_CREATE_FAIL               -1
 #define SOCKET_BIND_FAIL                 -1
 #define SOCKET_CONNECT_FAIL              -1
