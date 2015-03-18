@@ -17,14 +17,14 @@ CLIENT_OBJECTS = $(CLIENT_SOURCES:.c=.o)
 EXECUTABLES = server client
 
 # list of rpc sources and objects
-RPC_SOURCES = helper.c
-RPC_CPP_SOURCES = rpc_client.cc rpc_server.cc SkeletonDatabase.cc
+RPC_SOURCES = helper.c host_database.c
+RPC_CPP_SOURCES = rpc_client.cc ClientCacheDatabase.cc rpc_server.cc SkeletonDatabase.cc
 RPC_OBJECTS = $(RPC_SOURCES:.c=.o)
 RPC_CPP_OBJECTS = $(RPC_CPP_SOURCES:.cc=.o)
 RPC_ARCHIVE = librpc.a
 
 # list of binder sources and objects
-BINDER_SOURCES = binder.c binder_database.c helper.c
+BINDER_SOURCES = binder.c host_database.c helper.c
 BINDER_OBJECTS = $(BINDER_SOURCES:.c=.o)
 BINDER_EXECUTABLE = binder
 

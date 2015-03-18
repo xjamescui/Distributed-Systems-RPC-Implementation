@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
+#include <time.h>
+#include <list>
+
 #include "debug.h"
 #include "helper.h"
 #include "rpc.h"
 #include "SkeletonDatabase.h"
-#include <pthread.h>
-#include <list>
-
 
 #define MAX_CLIENT_CONNECTIONS 100
 
@@ -58,7 +59,7 @@ int rpcInit()
     // initialize skeleton database
     g_skeleton_database = new SkeletonDatabase();
 
-    return RPC_SERVER_INIT_SUCCESS;
+    return RPC_INIT_SUCCESS;
 } // rpcInit
 
 
@@ -124,7 +125,26 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
 
     DEBUG("registration result is: %d\n", register_result);
-    return register_result;
+    switch ( register_result ) {
+    case MSG_REGISTER_SUCCESS_NO_ERRORS : {
+        return RPC_REGISTER_SUCCESS;
+    }
+    case MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS : {
+        return RPC_REGISTER_OVERRIDE_PREVIOUS;
+    }
+    case MSG_REGISTER_FAILURE_INVALID_SERVER_PORT :
+    case MSG_REGISTER_FAILURE_INVALID_SERVER_IP : {
+        return RPC_REGISTER_SERVER_SETUP_ERROR;
+    }
+    case MSG_REGISTER_FAILURE_INVALID_FCT_NAME : {
+        return RPC_REGISTER_INVALID_FCT_NAME;
+    }
+    case MSG_REGISTER_FAILURE_INVALID_ARGTYPES : {
+        return RPC_REGISTER_INVALID_ARGTYPES;
+    }
+    default:
+        return RPC_REGISTER_UNKNOWN_ERROR;
+    }
 } // rpcRegister
 
 
@@ -151,7 +171,7 @@ int rpcExecute()
 
     while (running) {
 
-        DEBUG("SELECT ... ");
+        DEBUG("SELECT ... %d",(unsigned)time(NULL));
 
         read_fds = g_active_fds;
         select_rv = select(FD_SETSIZE, &read_fds, NULL, NULL, NULL);
@@ -239,7 +259,7 @@ int rpcExecute()
     close(g_server_fd);
     delete g_skeleton_database;
 
-    return RPC_SERVER_SHUTDOWN_SUCCESS;
+    return RPC_EXECUTE_SUCCESS;
 } // rpcExecute
 
 
@@ -291,11 +311,11 @@ int create_server_socket()
     }
 
     // prints out ip and port for debug purpose
-    unsigned int hton_ip = htonl(g_server_ip);
-    unsigned char ipb1 = (hton_ip >> 24) & 0xFF;
-    unsigned char ipb2 = (hton_ip >> 16) & 0xFF;
-    unsigned char ipb3 = (hton_ip >> 8) & 0xFF;
-    unsigned char ipb4 = (hton_ip >> 0) & 0xFF;
+    unsigned int ntoh_ip = ntohl(g_server_ip);
+    unsigned char ipb1 = (ntoh_ip >> 24) & 0xFF;
+    unsigned char ipb2 = (ntoh_ip >> 16) & 0xFF;
+    unsigned char ipb3 = (ntoh_ip >> 8) & 0xFF;
+    unsigned char ipb4 = (ntoh_ip >> 0) & 0xFF;
 
     DEBUG("server addr:%u.%u.%u.%u",ipb1, ipb2, ipb3, ipb4);
     DEBUG("server port:%d",ntohs(g_server_port));
@@ -362,16 +382,16 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-        case MSG_REGISTER_SUCCESS:
-        case MSG_REGISTER_FAILURE:
-            // register success or failure
-            if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
-                fprintf(stderr, "ERROR extracting msg\n");
-                return EXTRACT_MSG_FAIL;
-            }
-            return 0;
-        default:
-            return MSG_TYPE_NOT_SUPPORTED;
+    case MSG_REGISTER_SUCCESS:
+    case MSG_REGISTER_FAILURE:
+        // register success or failure
+        if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
+            fprintf(stderr, "ERROR extracting msg\n");
+            return EXTRACT_MSG_FAIL;
+        }
+        return 0;
+    default:
+        return MSG_TYPE_NOT_SUPPORTED;
     }
 } // extract_registration_results
 

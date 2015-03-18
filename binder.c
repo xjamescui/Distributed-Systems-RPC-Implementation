@@ -12,14 +12,14 @@
 #include "stdbool.h"
 #include <unistd.h>
 #include <errno.h>
-
+#include <time.h>
 #include <string.h>
 
 #include "rpc.h"
 #include "debug.h"
 #include "defines.h"
 #include "helper.h"
-#include "binder_database.h"
+#include "host_database.h"
 
 // prints BINDER_ADDRESS and BINDER_PORT to stdout
 int print_address_and_port(int sock_fd, struct sockaddr_in sock_addr, unsigned int sock_addr_len);
@@ -33,6 +33,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
 
 int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *server_fds);
 int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds);
+int handle_loc_cache_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds);
 int handle_terminate(fd_set *active_fds, fd_set *server_fds);
 
 
@@ -86,7 +87,7 @@ int main(int argc, char** argv)
     while ( running ) {
         // block until one fd is ready
         temp_fds = active_fds;
-        DEBUG("SELECT ...");
+        DEBUG("SELECT ... %d",(unsigned)time(NULL));
         if ( select(FD_SETSIZE, &temp_fds, NULL, NULL, NULL) < 0) {
             fprintf(stderr,"Error : select() failed\n");
             exit_code = 1;
@@ -209,10 +210,13 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     read_len = read_message(&rw_buffer,connection_fd);
     if ( read_len == READ_MSG_FAIL ) {
         fprintf(stderr,"Error : handle_request() couldn't read from socket\n");
+        close(connection_fd);
+        FD_CLR(connection_fd,active_fds);
+        FD_CLR(connection_fd,server_fds);
         return -1;
     }
     if ( read_len == READ_MSG_ZERO_LENGTH ) { // server closed
-        DEBUG("server closed at socket %d",connection_fd);
+        fprintf(stderr,"Warning : server at %d terminated\n",connection_fd);
         close(connection_fd);
         FD_CLR(connection_fd,active_fds);
         FD_CLR(connection_fd,server_fds);
@@ -237,7 +241,14 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     break;
     case MSG_LOC_REQUEST: {
         if ( handle_loc_request(connection_fd,rw_buffer,buffer_len,active_fds) < 0 ) {
-            fprintf(stderr,"Error : handle_request() failed\n");
+            fprintf(stderr,"Error : handle_loc_request() failed\n");
+            return_code = -1;
+        }
+    }
+    break;
+    case MSG_LOC_CACHE_REQUEST: {
+        if ( handle_loc_cache_request(connection_fd,rw_buffer,buffer_len,active_fds) < 0 ) {
+            fprintf(stderr,"Error : handle_loc_cache_request() failed\n");
             return_code = -1;
         }
     }
@@ -336,11 +347,11 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
 
     // send reply
     switch (put_result) {
-    case BINDER_DB_PUT_SIGNATURE_SUCCESS: {
+    case HOST_DB_PUT_SIGNATURE_SUCCESS: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_NO_ERRORS);
     }
     break;
-    case BINDER_DB_PUT_SIGNATURE_DUPLICATE: {
+    case HOST_DB_PUT_SIGNATURE_DUPLICATE: {
         assemble_msg(&buffer,&buffer_len,MSG_REGISTER_SUCCESS,MSG_REGISTER_SUCCESS_OVERRIDE_PREVIOUS);
     }
     break;
@@ -406,15 +417,15 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
 
     // make reply
     switch ( get_result ) {
-    case BINDER_DB_GET_SIGNATURE_FOUND : {
+    case HOST_DB_GET_SIGNATURE_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,host.ip,host.port);
     }
     break;
-    case BINDER_DB_GET_SIGNATURE_NOT_FOUND : {
+    case HOST_DB_GET_SIGNATURE_NOT_FOUND : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
     }
     break;
-    case BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
+    case HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
         assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
     }
     break;
@@ -427,7 +438,86 @@ int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len,
     write_len = write_message(connection_fd,buffer,buffer_len);
     free(buffer);
     if ( write_len < buffer_len ) {
-        fprintf(stderr, "handle_loc_request() write: is client still there?\n");
+        fprintf(stderr, "Error : handle_loc_request() write: is client still there?\n");
+        return -1;
+    }
+
+    close(connection_fd);
+    FD_CLR(connection_fd,active_fds);
+
+    return 0;
+}
+
+/**
+ * loc cache request:
+ *   - answers client with all ips and ports
+ *   - close client and remove it from active_fds
+ * returns -1 if either fail to read/write
+ */
+int handle_loc_cache_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds)
+{
+
+    // read the message
+    ssize_t write_len;
+
+    // stuff that get extracted
+    unsigned int fct_name_len;
+    char* fct_name = 0;
+    unsigned int arg_types_len;
+    int* arg_types = 0;
+
+    // extract message
+    extract_msg(buffer,buffer_len,MSG_LOC_REQUEST,
+                &fct_name_len,&fct_name,
+                &arg_types_len,&arg_types);
+
+    free(buffer);
+    buffer = 0;
+
+    SIGNATURE sig;
+    sig.fct_name_len = fct_name_len;
+    sig.fct_name = fct_name;
+    sig.arg_types_len = arg_types_len;
+    sig.arg_types = arg_types;
+
+    // get all ip and hosts
+    unsigned int hosts_len;
+    unsigned int *ips = NULL;
+    unsigned int *ports = NULL;
+
+    int get_result;
+    get_result = db_get_all(&hosts_len,&ips,&ports,sig);
+
+    free(fct_name);
+    free(arg_types);
+
+    // make reply
+    switch ( get_result ) {
+    case HOST_DB_GET_SIGNATURE_FOUND : {
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,
+            hosts_len,ips,ports);
+        free(ips);
+        free(ports);
+    }
+    break;
+    case HOST_DB_GET_SIGNATURE_NOT_FOUND : {
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
+    }
+    break;
+    case HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
+    }
+    break;
+    default:
+        DEBUG("get result not handled yet %d",get_result);
+        return -1;
+    } // switch
+
+    // send reply
+    write_len = write_message(connection_fd,buffer,buffer_len);
+    free(buffer);
+    if ( write_len < buffer_len ) {
+        fprintf(stderr, "Error : handle_loc_cache_request() write: is client still there?\n");
         return -1;
     }
 

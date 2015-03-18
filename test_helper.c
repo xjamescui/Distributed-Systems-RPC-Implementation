@@ -94,6 +94,18 @@ void test_short_messages()
     free(buffer);
     buffer = 0;
 
+    // loc cache failure
+    // printf("test execute failure\n");
+    assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_FAILURE,result);
+    // print_buffer(buffer,buffer_len);
+    extract_msg_len_type(&msg_len,&msg_type,buffer);
+    assert(msg_len == buffer_len - 5);
+    assert(msg_type == MSG_LOC_CACHE_FAILURE);
+    extract_msg(buffer,msg_len,MSG_LOC_CACHE_FAILURE,&result2);
+    assert(result2 == result);
+    free(buffer);
+    buffer = 0;
+
     // execute failure
     // printf("test execute failure\n");
     assemble_msg(&buffer,&buffer_len,MSG_EXECUTE_FAILURE,result);
@@ -386,6 +398,109 @@ void test_execute()
 
 }
 
+void test_loc_cache_request() {
+
+    char *return2 = (char *)malloc(25 * sizeof(char));
+    unsigned int fct_name_len = 5;
+    char fct_name[] = "fct01";
+    unsigned int arg_types_len =3;
+    int arg_types[arg_types_len + 1];
+
+    arg_types[0] = (1 << ARG_OUTPUT) | (ARG_CHAR << 16) | 25;
+    arg_types[1] = (1 << ARG_INPUT) | (ARG_FLOAT << 16);
+    arg_types[2] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16);
+    arg_types[3] = 0;
+
+    // buffer stuff
+    char* buffer = NULL;
+    unsigned int buffer_len;
+
+    // things to be extracted
+    unsigned int msg_len2;
+    char msg_type2;
+    unsigned int fct_name2_len;
+    char* fct_name2 = NULL;
+    unsigned int arg_types2_len;
+    int* arg_types2 = NULL;
+
+    // assemble
+    assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_REQUEST,
+                 fct_name_len,fct_name,arg_types_len,arg_types);
+
+    // print_buffer(buffer,buffer_len);
+    assert(buffer_len == (4 + 1 + 4 + fct_name_len + 4 + arg_types_len*4 ) );
+
+    // extract len + type
+    // printf("execute extract len type\n");
+    extract_msg_len_type(&msg_len2,&msg_type2,buffer);
+    assert(msg_len2 == buffer_len - 5);
+    assert(msg_type2 == MSG_LOC_CACHE_REQUEST);
+
+    extract_msg(buffer,buffer_len,MSG_LOC_CACHE_REQUEST,
+                &fct_name2_len,&fct_name2,&arg_types2_len,&arg_types2);
+
+    assert(fct_name2_len == fct_name_len);
+    assert(mystrcmp(fct_name2,fct_name,fct_name_len) == 0);
+    assert(arg_types2_len == arg_types_len);
+    assert(arg_types2 != NULL);
+    assert(arg_types2[0] == arg_types[0]);
+    assert(arg_types2[1] == arg_types[1]);
+    assert(arg_types2[2] == arg_types[2]);
+    assert(arg_types2[3] == 0);
+
+    free(buffer);
+    free(arg_types2);
+    free(fct_name2);
+
+    free(return2);
+
+}
+
+void test_loc_cache_success() {
+
+    char* buffer = NULL;
+    unsigned int buffer_len;
+
+    unsigned int hosts_len = 3;
+    unsigned int ips[] = { 0xAAAAAAAA , 0xBBBBBBBB , 0xCCCCCCCC };
+    unsigned int ports[] = { 0x1111 , 0x2222 , 0x3333 };
+
+    // assemble
+    assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_SUCCESS,
+        hosts_len, ips, ports);
+
+    assert(buffer_len == (4 + 1 + 4 + 6*hosts_len ) );
+
+    // things to be extracted
+    unsigned int msg_len2;
+    char msg_type2;
+    unsigned int hosts_len2;
+    unsigned int* ips2 = NULL;
+    unsigned int* ports2 = NULL;
+
+    extract_msg_len_type(&msg_len2,&msg_type2,buffer);
+    assert(msg_len2 == buffer_len - 5);
+    assert(msg_type2 == MSG_LOC_CACHE_SUCCESS);
+
+    extract_msg(buffer,buffer_len,MSG_LOC_CACHE_SUCCESS,
+        &hosts_len2,&ips2,&ports2);
+
+    assert(hosts_len2 == hosts_len);
+    assert(ips2 != NULL);
+    assert(ports2 != NULL);
+
+    for ( unsigned int i = 0 ; i < hosts_len2 ; i += 1 ) {
+        assert(ips2[i] == ips[i]);
+        assert(ports2[i] == ports[i]);
+    }
+
+    free(ips2);
+    free(ports2);
+
+    free(buffer);
+
+}
+
 int test_copy_args() {
 
     int char_array_len = 100;
@@ -458,6 +573,7 @@ int test_copy_args() {
     free(new_char_array);
     free(new_args);
 
+    return 0;
 }
 
 
@@ -491,6 +607,8 @@ int main()
         test_short_messages();
         test_register();
         test_loc_request();
+        test_loc_cache_request();
+        test_loc_cache_success();
         test_execute();
     }
 
