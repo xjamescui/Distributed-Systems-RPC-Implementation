@@ -406,6 +406,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     case MSG_REGISTER_SUCCESS :
     case MSG_REGISTER_FAILURE :
     case MSG_LOC_FAILURE :
+    case MSG_LOC_CACHE_FAILURE :
     case MSG_EXECUTE_FAILURE : {
         // length, type, result
         int register_result = va_arg(vl,int);
@@ -473,6 +474,7 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
     /**
      * loc request
      */
+    case MSG_LOC_CACHE_REQUEST :
     case MSG_LOC_REQUEST : {
         // length, type, fct_name_len, fct_name, arg_tyles_len, arg_types
         unsigned int fct_name_len = va_arg(vl,unsigned int);
@@ -532,6 +534,41 @@ int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, .
         memcpy(&(*buffer)[4],&msg_type,1);          // set type
         memcpy(&(*buffer)[5],&ip,4);                // set ip
         memcpy(&(*buffer)[9],&port,2);              // set port
+
+    }
+    break;
+    case MSG_LOC_CACHE_SUCCESS : {
+        // length, type, hosts_len, ips, ports
+        unsigned int hosts_len = va_arg(vl,unsigned int);
+        unsigned int* ips = va_arg(vl,unsigned int*);
+        unsigned int* ports = va_arg(vl,unsigned int*);
+
+        // compute len + allocate right size
+        *buffer_len = 0;
+        *buffer_len += 4;                           // length = u_int
+        *buffer_len += 1;                           // type = char
+        *buffer_len += 4;                           // hosts_len
+        *buffer_len += 6*hosts_len;                 // ips and hosts = (ip+port=6)*hosts_len
+
+        if ( *buffer != NULL ) {
+            free(*buffer);
+        }
+        *buffer = (char*)malloc(*buffer_len);
+        memset(*buffer,'\0',*buffer_len);
+
+        // LLLLTHHHHIIIIPPIIIIPPIIIIPPIIIIPPIIIIPP
+        // 01234567890123456789012345678901234567890
+        unsigned int msg_len = (*buffer_len) - 5;
+        memcpy(&(*buffer)[0],&msg_len,4);           // set length
+        memcpy(&(*buffer)[4],&msg_type,1);          // set type
+        memcpy(&(*buffer)[5],&hosts_len,4);         // set hosts_len
+        unsigned int buffer_current_index = 9;
+        for ( unsigned int i = 0 ; i < hosts_len ; i+= 1 ) {
+            memcpy(&(*buffer)[buffer_current_index],&ips[i],4);   // set ip
+            buffer_current_index += 4;
+            memcpy(&(*buffer)[buffer_current_index],&ports[i],2); // set port
+            buffer_current_index += 2;
+        }
 
     }
     break;
@@ -651,6 +688,7 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     case MSG_REGISTER_SUCCESS :
     case MSG_REGISTER_FAILURE :
     case MSG_LOC_FAILURE :
+    case MSG_LOC_CACHE_FAILURE :
     case MSG_EXECUTE_FAILURE : {
         // length, type, result
         int *register_result = va_arg(vl,int*);
@@ -699,6 +737,7 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
     /**
      * loc request
      */
+    case MSG_LOC_CACHE_REQUEST :
     case MSG_LOC_REQUEST : {
         // len, type, fct_name_len, fct_name, arg_types_len, arg_types
         unsigned int *fct_name_len = va_arg(vl,unsigned int*);
@@ -737,6 +776,37 @@ int extract_msg(const char* const buffer, const unsigned int buffer_len, const c
         // 01234567890
         memcpy(ip,&buffer[5],4);                        // extract ip
         memcpy(port,&buffer[9],2);                      // extract port
+
+    }
+    break;
+    case MSG_LOC_CACHE_SUCCESS : {
+        // length, type, hosts_len, ips, ports
+        unsigned int* hosts_len = va_arg(vl,unsigned int*);
+        unsigned int** ips = va_arg(vl,unsigned int**);
+        unsigned int** ports = va_arg(vl,unsigned int**);
+
+        if ( *ips != NULL ) {
+            free(*ips);
+        }
+        if ( *ports != NULL ) {
+            free(*ports);
+        }
+
+        // LLLLTHHHHIIIIPPIIIIPPIIIIPPIIIIPPIIIIPP
+        // 01234567890123456789012345678901234567890
+        memcpy(hosts_len,&buffer[5],4);                 // extract fct hosts_len
+        *ips = (unsigned int*)malloc(((*hosts_len)+1)*4);       // alloc enough space for ips, append by zero
+        memset(*ips,0,((*hosts_len)+1)*4);
+        *ports = (unsigned int*)malloc(((*hosts_len)+1)*4);     // alloc enough space for ports, append by zero
+        memset(*ports,0,((*hosts_len)+1)*4);
+
+        unsigned int buffer_current_index = 9;
+        for ( unsigned int i = 0 ; i < *hosts_len ; i += 1 ) {
+            memcpy(&(*ips)[i],&buffer[buffer_current_index],4);
+            buffer_current_index += 4;
+            memcpy(&(*ports)[i],&buffer[buffer_current_index],2);
+            buffer_current_index += 2;
+        }
 
     }
     break;
@@ -873,11 +943,12 @@ void print_received_message(char const *const buffer) {
                     &ip,&port,&fct_name_len,&fct_name,&arg_types_len,&arg_types);
 
         unsigned char ipb1, ipb2, ipb3, ipb4;
-        ipb1 = (ip >> 24) & 0xFF;
-        ipb2 = (ip >> 16) & 0xFF;
-        ipb3 = (ip >> 8) & 0xFF;
-        ipb4 = (ip >> 0) & 0xFF;
-        sprintf(to_print,"%s%u.%u.%u.%u:%u %s(",to_print,ipb1, ipb2, ipb3, ipb4, port, fct_name);
+        unsigned int ntoh_ip = ntohl(ip);
+        ipb1 = (ntoh_ip >> 24) & 0xFF;
+        ipb2 = (ntoh_ip >> 16) & 0xFF;
+        ipb3 = (ntoh_ip >> 8) & 0xFF;
+        ipb4 = (ntoh_ip >> 0) & 0xFF;
+        sprintf(to_print,"%s%u.%u.%u.%u:%u %s(", to_print, ipb1, ipb2, ipb3, ipb4, ntohs(port), fct_name);
 
         char single_arg_type_type;
         unsigned int single_arg_type_size;

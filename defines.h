@@ -33,6 +33,10 @@
 #define MSG_EXECUTE_SUCCESS     0x31
 #define MSG_EXECUTE_FAILURE     0x32
 
+#define MSG_LOC_CACHE_REQUEST   0x40
+#define MSG_LOC_CACHE_SUCCESS   0x41
+#define MSG_LOC_CACHE_FAILURE   0x42
+
 #define MSG_TERMINATE           0x70
 
 #define MAX_RW_CHUNK_SIZE       16348
@@ -57,23 +61,23 @@
 
 
 /******************************************************************
- * For binder database                                            *
+ * For host database with round robin algorithm                   *
  *                                                                *
  ******************************************************************/
 // put
-#define BINDER_DB_PUT_SIGNATURE_SUCCESS          0
-#define BINDER_DB_PUT_SIGNATURE_DUPLICATE        1
-#define BINDER_DB_PUT_SIGNATURE_FAIL            -1
+#define HOST_DB_PUT_SIGNATURE_SUCCESS            0
+#define HOST_DB_PUT_SIGNATURE_DUPLICATE          1
+#define HOST_DB_PUT_SIGNATURE_FAIL              -1
 
 // get
-#define BINDER_DB_GET_SIGNATURE_FOUND            0
-#define BINDER_DB_GET_SIGNATURE_NOT_FOUND       -1
-#define BINDER_DB_GET_SIGNATURE_HAS_NO_HOSTS    -2
+#define HOST_DB_GET_SIGNATURE_FOUND              0
+#define HOST_DB_GET_SIGNATURE_NOT_FOUND         -1
+#define HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS      -2
 
 // delete
-#define BINDER_DB_DELETE_HOST_SUCCESS           0
-#define BINDER_DB_DELETE_HOST_NOT_FOUND         1
-#define BINDER_DB_DELETE_SIGNATURE_NOT_FOUND    2
+#define HOST_DB_DELETE_HOST_SUCCESS              0
+#define HOST_DB_DELETE_HOST_NOT_FOUND            1
+#define HOST_DB_DELETE_SIGNATURE_NOT_FOUND       2
 
 
 // Skeleton Database
@@ -106,8 +110,22 @@
 #define RPC_SERVER_BIND_SOCKET_FAIL             -2
 #define RPC_SERVER_GET_SOCK_NAME_FAIL           -3
 
-#define RPC_SERVER_INIT_SUCCESS                  0
-#define RPC_SERVER_SHUTDOWN_SUCCESS              0
+#define RPC_REGISTER_OVERRIDE_PREVIOUS           1
+#define RPC_REGISTER_SERVER_SETUP_ERROR         -1
+#define RPC_REGISTER_INVALID_FCT_NAME           -2
+#define RPC_REGISTER_INVALID_ARGTYPES           -3
+#define RPC_REGISTER_UNKNOWN_ERROR              -4
+
+#define RPC_CALL_NO_HOSTS                       -1
+#define RPC_CALL_INTERNAL_DB_ERROR              -2
+
+
+#define RPC_INIT_SUCCESS                         0
+#define RPC_REGISTER_SUCCESS                     0
+#define RPC_CALL_SUCCESS                         0
+#define RPC_CACHE_CALL_SUCCESS                   0
+#define RPC_TERMINATE_SUCCESS                    0
+#define RPC_EXECUTE_SUCCESS                      0
 
 #define RPC_CONNECT_TO_BINDER_FAIL              -1
 #define RPC_CONNECT_TO_SERVER_FAIL              -2
