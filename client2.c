@@ -2,7 +2,7 @@
  * client.c
  *
  * This file is the client program,
- * which prepares the arguments, calls "rpcCall", and checks the returns.
+ * which prepares the arguments, calls "rpcCacheCall", and checks the returns.
  */
 
 #include <stdio.h>
