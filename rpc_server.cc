@@ -115,7 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
-        return RPC_WRITE_MSG_FAIL;
+        return RPC_WRITE_BINDER_FAIL;
     }
 
     msg = NULL;
@@ -308,7 +308,7 @@ int create_server_socket()
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * RPC_CONNECT_TO_HOST_FAIL
+ * RPC_CONNECT_TO_BINDER_FAIL
  */
 int connect_server_to_binder()
 {
@@ -335,7 +335,7 @@ int connect_server_to_binder()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
-        return RPC_CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_BINDER_FAIL;
     }
 
     g_binder_fd = binder_fd;

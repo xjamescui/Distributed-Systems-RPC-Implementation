@@ -98,17 +98,19 @@
  ******************************************************************/
 
 #define RPC_ENVR_VARIABLES_NOT_SET              -1
+
 #define RPC_SOCKET_UNINITIALIZED                -1
 
 #define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
 #define RPC_SERVER_INIT_SUCCESS                  0
 #define RPC_SERVER_SHUTDOWN_SUCCESS              0
 
-#define RPC_CONNECT_TO_HOST_FAIL                -1
-#define RPC_CONNECT_TO_IP_FAIL                  -1
+#define RPC_CONNECT_TO_BINDER_FAIL              -1
+#define RPC_CONNECT_TO_SERVER_FAIL              -2
+
 #define RPC_CONNECTION_SELECT_FAIL              -1
 
-#define RPC_WRITE_MSG_FAIL                      -1
+#define RPC_WRITE_BINDER_FAIL                   -1
 
 
 /******************************************************************
@@ -117,9 +119,9 @@
  ******************************************************************/
 
 #define SOCKET_CREATE_FAIL               -1
-#define SOCKET_BIND_FAIL                 -1
-#define SOCKET_CONNECT_FAIL              -1
-#define SOCKET_GET_SOCK_NAME_FAIL        -1
+#define SOCKET_BIND_FAIL                 -2
+#define SOCKET_CONNECT_FAIL              -3
+#define SOCKET_GET_SOCK_NAME_FAIL        -4
 
 
 #define ASSEMBLE_MSG_FAIL                -1

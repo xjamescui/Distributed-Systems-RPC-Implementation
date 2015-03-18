@@ -26,8 +26,8 @@ int send_execute_to_server(int server_fd,
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * RPC_CONNECT_TO_HOST_FAIL
- * RPC_CONNECT_TO_IP_FAIL
+ * RPC_CONNECT_TO_BINDER_FAIL
+ * RPC_CONNECT_TO_SERVER_FAIL
  */
 int rpcCall(char* name, int* argTypes, void** args)
 {
@@ -68,7 +68,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to binder\n");
-        return RPC_CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_BINDER_FAIL;
     }
 
     // get ip and port from binder
@@ -96,7 +96,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
-        return RPC_CONNECT_TO_IP_FAIL;
+        return RPC_CONNECT_TO_SERVER_FAIL;
     }
 
     DEBUG("connect success!");
@@ -119,9 +119,9 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * RPC_CONNECT_TO_HOST_FAIL
+ * RPC_CONNECT_TO_BINDER_FAIL
  * ASSEMBLE_MSG_FAIL
- * RPC_WRITE_MSG_FAIL
+ * RPC_WRITE_BINDER_FAIL
  *
  */
 int rpcTerminate()
@@ -152,7 +152,7 @@ int rpcTerminate()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
-        return RPC_CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_BINDER_FAIL;
     }
 
     // assemble a terminate message
@@ -163,7 +163,7 @@ int rpcTerminate()
     free(w_buffer);
     if ( write_len < w_buffer_len ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
-        return RPC_WRITE_MSG_FAIL;
+        return RPC_WRITE_BINDER_FAIL;
     }
 
     close(binder_fd);
