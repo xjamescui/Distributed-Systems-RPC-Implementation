@@ -467,7 +467,7 @@ int handle_loc_cache_request(int connection_fd, char *buffer, unsigned int buffe
     int* arg_types = 0;
 
     // extract message
-    extract_msg(buffer,buffer_len,MSG_LOC_REQUEST,
+    extract_msg(buffer,buffer_len,MSG_LOC_CACHE_REQUEST,
                 &fct_name_len,&fct_name,
                 &arg_types_len,&arg_types);
 
@@ -494,18 +494,18 @@ int handle_loc_cache_request(int connection_fd, char *buffer, unsigned int buffe
     // make reply
     switch ( get_result ) {
     case HOST_DB_GET_SIGNATURE_FOUND : {
-        assemble_msg(&buffer,&buffer_len,MSG_LOC_SUCCESS,
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_SUCCESS,
             hosts_len,ips,ports);
         free(ips);
         free(ports);
     }
     break;
     case HOST_DB_GET_SIGNATURE_NOT_FOUND : {
-        assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND);
     }
     break;
     case HOST_DB_GET_SIGNATURE_HAS_NO_HOSTS : {
-        assemble_msg(&buffer,&buffer_len,MSG_LOC_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
+        assemble_msg(&buffer,&buffer_len,MSG_LOC_CACHE_FAILURE,MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS);
     }
     break;
     default:

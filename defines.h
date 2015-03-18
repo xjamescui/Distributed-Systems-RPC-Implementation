@@ -116,7 +116,8 @@
 #define RPC_REGISTER_INVALID_ARGTYPES           -3
 #define RPC_REGISTER_UNKNOWN_ERROR              -4
 
-#define RPC_CALL_SIGNATURE_NO_HOSTS             -1
+#define RPC_CALL_NO_HOSTS                       -1
+#define RPC_CALL_INTERNAL_DB_ERROR              -2
 
 
 #define RPC_INIT_SUCCESS                         0
