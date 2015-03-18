@@ -474,7 +474,6 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
     char msg_type;
     unsigned int *server_ips = NULL;
     unsigned int *server_ports = NULL;
-    int result;
 
     // assemble
     assemble_msg(&rw_buffer,&rw_buffer_len,MSG_LOC_CACHE_REQUEST,
