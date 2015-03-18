@@ -26,6 +26,7 @@
  *
  * error codes:
  * READ_MSG_FAIL
+ * READ_MSG_ZERO_LENGTH
  */
 ssize_t read_message(char** buffer, int socket_fd)
 {
@@ -43,6 +44,10 @@ ssize_t read_message(char** buffer, int socket_fd)
         fprintf(stderr,"Error reading first 5 bytes: %s\n" , strerror(errno));
         return READ_MSG_FAIL;
     }
+    if (read_so_far == 0) {
+        DEBUG("Read something of zero length!");
+        return READ_MSG_ZERO_LENGTH;
+    }
 
     // determine msg_len and msg type value
     memcpy(&msg_len, &(*buffer)[0], 4);
@@ -56,9 +61,15 @@ ssize_t read_message(char** buffer, int socket_fd)
     memcpy(&(*buffer)[0], &msg_len, 4);
     memcpy(&(*buffer)[4], &msg_type, 1);
 
+    unsigned int to_read_len;
     while ( read_so_far < msg_len ) {
-        read_len = read(socket_fd, &(*buffer)[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
-        if ( read_len < 0 ) {
+        to_read_len = MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far);
+        read_len = read(socket_fd, &(*buffer)[read_so_far], to_read_len );
+        if (read_len == 0) {
+            DEBUG("Read something of zero length!");
+            return READ_MSG_ZERO_LENGTH;
+        }
+        if ( read_len < to_read_len ) {
             fprintf(stderr,"Error: Could only read %ld of %d\n",read_so_far,msg_len);
             return READ_MSG_FAIL;
         }

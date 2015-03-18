@@ -8,7 +8,6 @@
 
 /** read() that can take a large buffer_len
  *  returns # of chars read if successful
- *          -1 if fail
  */
 ssize_t read_message(char** buffer, int socket_fd);
 
@@ -48,6 +47,9 @@ bool type_is_array(const int type);
 void print_buffer(const char* const buffer, int buffer_len);
 void print_received_message(char const *const buffer);
 
+/**
+ * given a list of arg_types, return the length
+ */
 unsigned int arg_types_length(int* argTypes);
 
 

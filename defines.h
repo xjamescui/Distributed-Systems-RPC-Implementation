@@ -93,7 +93,7 @@
 
 
 /******************************************************************
- * socket and related                                             *
+ * socket                                                         *
  *                                                                *
  ******************************************************************/
 
@@ -105,8 +105,11 @@
 
 
 #define ASSEMBLE_MSG_FAIL                -1
-#define EXTRACT_MSG_FAIL                 -1
+#define EXTRACT_MSG_FAIL                 -2
+
 #define READ_MSG_FAIL                    -1 
+#define READ_MSG_ZERO_LENGTH             -2
+
 #define WRITE_MSG_FAIL                   -1 
 
 #define CONNECT_TO_HOST_FAIL             -1
