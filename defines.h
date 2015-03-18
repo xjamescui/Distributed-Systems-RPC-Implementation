@@ -107,7 +107,9 @@
 #define RPC_SERVER_CONNECT_TO_BINDER_SUCCESS     0
 
 #define RPC_CONNECT_TO_HOST_FAIL                -1
+#define RPC_CONNECT_TO_IP_FAIL                  -1
 #define RPC_CONNECTION_SELECT_FAIL              -1
+
 #define RPC_WRITE_MSG_FAIL                      -1
 
 

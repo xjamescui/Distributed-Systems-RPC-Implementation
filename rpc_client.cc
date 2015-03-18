@@ -26,8 +26,8 @@ int send_execute_to_server(int server_fd,
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * CONNECT_TO_HOST_FAIL
- * CONENCT_TO_IP_FAIL
+ * RPC_CONNECT_TO_HOST_FAIL
+ * RPC_CONNECT_TO_IP_FAIL
  */
 int rpcCall(char* name, int* argTypes, void** args)
 {
@@ -96,7 +96,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
-        return CONNECT_TO_IP_FAIL;
+        return RPC_CONNECT_TO_IP_FAIL;
     }
 
     DEBUG("connect success!");
@@ -119,9 +119,9 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * CONNECT_TO_HOST_FAIL
+ * RPC_CONNECT_TO_HOST_FAIL
  * ASSEMBLE_MSG_FAIL
- * WRITE_MSG_FAIL
+ * RPC_WRITE_MSG_FAIL
  *
  */
 int rpcTerminate()
@@ -152,7 +152,7 @@ int rpcTerminate()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
-        return CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_HOST_FAIL;
     }
 
     // assemble a terminate message
@@ -166,7 +166,7 @@ int rpcTerminate()
     free(w_buffer);
     if ( write_len < w_buffer_len ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
-        return WRITE_MSG_FAIL;
+        return RPC_WRITE_MSG_FAIL;
     }
 
     close(binder_fd);
@@ -320,8 +320,6 @@ int send_execute_to_server(int server_fd,
     // copy args over
     copy_args_step_by_step(reply_arg_types, args, reply_args);
 
-    // TODO: Free everything
-    // extract: reply_name, reply_arg_types, reply_args
     free(reply_name);
     for ( unsigned int i = 0 ; i < reply_arg_types_len ; i += 1 ) {
         if ( type_is_array(reply_arg_types[i]) ) {
