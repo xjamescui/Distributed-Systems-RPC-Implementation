@@ -28,10 +28,13 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
                               unsigned int name_len, char *name,
                               unsigned int arg_types_len, int *arg_types);
 /**
+ * success:
+ * RPC_CALL_SUCCESS
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
+ * RPC_CALL_SIGNATURE_NO_HOSTS
  */
 int rpcCall(char* name, int* argTypes, void** args)
 {
@@ -114,6 +117,16 @@ int rpcCall(char* name, int* argTypes, void** args)
     return RPC_CALL_SUCCESS;
 }
 
+/**
+ * success:
+ * RPC_CACHE_CALL_SUCCESS
+ * error codes:
+ * RPC_ENVR_VARIABLES_NOT_SET
+ * RPC_CONNECT_TO_BINDER_FAIL
+ * RPC_CONNECT_TO_SERVER_FAIL
+ * RPC_CALL_SIGNATURE_NO_HOSTS
+ * or failure code from the actual function
+ */
 int rpcCacheCall(char* name, int* argTypes, void** args)
 {
 
@@ -184,7 +197,12 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
         DEBUG("got new cache, db size:%d",ClientCacheDatabase::Instance()->size());
 
         // call get again, there is at least one
-        ClientCacheDatabase::Instance()->get(&host,sig);
+        get_code = ClientCacheDatabase::Instance()->get(&host,sig);
+        if ( get_code < 0 ) {
+            fprintf(stderr, "Error : rpcCacheCall() should not reach here %d\n",get_code);
+            return RPC_CALL_INTERNAL_DB_ERROR;
+        }
+
     }
 
     // at this point, we got at least 1 server
@@ -265,14 +283,14 @@ int rpcTerminate()
     return RPC_TERMINATE_SUCCESS;
 }
 
-// TODO: these errors codes should be RPC_...
+
 /**
  * rpcCall helper functions
  *
  * RPC_WRITE_TO_BINDER_FAIL
  * RPC_READ_FROM_BINDER_FAIL
+ * RPC_CALL_NO_HOSTS
  * MSG_TYPE_NOT_SUPPORTED
- *
  */
 int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
                         unsigned int name_len, char *name,
@@ -329,7 +347,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
         switch(result){
         case MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND :
         case MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS :
-            return RPC_CALL_SIGNATURE_NO_HOSTS;
+            return RPC_CALL_NO_HOSTS;
         }
     }
     break;
