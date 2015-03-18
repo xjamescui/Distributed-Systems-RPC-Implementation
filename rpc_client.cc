@@ -87,17 +87,6 @@ int rpcCall(char* name, int* argTypes, void** args)
     // done with binder, close it
     close(binder_fd);
 
-
-    // TODO: remove this {
-    unsigned int ntohip = ntohl(server_ip);
-    unsigned char ipb1,ipb2,ipb3,ipb4;
-    ipb1 = (ntohip >> 24) & 0xFF;
-    ipb2 = (ntohip >> 16) & 0xFF;
-    ipb3 = (ntohip >> 8) & 0xFF;
-    ipb4 = (ntohip >> 0) & 0xFF;
-    DEBUG("calling server: %u.%u.%u.%u:%u",ipb1,ipb2,ipb3,ipb4,ntohs(server_port));
-    // }
-
     // connect to server
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
