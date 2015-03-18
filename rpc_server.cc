@@ -115,7 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
-        return RPC_WRITE_BINDER_FAIL;
+        return RPC_WRITE_TO_BINDER_FAIL;
     }
 
     msg = NULL;

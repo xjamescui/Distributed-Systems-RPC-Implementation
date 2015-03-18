@@ -114,11 +114,11 @@
 
 #define RPC_CONNECTION_SELECT_FAIL              -1
 
-#define RPC_WRITE_BINDER_FAIL                   -1
-#define RPC_READ_BINDER_FAIL                    -2
+#define RPC_WRITE_TO_BINDER_FAIL                -1
+#define RPC_READ_FROM_BINDER_FAIL               -2
 
-#define RPC_WRITE_SERVER_FAIL                   -1
-#define RPC_READ_SERVER_FAIL                    -2
+#define RPC_WRITE_TO_SERVER_FAIL                -1
+#define RPC_READ_FROM_SERVER_FAIL               -2
 
 
 
