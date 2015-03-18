@@ -33,6 +33,9 @@
 #define MSG_EXECUTE_SUCCESS     0x31
 #define MSG_EXECUTE_FAILURE     0x32
 
+// execute failure reason codes
+
+
 #define MSG_TERMINATE           0x70
 
 #define MAX_RW_CHUNK_SIZE       16348
@@ -53,7 +56,7 @@
 #define MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND         -1
 #define MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS          -2
 
-
+#define MSG_TYPE_NOT_SUPPORTED                      -1
 
 
 /******************************************************************
@@ -86,3 +89,44 @@
 
 #define RECORD_DELETE_SUCCESS   0
 #define RECORD_DELETE_FAIL      -1
+
+// Skeleton method return codes
+#define SKEL_EXEC_SUCCESS       0
+#define SKEL_EXEC_FAIL          -1
+
+
+/******************************************************************
+ * socket and related                                             *
+ *                                                                *
+ ******************************************************************/
+
+#define SOCKET_UNINITIALIZED             -1
+#define SOCKET_CREATE_FAIL               -1
+#define SOCKET_BIND_FAIL                 -1
+#define SOCKET_CONNECT_FAIL              -1
+#define SOCKET_GET_SOCK_NAME_FAIL        -1
+#define SOCKET_WRITE_MESSAGE_FAIL        -1
+
+
+#define ASSEMBLE_MSG_FAIL                -1
+#define EXTRACT_MSG_FAIL                 -1
+#define READ_MSG_FAIL                    -1 
+#define WRITE_MSG_FAIL                   -1 
+
+#define CONNECT_TO_HOST_FAIL             -1
+#define CONNECT_TO_IP_FAIL               -1
+#define CONNECTION_SELECT_FAIL           -1
+
+#define GET_IP_FROM_SOCKET_FAIL          -1
+
+/******************************************************************
+ * etc.                                                           *
+ *                                                                *
+ ******************************************************************/
+
+#define ENVR_VARIABLES_NOT_SET           -1
+#define INVALID_SIZE                     -1
+#define IOCTL_ERROR                      -1 
+
+// threads
+#define PTHREAD_CREATE_FAIL              -1

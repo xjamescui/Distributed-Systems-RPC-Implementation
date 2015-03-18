@@ -24,8 +24,10 @@ int connect_server_to_binder();
 int extract_registration_results(char *msg, int* result);
 void* handle_client_message(void * hidden_args);
 
-int g_binder_fd = -1;
-int g_server_fd = -1;
+int g_binder_fd = SOCKET_UNINITIALIZED;
+int g_server_fd = SOCKET_UNINITIALIZED;
+fd_set g_active_fds;
+
 unsigned int g_server_port, g_server_ip;
 SkeletonDatabase* g_skeleton_database;
 
@@ -72,9 +74,9 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 {
 
     // not connected to binder
-    if (g_binder_fd < 0){
+    if (g_binder_fd == SOCKET_UNINITIALIZED){
         fprintf(stderr, "ERROR: cannot execute rpcRegister because server is not connected to binder\n");
-        return -1;
+        return SOCKET_UNINITIALIZED; // error
     }
 
     unsigned int num_args, msg_len, name_len, write_len;
@@ -96,14 +98,16 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
 
     g_skeleton_database->db_print(); // TODO remove later
 
-    /* if (dbOpCode == RECORD_PUT_DUPLICATE) return 1; // warning */
+    if (dbOpCode == RECORD_PUT_DUPLICATE) {
+        fprintf(stdout, "%s already exists in the server database\n", name);
+    } 
 
     // create MSG_REGISTER type msg
     // format: msg_len, msg_type, server_ip, server_port, fct_name_len, fct_name, num_args, argTypes
     if (assemble_msg(&msg, &msg_len, MSG_REGISTER, g_server_ip, g_server_port, name_len, name, num_args, argTypes) < 0) {
         fprintf(stderr, "ERROR creating registration request message\n");
         free(msg);
-        return -1;
+        return ASSEMBLE_MSG_FAIL;
     }
 
     // send registration message to binder
@@ -111,7 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
-        return -1;
+        return SOCKET_WRITE_MESSAGE_FAIL;
     }
 
     msg = NULL;
@@ -133,12 +137,12 @@ int rpcExecute()
 {
 
     int select_rv, client_fd;
-    fd_set active_fds, read_fds;
+    fd_set read_fds;
 
-    FD_ZERO(&active_fds);
+    FD_ZERO(&g_active_fds);
     FD_ZERO(&read_fds);
-    FD_SET(g_server_fd, &active_fds);
-    FD_SET(g_binder_fd, &active_fds);
+    FD_SET(g_server_fd, &g_active_fds);
+    FD_SET(g_binder_fd, &g_active_fds);
 
     listen(g_server_fd, MAX_CLIENT_CONNECTIONS);
 
@@ -149,14 +153,14 @@ int rpcExecute()
 
         DEBUG("SELECT ... ");
 
-        read_fds = active_fds;
+        read_fds = g_active_fds;
         select_rv = select(FD_SETSIZE, &read_fds, NULL, NULL, NULL);
 
         DEBUG("SELECTED!");
 
         if (select_rv < 0) {
             fprintf(stderr, "ERROR on select: %s\n", strerror(errno));
-            return -1;
+            return CONNECTION_SELECT_FAIL;
         }
 
         // iterate through each socket
@@ -171,7 +175,7 @@ int rpcExecute()
                 if (client_fd < 0) {
                     fprintf(stderr, "ERROR on accepting client: %s\n", strerror(errno));
                 } else {
-                    FD_SET(client_fd, &active_fds);
+                    FD_SET(client_fd, &g_active_fds);
                 }
 
             } else if (connection_fd == (unsigned int)g_binder_fd) {
@@ -210,7 +214,7 @@ int rpcExecute()
                 if (bad_code) {
                     // failed to create new thread
                     fprintf(stderr, "ERROR: failed to create a thread for client\n");
-                    return -1;
+                    return PTHREAD_CREATE_FAIL;
                 }
 
                 pthread_mutex_lock( &g_client_thread_lock);
@@ -221,7 +225,7 @@ int rpcExecute()
         } // for
     } // while
 
-    FD_ZERO(&active_fds);
+    FD_ZERO(&g_active_fds);
     FD_ZERO(&read_fds);
 
     // wait for all client threads to finish
@@ -254,7 +258,7 @@ int create_server_socket()
     server_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_fd < 0) {
         fprintf(stderr, "ERROR creating client socket on server: %s\n", strerror(errno));
-        return -1;
+        return SOCKET_CREATE_FAIL; 
     }
 
     g_server_fd = server_fd;
@@ -262,19 +266,19 @@ int create_server_socket()
     // bind client listener socket
     if ( bind(g_server_fd, (const struct sockaddr *)(&server_addr), server_addr_len) < 0 ) {
         fprintf(stderr,"ERROR binding client listener socket: %s\n", strerror(errno));
-        return -1;
+        return SOCKET_BIND_FAIL;
     }
 
     // set server ip and port to global variable
     if (getsockname(g_server_fd, (struct sockaddr *)&server_addr, &server_addr_len) == -1){
         fprintf(stderr, "ERROR getsockname on server\n");
-        return -1;
+        return SOCKET_GET_SOCK_NAME_FAIL;
     }
 
     g_server_port = server_addr.sin_port;
 
     if(get_ip_from_socket(&g_server_ip, g_server_fd) < 0) {
-        return -1;
+        return GET_IP_FROM_SOCKET_FAIL;
     }
 
     // prints out ip and port for debug purpose
@@ -292,6 +296,11 @@ int create_server_socket()
 } // create_server_socket
 
 
+/**
+ * error codes:
+ * ENVR_VARIABLES_NOT_SET
+ * CONNECT_TO_HOST_FAIL
+ */
 int connect_server_to_binder()
 {
 
@@ -308,7 +317,7 @@ int connect_server_to_binder()
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : connect_server_to_binder() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return -1;
+        return ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;
@@ -317,7 +326,7 @@ int connect_server_to_binder()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
-        return -1;
+        return CONNECT_TO_HOST_FAIL;
     }
 
     g_binder_fd = binder_fd;
@@ -331,6 +340,10 @@ int connect_server_to_binder()
 
 /**
  * Extract response from binder after a server method registration request is sent
+ *
+ * error codes:
+ * EXTRACT_MSG_FAIL
+ * MSG_TYPE_NOT_SUPPORTED
  */
 int extract_registration_results(char *msg, int* result)
 {
@@ -340,16 +353,16 @@ int extract_registration_results(char *msg, int* result)
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     switch (msg_type) {
-    case MSG_REGISTER_SUCCESS:
-    case MSG_REGISTER_FAILURE:
-        // register success or failure
-        if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
-            fprintf(stderr, "ERROR extracting msg\n");
-            return -1;
-        }
-        return 0;
-    default:
-        return -1;
+        case MSG_REGISTER_SUCCESS:
+        case MSG_REGISTER_FAILURE:
+            // register success or failure
+            if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
+                fprintf(stderr, "ERROR extracting msg\n");
+                return EXTRACT_MSG_FAIL;
+            }
+            return 0;
+        default:
+            return MSG_TYPE_NOT_SUPPORTED;
     }
 } // extract_registration_results
 
@@ -373,41 +386,44 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     char* fct_name = NULL;
     char* response_msg = NULL;
     skeleton target_method;
-    int method_return_code;
+    int reason_code;
 
     extract_msg_len_type(&msg_len, &msg_type, msg);
     if (msg_type == MSG_EXECUTE) {
 
-        DEBUG("HANDLING CLIENT MESSAGE!");
         // extract msg
         if (extract_msg(msg, msg_len, msg_type, &fct_name_len, &fct_name, &arg_types_len, &arg_types, &args) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
         }
 
         // run requested server procedure
-        g_skeleton_database->db_get(&target_method, fct_name, arg_types);
+        reason_code = g_skeleton_database->db_get(&target_method, fct_name, arg_types);
 
-        // respond with execution results
-        method_return_code = target_method(arg_types, args);
+        if (reason_code == RECORD_FOUND){
+            // respond with execution results
+            reason_code = target_method(arg_types, args);
+        }
 
-        if (method_return_code == 0) {
+        if (reason_code == SKEL_EXEC_SUCCESS) {
             // EXECUTE SUCCESS
             assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_SUCCESS, fct_name_len, fct_name, arg_types_len, arg_types, args);
-        } else if (method_return_code < 0) {
+        } else {
             // EXECUTE FAIL
-            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, -1); // TODO: what should reason code be instead of -1?
+            assemble_msg(&response_msg, &msg_len, MSG_EXECUTE_FAILURE, reason_code);
         }
 
         // send response to client regarding RPC success/failure
         write_message(client_fd, response_msg, msg_len);
-        DEBUG("DONE HANDLING CLIENT MESSAGE!");
 
     }
 
+    FD_CLR(client_fd, &g_active_fds);
     close(client_fd);
-    // TODO: remove clientfd from active sockets
 
-    // TODO: free stuff
+    if (response_msg != NULL) free(response_msg);
+    if (fct_name != NULL) free(fct_name);
+    if (arg_types != NULL) free(arg_types);
+    if (args != NULL) free(args);
 
     return NULL;
 } // handle_client_msg

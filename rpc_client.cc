@@ -23,6 +23,11 @@ int send_execute_to_server(int server_fd,
                            unsigned int name_len, char *name,
                            unsigned int arg_types_len, int *arg_types, void** args);
 
+/**
+ * error codes:
+ * ENVR_VARIABLES_NOT_SET
+ * CONNECT_TO_HOST_FAIL;
+ */
 int rpcCall(char* name, int* argTypes, void** args)
 {
 
@@ -53,7 +58,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : rpcCall() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return -1;
+        return ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;
@@ -62,7 +67,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to binder\n");
-        return -1;
+        return CONNECT_TO_HOST_FAIL;
     }
 
     // get ip and port from binder
@@ -90,7 +95,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
-        return -1;
+        return CONNECT_TO_IP_FAIL;
     }
 
     DEBUG("connect success!");
@@ -110,6 +115,14 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
     return -1;
 }
 
+/**
+ * error codes:
+ * ENVR_VARIABLES_NOT_SET
+ * CONNECT_TO_HOST_FAIL
+ * ASSEMBLE_MSG_FAIL
+ * WRITE_MSG_FAIL
+ *
+ */
 int rpcTerminate()
 {
     // declare sock vars
@@ -129,7 +142,7 @@ int rpcTerminate()
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return -1;
+        return ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;
@@ -138,13 +151,13 @@ int rpcTerminate()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcTerminate() cannot connect to binder\n");
-        return -1;
+        return CONNECT_TO_HOST_FAIL;
     }
 
     // assemble a terminate message
     if ( assemble_msg(&w_buffer,&w_buffer_len,MSG_TERMINATE) < 0 ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't assemble terminate message\n");
-        return -1;
+        return ASSEMBLE_MSG_FAIL;
     }
 
     // send message
@@ -152,7 +165,7 @@ int rpcTerminate()
     free(w_buffer);
     if ( write_len < w_buffer_len ) {
         fprintf(stderr,"Error : rpcTerminate() couldn't send terminate to binder\n");
-        return -1;
+        return WRITE_MSG_FAIL;
     }
 
     close(binder_fd);
@@ -162,6 +175,9 @@ int rpcTerminate()
 /**
  * rpcCall helper functions
  *
+ * WRITE_MSG_FAIL
+ * READ_MSG_FAIL
+ * MSG_TYPE_NOT_SUPPORTED
  *
  */
 int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
@@ -190,14 +206,14 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
     rw_buffer = NULL;
     if ( write_len < rw_buffer_len ) {
         fprintf(stderr, "Error : couldn't send loc request\n");
-        return -1;
+        return WRITE_MSG_FAIL;
     }
 
     // wait for answer
     read_len = read_message(&rw_buffer,binder_fd);
     if ( read_len < 0 ) {
         fprintf(stderr, "Error : couldn't read reply of loc request\n");
-        return -1;
+        return READ_MSG_FAIL;
     }
 
     // extract length and type
@@ -222,12 +238,21 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
     default:
         fprintf(stderr, "Error : asking for server ip and port, got invalid type %x\n",msg_type);
         free(rw_buffer);
-        return -1;
+        return MSG_TYPE_NOT_SUPPORTED;
     }
 
     // success!
     return 0;
 }
+
+/**
+ *  Send execute request to server
+ *
+ *  error codes:
+ *  WRITE_MSG_FAIL
+ *  READ_MSG_FAIL
+ *  MSG_TYPE_NOT_SUPPORTED
+ */
 int send_execute_to_server(int server_fd,
                            unsigned int name_len, char *name,
                            unsigned int arg_types_len, int *arg_types, void** args)
@@ -258,14 +283,14 @@ int send_execute_to_server(int server_fd,
     rw_buffer = NULL;
     if ( write_len < rw_buffer_len) {
         fprintf(stderr, "Error : couldn't send execute\n");
-        return -1;
+        return WRITE_MSG_FAIL;
     }
 
     // wait for answer
     read_len = read_message(&rw_buffer,server_fd);
     if ( read_len < 0 ) {
         fprintf(stderr, "Error : couldn't read reply of loc request\n");
-        return -1;
+        return READ_MSG_FAIL;
     }
 
     // extract len and type
@@ -288,7 +313,7 @@ int send_execute_to_server(int server_fd,
     default:
         free(rw_buffer);
         fprintf(stderr, "Error : asking for server execute, got invalid type %x\n",msg_type);
-        return -1;
+        return MSG_TYPE_NOT_SUPPORTED;
     }
 
     // copy args over

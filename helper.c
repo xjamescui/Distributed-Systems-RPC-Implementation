@@ -23,6 +23,9 @@
 
 /**
  * Read message of buffer_len from socket fd into buffer
+ *
+ * error codes:
+ * READ_MSG_FAIL
  */
 ssize_t read_message(char** buffer, int socket_fd)
 {
@@ -38,7 +41,7 @@ ssize_t read_message(char** buffer, int socket_fd)
 
     if (read_so_far < 0) {
         fprintf(stderr,"Error reading first 5 bytes: %s\n" , strerror(errno));
-        return -1;
+        return READ_MSG_FAIL;
     }
 
     // determine msg_len and msg type value
@@ -57,7 +60,7 @@ ssize_t read_message(char** buffer, int socket_fd)
         read_len = read(socket_fd, &(*buffer)[read_so_far], MIN(MAX_RW_CHUNK_SIZE, msg_len-read_so_far));
         if ( read_len < 0 ) {
             fprintf(stderr,"Error: Could only read %ld of %d\n",read_so_far,msg_len);
-            return -1;
+            return READ_MSG_FAIL;
         }
         read_so_far += read_len;
     }
@@ -67,6 +70,9 @@ ssize_t read_message(char** buffer, int socket_fd)
 
 /**
  * Write message(buffer) of buffer_len and send to socket fd
+ *
+ * error codes:
+ * WRITE_MSG_FAIL
  */
 ssize_t write_message(int fd, const char* const buffer, const unsigned int buffer_len)
 {
@@ -77,7 +83,7 @@ ssize_t write_message(int fd, const char* const buffer, const unsigned int buffe
         write_len = write(fd, &buffer[write_so_far], MIN(MAX_RW_CHUNK_SIZE,buffer_len-write_so_far));
         if ( write_len < 0 ) {
             fprintf(stderr,"Error : Could only write %d of %d\n",write_so_far,buffer_len);
-            return -1;
+            return WRITE_MSG_FAIL;
         }
         write_so_far += write_len;
     }
@@ -91,6 +97,12 @@ ssize_t write_message(int fd, const char* const buffer, const unsigned int buffe
  *
  *
  *****************************************************************************/
+
+
+/**
+ * error codes:
+ * INVALID_SIZE
+ */
 int compute_type_int(int *type_int, const bool is_input, const bool is_output,
                      const char arg_type, const unsigned int arg_size )
 {
@@ -98,7 +110,7 @@ int compute_type_int(int *type_int, const bool is_input, const bool is_output,
     if ( is_input ) *type_int = *type_int | 1 << ARG_INPUT ;
     if ( is_output ) *type_int = *type_int | 1 << ARG_OUTPUT ;
     *type_int = *type_int | arg_type << 16 ;
-    if ( ( arg_size & 0xFFFF0000 ) != 0 ) return -1;
+    if ( ( arg_size & 0xFFFF0000 ) != 0 ) return INVALID_SIZE;
     *type_int = *type_int | arg_size ;
     return 0;
 }
@@ -245,7 +257,7 @@ bool starts_with(const char *pre, const char *str)
 {
     size_t lenpre = strlen(pre),
            lenstr = strlen(str);
-    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+    return (lenstr < lenpre) ? false : strncmp(pre, str, lenpre) == 0;
 }
 
 // function to return eth0 or etho000 ip addr
@@ -259,7 +271,8 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
     ic.ifc_req = ifreqs;
 
     if (ioctl(socket_fd, SIOCGIFCONF, &ic) < 0) {
-        return -1;
+        fprintf(stderr, "ERROR when calling ioctl(): %s\n", strerror(errno));
+        return IOCTL_ERROR;
     }
 
     for (i = 0; i < ic.ifc_len/sizeof(struct ifreq); ++i) {
@@ -276,6 +289,9 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
 /******************************************************************************
  * connect to given ip/hostname and port
  *
+ * error codes:
+ * SOCKET_CREATE_FAIL
+ * SOCKET_CONNECT_FAIL
  *
  *****************************************************************************/
 int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned short port )
@@ -296,7 +312,7 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned s
     // socket()
     if ( ( sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0 ) {
         fprintf(stderr, "Error : connect_to_ip_port socket() failed: %s\n", strerror(errno));
-        return -1;
+        return SOCKET_CREATE_FAIL;
     }
 
     // prepare connect()
@@ -309,7 +325,7 @@ int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned s
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
         fprintf(stderr,"Error : connect_to_ip_port connect() failed : %s\n",strerror(errno));
-        return -1;
+        return SOCKET_CONNECT_FAIL;
     }
 
     // set the return socket
@@ -331,7 +347,7 @@ int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const
     // socket()
     if ( ( sock_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0 ) {
         fprintf(stderr, "Error : connect_to_hostname_port socket() failed: %s\n", strerror(errno));
-        return -1;
+        return SOCKET_CREATE_FAIL;
     }
 
     temp_hostinfo = gethostbyname(hostname);
@@ -344,7 +360,7 @@ int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const
     // connect()
     if( connect( sock_fd , (struct sockaddr *)&temp_socket_addr , temp_socket_addr_len ) < 0) {
         fprintf(stderr,"Error : connect_to_hostname_port connect() failed : %s\n",strerror(errno));
-        return -1;
+        return SOCKET_CONNECT_FAIL;
     }
 
     // set the return socket
@@ -363,7 +379,7 @@ int connect_to_hostname_port(int *out_sock_fd, const char* const hostname, const
  *
  * return:
  * 0 = success
- * TODO: error is negative?
+ * < 0: error
  *****************************************************************************/
 int assemble_msg(char** buffer, unsigned int *buffer_len, const char msg_type, ... )
 {
@@ -600,11 +616,17 @@ int extract_msg_len_type(unsigned int *msg_len, char *msg_type, const char* cons
     return 0;
 }
 
+/**
+ * 
+ * error codes:
+ * EXTRACT_MSG_FAIL
+ *
+ */
 int extract_msg(const char* const buffer, const unsigned int buffer_len, const char msg_type, ...)
 {
     if ( buffer == 0 ) {
         DEBUG("extract_msg() : cannot extract an empty buffer");
-        return -1;
+        return EXTRACT_MSG_FAIL;
     }
 
     va_list vl;             // declare a list of args
@@ -785,6 +807,9 @@ unsigned int arg_types_length(int* argTypes)
 /**
  * step by step copy void** args into another void** args
  * (not changing pointers, assuming it's already allocated)
+ *
+ * error codes:
+ * INVALID_SIZE
  */
 int copy_args_step_by_step(int const *arg_types, void** const to_args, void const *const *const from_args)
 {
@@ -796,7 +821,7 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
     int single_arg_total_len = 0;
     for ( unsigned int i = 0 ; i < arg_types_len ; i += 1 ) {
         single_arg_total_len = type_arg_total_length(arg_types[i]);
-        if ( single_arg_total_len == 0 ) return -1;
+        if ( single_arg_total_len == 0 ) return INVALID_SIZE;
         memcpy(to_args[i],from_args[i],single_arg_total_len);
     }
 
