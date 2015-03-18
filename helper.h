@@ -11,8 +11,6 @@
  *          READ_MESSAGE_ERROR if read returns negative
  *          READ_MESSAGE_ZERO_LENGTH if it's zero length (socket is dead)
  */
-#define READ_MESSAGE_ERROR          -1
-#define READ_MESSAGE_ZERO_LENGTH    -2
 ssize_t read_message(char** buffer, int socket_fd);
 
 /** write() that can take a large buffer_len

@@ -86,3 +86,11 @@
 
 #define RECORD_DELETE_SUCCESS   0
 #define RECORD_DELETE_FAIL      -1
+
+
+/******************************************************************
+ * From functions in helper.c                                     *
+ *                                                                *
+ ******************************************************************/
+#define READ_MESSAGE_ERROR          -1
+#define READ_MESSAGE_ZERO_LENGTH    -2
