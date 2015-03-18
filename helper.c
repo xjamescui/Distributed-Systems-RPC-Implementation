@@ -943,11 +943,12 @@ void print_received_message(char const *const buffer) {
                     &ip,&port,&fct_name_len,&fct_name,&arg_types_len,&arg_types);
 
         unsigned char ipb1, ipb2, ipb3, ipb4;
-        ipb1 = (ip >> 24) & 0xFF;
-        ipb2 = (ip >> 16) & 0xFF;
-        ipb3 = (ip >> 8) & 0xFF;
-        ipb4 = (ip >> 0) & 0xFF;
-        sprintf(to_print,"%s%u.%u.%u.%u:%u %s(",to_print,ipb1, ipb2, ipb3, ipb4, port, fct_name);
+        unsigned int ntoh_ip = ntohl(ip);
+        ipb1 = (ntoh_ip >> 24) & 0xFF;
+        ipb2 = (ntoh_ip >> 16) & 0xFF;
+        ipb3 = (ntoh_ip >> 8) & 0xFF;
+        ipb4 = (ntoh_ip >> 0) & 0xFF;
+        sprintf(to_print,"%s%u.%u.%u.%u:%u %s(", to_print, ipb1, ipb2, ipb3, ipb4, ntohs(port), fct_name);
 
         char single_arg_type_type;
         unsigned int single_arg_type_size;

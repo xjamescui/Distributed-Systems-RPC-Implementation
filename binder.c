@@ -12,7 +12,7 @@
 #include "stdbool.h"
 #include <unistd.h>
 #include <errno.h>
-
+#include <time.h>
 #include <string.h>
 
 #include "rpc.h"
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     while ( running ) {
         // block until one fd is ready
         temp_fds = active_fds;
-        DEBUG("SELECT ...");
+        DEBUG("SELECT ... %d",(unsigned)time(NULL));
         if ( select(FD_SETSIZE, &temp_fds, NULL, NULL, NULL) < 0) {
             fprintf(stderr,"Error : select() failed\n");
             exit_code = 1;
@@ -210,10 +210,13 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     read_len = read_message(&rw_buffer,connection_fd);
     if ( read_len == READ_MSG_FAIL ) {
         fprintf(stderr,"Error : handle_request() couldn't read from socket\n");
+        close(connection_fd);
+        FD_CLR(connection_fd,active_fds);
+        FD_CLR(connection_fd,server_fds);
         return -1;
     }
     if ( read_len == READ_MSG_ZERO_LENGTH ) { // server closed
-        DEBUG("server closed at socket %d",connection_fd);
+        fprintf(stderr,"Warning : server at %d terminated\n",connection_fd);
         close(connection_fd);
         FD_CLR(connection_fd,active_fds);
         FD_CLR(connection_fd,server_fds);

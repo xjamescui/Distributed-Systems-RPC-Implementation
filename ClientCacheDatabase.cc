@@ -66,3 +66,12 @@ int ClientCacheDatabase::drop()
     pthread_mutex_unlock(&m_lock);      // unlock
     return opCode;                      // return the opCode
 }
+int ClientCacheDatabase::size()
+{
+    int opCode;
+    pthread_mutex_lock(&m_lock);        // lock
+    opCode = db_size();                 // do the function
+    pthread_mutex_unlock(&m_lock);      // unlock
+    return opCode;                      // return the opCode
+}
+

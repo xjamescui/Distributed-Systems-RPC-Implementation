@@ -25,6 +25,7 @@ public:
     int get(HOST* host, SIGNATURE sig);
     int delete_host(const HOST &host, SIGNATURE sig);
     int drop();
+    int size();
 
 private:
     // make default functions private
@@ -34,7 +35,7 @@ private:
     ClientCacheDatabase& operator=(ClientCacheDatabase const&);
 
     static ClientCacheDatabase* m_pInstance;
-    static pthread_mutex_t m_lock;
+    pthread_mutex_t m_lock;
 };
 
 #endif // CLIENT_CACHE_DATABASE_H

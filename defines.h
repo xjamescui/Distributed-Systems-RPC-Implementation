@@ -110,8 +110,21 @@
 #define RPC_SERVER_BIND_SOCKET_FAIL             -2
 #define RPC_SERVER_GET_SOCK_NAME_FAIL           -3
 
-#define RPC_SERVER_INIT_SUCCESS                  0
-#define RPC_SERVER_SHUTDOWN_SUCCESS              0
+#define RPC_REGISTER_OVERRIDE_PREVIOUS           1
+#define RPC_REGISTER_SERVER_SETUP_ERROR         -1
+#define RPC_REGISTER_INVALID_FCT_NAME           -2
+#define RPC_REGISTER_INVALID_ARGTYPES           -3
+#define RPC_REGISTER_UNKNOWN_ERROR              -4
+
+#define RPC_CALL_SIGNATURE_NO_HOSTS             -1
+
+
+#define RPC_INIT_SUCCESS                         0
+#define RPC_REGISTER_SUCCESS                     0
+#define RPC_CALL_SUCCESS                         0
+#define RPC_CACHE_CALL_SUCCESS                   0
+#define RPC_TERMINATE_SUCCESS                    0
+#define RPC_EXECUTE_SUCCESS                      0
 
 #define RPC_CONNECT_TO_BINDER_FAIL              -1
 #define RPC_CONNECT_TO_SERVER_FAIL              -2
