@@ -116,7 +116,6 @@
  *                                                                *
  ******************************************************************/
 
-#define SOCKET_UNINITIALIZED             -1 //TODO give unique values later if needed
 #define SOCKET_CREATE_FAIL               -1
 #define SOCKET_BIND_FAIL                 -1
 #define SOCKET_CONNECT_FAIL              -1
@@ -130,10 +129,6 @@
 #define READ_MSG_ZERO_LENGTH             -2
 
 #define WRITE_MSG_FAIL                   -1 
-
-#define CONNECT_TO_HOST_FAIL             -1
-#define CONNECT_TO_IP_FAIL               -1
-#define CONNECTION_SELECT_FAIL           -1
 
 
 #define GET_IP_FROM_SOCKET_FAIL          -1

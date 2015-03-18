@@ -308,7 +308,7 @@ int create_server_socket()
 /**
  * error codes:
  * RPC_ENVR_VARIABLES_NOT_SET
- * CONNECT_TO_HOST_FAIL
+ * RPC_CONNECT_TO_HOST_FAIL
  */
 int connect_server_to_binder()
 {
@@ -335,7 +335,7 @@ int connect_server_to_binder()
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : connect_server_to_binder() cannot connect to binder\n");
-        return CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_HOST_FAIL;
     }
 
     g_binder_fd = binder_fd;
