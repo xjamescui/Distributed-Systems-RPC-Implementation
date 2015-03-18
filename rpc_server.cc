@@ -342,7 +342,7 @@ int connect_server_to_binder()
 
     // DEBUG("SERVER CONNECTED to binder: %s\n", binder_hostinfo->h_name);
 
-    return RPC_SERVER_CONNECT_TO_BINDER_SUCCESS;
+    return 0;
 } // connect_server_to_binder
 
 
@@ -369,7 +369,7 @@ int extract_registration_results(char *msg, int* result)
                 fprintf(stderr, "ERROR extracting msg\n");
                 return EXTRACT_MSG_FAIL;
             }
-            return RPC_EXTRACT_REGISTRATION_RESULTS_SUCCESS;
+            return 0;
         default:
             return MSG_TYPE_NOT_SUPPORTED;
     }
@@ -434,7 +434,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
     if (arg_types != NULL) free(arg_types);
 
     for ( unsigned int i = 0; i < arg_types_len; i += 1) {
-        free(args[i]);
+        if (args[i] != NULL) free(args[i]);
     }
 
     if (args != NULL) free(args);

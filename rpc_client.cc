@@ -156,10 +156,7 @@ int rpcTerminate()
     }
 
     // assemble a terminate message
-    if ( assemble_msg(&w_buffer,&w_buffer_len,MSG_TERMINATE) < 0 ) {
-        fprintf(stderr,"Error : rpcTerminate() couldn't assemble terminate message\n");
-        return ASSEMBLE_MSG_FAIL;
-    }
+    assemble_msg(&w_buffer,&w_buffer_len,MSG_TERMINATE);
 
     // send message
     write_len = write_message(binder_fd, w_buffer, w_buffer_len);
