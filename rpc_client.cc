@@ -23,7 +23,7 @@ int ask_binder_for_host(int binder_fd, unsigned int *ip, unsigned int *port,
 int send_execute_to_server(int server_fd,
                            unsigned int name_len, char *name,
                            unsigned int arg_types_len, int *arg_types, void** args);
-int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
+int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len, 
                               unsigned int **ips, unsigned int **ports,
                               unsigned int name_len, char *name,
                               unsigned int arg_types_len, int *arg_types);
@@ -146,12 +146,19 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
     // if it's not, then ask binder again
     int opCode;
     if ( get_code < 0 ) {
+        DEBUG("asking binder for cache");
+
         // declare binder sock vars
         int binder_fd;
         char* binder_address;
         char* binder_port_str;
         unsigned int binder_port;
         unsigned short binder_port_short;
+
+        // server stuff that get returned by binder
+        unsigned int hosts_len;
+        unsigned int* server_ips = NULL;
+        unsigned int* server_ports = NULL;
 
         // get environment variables
         binder_address = getenv(BINDER_ADDRESS_STRING);
@@ -170,14 +177,6 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
             return RPC_CONNECT_TO_BINDER_FAIL;
         }
 
-        // done with binder, close it
-        close(binder_fd);
-
-        // server stuff
-        unsigned int hosts_len;
-        unsigned int* server_ips = NULL;
-        unsigned int* server_ports = NULL;
-
         // get ip and port from binder
         if ( (opCode = ask_binder_for_cache_host(binder_fd,
                             &hosts_len, &server_ips,&server_ports,
@@ -186,6 +185,9 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
             fprintf(stderr, "Error : rpcCacheCall() cannot get cache servers from binder %d\n",opCode);
             return opCode;
         }
+
+        // done with binder, close it
+        close(binder_fd);
 
         // put everything in cache database, pretty sure hosts_len > 0
         for ( unsigned int i = 0 ; i < hosts_len ; i += 1 ) {
@@ -213,7 +215,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
 
     // connect to server
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {
-        fprintf(stderr, "Error : rpcCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
+        fprintf(stderr, "Error : rpcCacheCall() cannot connect to server %x:%u\n",server_ip,server_port_short);
         return RPC_CONNECT_TO_SERVER_FAIL;
     }
 
@@ -221,7 +223,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
 
     // execute the message
     if ( (opCode = send_execute_to_server(server_fd, sig.fct_name_len, sig.fct_name, sig.arg_types_len, sig.arg_types, args)) < 0 ) {
-        fprintf(stderr, "Error : rpcCall() cannot execute %d\n",opCode);
+        fprintf(stderr, "Error : rpcCacheCall() cannot execute %d\n",opCode);
         return opCode;
     }
 
@@ -457,7 +459,7 @@ int send_execute_to_server(int server_fd,
  *  RPC_READ_FROM_SERVER_FAIL
  *  MSG_TYPE_NOT_SUPPORTED
  */
-int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
+int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len, 
                               unsigned int **ips, unsigned int **ports,
                               unsigned int name_len, char *name,
                               unsigned int arg_types_len, int *arg_types) {
@@ -470,8 +472,8 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
     // stuff to be extracted
     unsigned int msg_len;
     char msg_type;
-    unsigned int *server_ips;
-    unsigned int *server_ports;
+    unsigned int *server_ips = NULL;
+    unsigned int *server_ports = NULL;
     int result;
 
     // assemble
@@ -525,12 +527,12 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
         switch(result){
         case MSG_LOC_FAILURE_SIGNATURE_NOT_FOUND :
         case MSG_LOC_FAILURE_SIGNATURE_NO_HOSTS :
-            return RPC_CALL_SIGNATURE_NO_HOSTS;
+            return RPC_CALL_NO_HOSTS;
         }
     }
     break;
     default:
-        fprintf(stderr, "Error : asking for server ip and port, got invalid type %x\n",msg_type);
+        fprintf(stderr, "Error : asking for server ip and port, got invalid type 0x%x\n",msg_type);
         free(rw_buffer);
         return MSG_TYPE_NOT_SUPPORTED;
     }
