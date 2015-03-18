@@ -115,7 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
-        return SOCKET_WRITE_MESSAGE_FAIL;
+        return WRITE_MSG_FAIL;
     }
 
     msg = NULL;
@@ -431,8 +431,14 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
     if (response_msg != NULL) free(response_msg);
     if (fct_name != NULL) free(fct_name);
-    if (arg_types != NULL) free(arg_types);
+
+    for ( unsigned int i = 0; i < arg_types_len; i += 1) {
+        free(&arg_types[i]);
+        free(args[i]);
+    }
+
     if (args != NULL) free(args);
+    if (arg_types != NULL) free(arg_types);
 
     return NULL;
 } // handle_client_msg

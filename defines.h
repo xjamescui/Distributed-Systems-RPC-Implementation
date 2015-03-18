@@ -102,7 +102,6 @@
 #define SOCKET_BIND_FAIL                 -1
 #define SOCKET_CONNECT_FAIL              -1
 #define SOCKET_GET_SOCK_NAME_FAIL        -1
-#define SOCKET_WRITE_MESSAGE_FAIL        -1
 
 
 #define ASSEMBLE_MSG_FAIL                -1
