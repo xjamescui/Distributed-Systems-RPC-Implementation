@@ -58,7 +58,7 @@ int rpcInit()
     // initialize skeleton database
     g_skeleton_database = new SkeletonDatabase();
 
-    return 0;
+    return RPC_SERVER_INIT_SUCCESS;
 } // rpcInit
 
 
@@ -115,7 +115,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     free(msg);
     if ( write_len < msg_len ) {
         fprintf(stderr, "Error : couldn't send register request\n");
-        return WRITE_MSG_FAIL;
+        return RPC_WRITE_MSG_FAIL;
     }
 
     msg = NULL;
@@ -160,7 +160,7 @@ int rpcExecute()
 
         if (select_rv < 0) {
             fprintf(stderr, "ERROR on select: %s\n", strerror(errno));
-            return CONNECTION_SELECT_FAIL;
+            return RPC_CONNECTION_SELECT_FAIL;
         }
 
         // iterate through each socket
@@ -239,7 +239,7 @@ int rpcExecute()
     close(g_server_fd);
     delete g_skeleton_database;
 
-    return 0;
+    return RPC_SERVER_SHUTDOWN_SUCCESS;
 }
 
 
@@ -301,7 +301,7 @@ int create_server_socket()
     DEBUG("server port:%d",ntohs(g_server_port));
     DEBUG("(network)server port:%x",g_server_port);
 
-    return 0;
+    return RPC_SERVER_CREATE_SOCKET_SUCCESS;
 } // create_server_socket
 
 
@@ -342,7 +342,7 @@ int connect_server_to_binder()
 
     // DEBUG("SERVER CONNECTED to binder: %s\n", binder_hostinfo->h_name);
 
-    return 0;
+    return RPC_SERVER_CONNECT_TO_BINDER_SUCCESS;
 } // connect_server_to_binder
 
 
@@ -369,7 +369,7 @@ int extract_registration_results(char *msg, int* result)
                 fprintf(stderr, "ERROR extracting msg\n");
                 return EXTRACT_MSG_FAIL;
             }
-            return 0;
+            return RPC_EXTRACT_REGISTRATION_RESULTS_SUCCESS;
         default:
             return MSG_TYPE_NOT_SUPPORTED;
     }

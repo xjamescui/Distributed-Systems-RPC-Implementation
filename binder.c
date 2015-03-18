@@ -207,11 +207,11 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     // read()
     rw_buffer = NULL;
     read_len = read_message(&rw_buffer,connection_fd);
-    if ( read_len == READ_MESSAGE_ERROR ) {
+    if ( read_len == READ_MSG_FAIL ) {
         fprintf(stderr,"Error : handle_request() couldn't read from socket\n");
         return -1;
     }
-    if ( read_len == READ_MESSAGE_ZERO_LENGTH ) { // server closed
+    if ( read_len == READ_MSG_ZERO_LENGTH ) { // server closed
         DEBUG("server closed at socket %d",connection_fd);
         close(connection_fd);
         FD_CLR(connection_fd,active_fds);

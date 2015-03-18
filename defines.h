@@ -93,6 +93,21 @@
 
 
 /******************************************************************
+ * RPC-specific                                                   *
+ *                                                                *
+ ******************************************************************/
+
+#define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
+#define RPC_SERVER_INIT_SUCCESS                  0
+#define RPC_EXTRACT_REGISTRATION_RESULTS_SUCCESS 0
+#define RPC_SERVER_SHUTDOWN_SUCCESS              0
+#define RPC_SERVER_CONNECT_TO_BINDER_SUCCESS     0
+
+#define RPC_CONNECTION_SELECT_FAIL              -1
+#define RPC_WRITE_MSG_FAIL                      -1
+
+
+/******************************************************************
  * socket                                                         *
  *                                                                *
  ******************************************************************/
@@ -115,6 +130,7 @@
 #define CONNECT_TO_HOST_FAIL             -1
 #define CONNECT_TO_IP_FAIL               -1
 #define CONNECTION_SELECT_FAIL           -1
+
 
 #define GET_IP_FROM_SOCKET_FAIL          -1
 
