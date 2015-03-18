@@ -26,7 +26,8 @@ int send_execute_to_server(int server_fd,
 /**
  * error codes:
  * ENVR_VARIABLES_NOT_SET
- * CONNECT_TO_HOST_FAIL;
+ * CONNECT_TO_HOST_FAIL
+ * CONENCT_TO_IP_FAIL
  */
 int rpcCall(char* name, int* argTypes, void** args)
 {

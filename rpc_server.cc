@@ -241,6 +241,14 @@ int rpcExecute()
     return 0;
 }
 
+
+/**
+ * error codes:
+ * SOCKET_CREATE_FAIL
+ * SOCKET_BIND_FAIL
+ * SOCKET_GET_SOCK_NAME_FAIL
+ * GET_IP_FROM_SOCKET_FAIL
+ */
 int create_server_socket()
 {
 
