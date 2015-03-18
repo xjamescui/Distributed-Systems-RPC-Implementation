@@ -25,7 +25,7 @@ int send_execute_to_server(int server_fd,
 
 /**
  * error codes:
- * ENVR_VARIABLES_NOT_SET
+ * RPC_ENVR_VARIABLES_NOT_SET
  * CONNECT_TO_HOST_FAIL
  * CONENCT_TO_IP_FAIL
  */
@@ -59,7 +59,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : rpcCall() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return ENVR_VARIABLES_NOT_SET;
+        return RPC_ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;
@@ -68,7 +68,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     // connect to binder
     if ( connect_to_hostname_port(&binder_fd, binder_address, binder_port_short) < 0 ) {
         fprintf(stderr, "Error : rpcCall() cannot connect to binder\n");
-        return CONNECT_TO_HOST_FAIL;
+        return RPC_CONNECT_TO_HOST_FAIL;
     }
 
     // get ip and port from binder
@@ -118,7 +118,7 @@ int rpcCacheCall(char* name, int* argTypes, void** args)
 
 /**
  * error codes:
- * ENVR_VARIABLES_NOT_SET
+ * RPC_ENVR_VARIABLES_NOT_SET
  * CONNECT_TO_HOST_FAIL
  * ASSEMBLE_MSG_FAIL
  * WRITE_MSG_FAIL
@@ -143,7 +143,7 @@ int rpcTerminate()
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : rpcTerminate() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return ENVR_VARIABLES_NOT_SET;
+        return RPC_ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;

@@ -307,7 +307,7 @@ int create_server_socket()
 
 /**
  * error codes:
- * ENVR_VARIABLES_NOT_SET
+ * RPC_ENVR_VARIABLES_NOT_SET
  * CONNECT_TO_HOST_FAIL
  */
 int connect_server_to_binder()
@@ -326,7 +326,7 @@ int connect_server_to_binder()
     binder_port_str = getenv(BINDER_PORT_STRING);
     if (binder_address == NULL || binder_port_str == NULL) {
         fprintf(stderr, "Error : connect_server_to_binder() BINDER_ADDRESS and/or BINDER_PORT not set\n");
-        return ENVR_VARIABLES_NOT_SET;
+        return RPC_ENVR_VARIABLES_NOT_SET;
     }
     binder_port = atoi(binder_port_str);
     binder_port_short = binder_port;

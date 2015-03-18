@@ -97,6 +97,7 @@
  *                                                                *
  ******************************************************************/
 
+#define RPC_ENVR_VARIABLES_NOT_SET              -1
 #define RPC_SOCKET_UNINITIALIZED                -1
 
 #define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
@@ -105,6 +106,7 @@
 #define RPC_SERVER_SHUTDOWN_SUCCESS              0
 #define RPC_SERVER_CONNECT_TO_BINDER_SUCCESS     0
 
+#define RPC_CONNECT_TO_HOST_FAIL                -1
 #define RPC_CONNECTION_SELECT_FAIL              -1
 #define RPC_WRITE_MSG_FAIL                      -1
 
@@ -141,7 +143,6 @@
  *                                                                *
  ******************************************************************/
 
-#define ENVR_VARIABLES_NOT_SET           -1
 #define ARG_TYPE_INVALID_SIZE            -1
 #define IOCTL_ERROR                      -1 
 
