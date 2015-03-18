@@ -237,6 +237,7 @@ int rpcExecute()
 
     close(g_binder_fd);
     close(g_server_fd);
+    delete g_skeleton_database;
 
     return 0;
 }

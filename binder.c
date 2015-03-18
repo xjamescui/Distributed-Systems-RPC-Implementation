@@ -35,20 +35,11 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
 int handle_loc_request(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *active_fds);
 int handle_terminate(fd_set *active_fds, fd_set *server_fds);
 
+
 /**
  * MAIN
  *
- *
- *
- *
- *
- *
- *
- *
- *
  */
-
-
 int main(int argc, char** argv)
 {
 

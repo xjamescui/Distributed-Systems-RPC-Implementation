@@ -81,43 +81,43 @@ int main()
 
     cout << "TEST: insert into empty db" << endl;
     assert(db->db_size() == 0);
-    assert(db->db_put(skel_f0) == RECORD_PUT_SUCCESS);
+    assert(db->db_put(skel_f0) == SKEL_RECORD_PUT_SUCCESS);
     assert(db->db_size() == 1);
-    assert(db->db_put(skel_f0) == RECORD_PUT_DUPLICATE);
+    assert(db->db_put(skel_f0) == SKEL_RECORD_PUT_DUPLICATE);
     assert(db->db_size() == 1);
 
 
     cout << "TEST: delete existing" << endl;
-    assert(db->db_delete(skel_f0) == RECORD_DELETE_SUCCESS);
+    assert(db->db_delete(skel_f0) == SKEL_RECORD_DELETE_SUCCESS);
     assert(db->db_size() == 0);
 
     cout << "TEST: delete on empty db" << endl;
-    assert(db->db_delete(skel_f0) == RECORD_DELETE_FAIL);
+    assert(db->db_delete(skel_f0) == SKEL_RECORD_DELETE_FAIL);
 
-    assert(db->db_put(skel_f0) == RECORD_PUT_SUCCESS);
+    assert(db->db_put(skel_f0) == SKEL_RECORD_PUT_SUCCESS);
     assert(db->db_size() == 1);
 
-    assert(db->db_put(skel_f1) == RECORD_PUT_SUCCESS);
+    assert(db->db_put(skel_f1) == SKEL_RECORD_PUT_SUCCESS);
     assert(db->db_size() == 2);
 
-    assert(db->db_put(skel_f2) == RECORD_PUT_SUCCESS);
+    assert(db->db_put(skel_f2) == SKEL_RECORD_PUT_SUCCESS);
     assert(db->db_size() == 3);
 
     cout << "TEST: get" << endl;
 
-    assert(db->db_get(&query_skel, (char *)"f0", argTypes0) == RECORD_FOUND);
+    assert(db->db_get(&query_skel, (char *)"f0", argTypes0) == SKEL_RECORD_FOUND);
     assert(query_skel == f0_Skel);
 
-    assert(db->db_get(&query_skel, (char *)"f2", argTypes0) == RECORD_NOT_FOUND);
+    assert(db->db_get(&query_skel, (char *)"f2", argTypes0) == SKEL_RECORD_NOT_FOUND);
     assert(query_skel == NULL);
 
-    assert(db->db_get(&query_skel, (char *)"f4", argTypes4) == RECORD_NOT_FOUND);
+    assert(db->db_get(&query_skel, (char *)"f4", argTypes4) == SKEL_RECORD_NOT_FOUND);
     assert(query_skel == NULL);
 
-    assert(db->db_put(skel_f4) == RECORD_PUT_SUCCESS);
+    assert(db->db_put(skel_f4) == SKEL_RECORD_PUT_SUCCESS);
     assert(db->db_size() == 4);
 
-    assert(db->db_get(&query_skel, (char *)"f4", argTypes4) == RECORD_FOUND);
+    assert(db->db_get(&query_skel, (char *)"f4", argTypes4) == SKEL_RECORD_FOUND);
     assert(query_skel == f4_Skel);
 
     cout << "ALL TESTS PASS!" << endl;
