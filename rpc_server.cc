@@ -175,7 +175,9 @@ int rpcExecute()
                 if (client_fd < 0) {
                     fprintf(stderr, "ERROR on accepting client: %s\n", strerror(errno));
                 } else {
+                    pthread_mutex_lock( &g_client_thread_lock);
                     FD_SET(client_fd, &g_active_fds);
+                    pthread_mutex_unlock( &g_client_thread_lock);
                 }
 
             } else if (connection_fd == (unsigned int)g_binder_fd) {
@@ -189,7 +191,11 @@ int rpcExecute()
                 if (read_len == READ_MSG_ZERO_LENGTH) {
                   // binder is closed
                   close(connection_fd);
+
+                  pthread_mutex_lock( &g_client_thread_lock);
                   FD_CLR(connection_fd, &g_active_fds);
+                  pthread_mutex_unlock( &g_client_thread_lock);
+
                   break;
                 }
 
@@ -436,7 +442,10 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
     }
 
+    pthread_mutex_lock( &g_client_thread_lock);
     FD_CLR(client_fd, &g_active_fds);
+    pthread_mutex_unlock( &g_client_thread_lock);
+
     close(client_fd);
 
     if (response_msg != NULL) free(response_msg);
