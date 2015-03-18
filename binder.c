@@ -109,6 +109,8 @@ int main(int argc, char** argv)
         for ( int i = 0 ; i < FD_SETSIZE ; i += 1 ) {
             if ( FD_ISSET(i, &temp_fds) ) {
                 if ( i == binder_fd) {
+                    DEBUG("handling request from listen socket %d",i);
+
                     // there is a new connection request, gotta take it
                     connection_fd = accept(binder_fd,NULL,NULL);
                     if ( connection_fd < 0 ) {
@@ -120,6 +122,7 @@ int main(int argc, char** argv)
                     // add new connection to the active set
                     FD_SET(connection_fd,&active_fds);
                 } else {
+                    DEBUG("handling request from %d",i);
                     // a connected connection request arrived, gotta talk to it
                     if ( handle_request(i,&active_fds,&server_fds,&running) < 0 ) {
                         DEBUG("COULDN'T HANDLE REQUEST!!!");
@@ -213,9 +216,16 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
     // read()
     rw_buffer = NULL;
     read_len = read_message(&rw_buffer,connection_fd);
-    if ( read_len < 0 ) {
+    if ( read_len == READ_MESSAGE_ERROR ) {
         fprintf(stderr,"Error : handle_request() couldn't read from socket\n");
         return -1;
+    }
+    if ( read_len == READ_MESSAGE_ZERO_LENGTH ) { // server closed
+        DEBUG("server closed at socket %d",connection_fd);
+        close(connection_fd);
+        FD_CLR(connection_fd,active_fds);
+        FD_CLR(connection_fd,server_fds);
+        return 0;
     }
 
     // extract msg_len and msg_type
