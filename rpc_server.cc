@@ -34,8 +34,7 @@ SkeletonDatabase* g_skeleton_database;
 
 // threads
 list<pthread_t> g_client_threads; // running client threads
-pthread_mutex_t g_client_thread_lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t g_active_fd_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_active_fd_lock = PTHREAD_MUTEX_INITIALIZER; // mutex on fd_set ops
 
 
 
@@ -254,10 +253,8 @@ int rpcExecute()
                     return PTHREAD_CREATE_FAIL;
                 }
 
-                pthread_mutex_lock( &g_client_thread_lock);
                 // add this thread to list of all running threads
                 g_client_threads.push_back(client_thread);
-                pthread_mutex_unlock( &g_client_thread_lock);
             }
         } // for
     } // while
@@ -270,7 +267,6 @@ int rpcExecute()
         pthread_join((*it), NULL);
     }
 
-    pthread_mutex_destroy(&g_client_thread_lock);
     pthread_mutex_destroy(&g_active_fd_lock);
 
     close(g_binder_fd);
