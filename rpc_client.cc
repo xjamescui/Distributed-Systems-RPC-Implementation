@@ -10,6 +10,7 @@
 #include "defines.h"
 #include "helper.h"
 #include "rpc.h"
+#include "ClientCacheDatabase.h"
 
 /**
  * rpcCall helper functions
@@ -67,8 +68,7 @@ int rpcCall(char* name, int* argTypes, void** args)
 
     // get ip and port from binder
     if ( (opCode = ask_binder_for_host(binder_fd,&server_ip,&server_port,name_len,name,argTypesLen,argTypes)) < 0 ) {
-        // fprintf(stderr, "Error : rpcCall() cannot get host\n");
-        DEBUG("Error : rpcCall() cannot get host %d\n",opCode);
+        fprintf(stderr, "Error : rpcCall() cannot get server from binder %d\n",opCode);
         return opCode;
     }
 
@@ -93,7 +93,7 @@ int rpcCall(char* name, int* argTypes, void** args)
         return -1;
     }
 
-    DEBUG("connect success!");
+    DEBUG("connect to server success!");
 
     // execute the message
     if ( (opCode = send_execute_to_server(server_fd, name_len, name, argTypesLen, argTypes, args)) < 0 ) {
