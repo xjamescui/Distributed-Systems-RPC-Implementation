@@ -201,23 +201,32 @@ int db_get(HOST *host, SIGNATURE sig)
     // put the HOST of for every sig to the end
     DB_NODE* temp_node = g_db_nodes_root;
     while ( temp_node != NULL ) {
-        HOST* temp_first_host = temp_node->hosts_root;
-        if ( temp_first_host != NULL ) {
-            if ( is_same_host(*temp_first_host,*first_host) ) {
+        HOST* temp_host = temp_node->hosts_root;
+        HOST* prev_host = NULL;
+        while ( temp_host != NULL ) {
+            if ( is_same_host(*temp_host,*first_host) ) {
                 // find last
-                HOST* temp_last = temp_first_host;
+                HOST* temp_last = temp_host;
                 while ( temp_last->next != NULL ) {
                     temp_last = temp_last->next;
                 }
-                if ( temp_last != temp_first_host ) {
-                    temp_last->next = temp_first_host;
-                    temp_node->hosts_root = temp_first_host->next;
-                    temp_first_host->next = NULL;
-                }
-            }
-        }
+                if ( temp_last != temp_host ) {
+                    temp_last->next = temp_host;
+                    if ( prev_host != NULL ) {
+                        prev_host->next = temp_host->next;
+                    } else {
+                        temp_node->hosts_root = temp_host->next;
+                    }
+                    temp_host->next = NULL;
+                } // if it's last, do nothing
+            } // if same host
+
+            prev_host = temp_host;
+            temp_host = temp_host->next;
+        } // while hosts
+
         temp_node = temp_node->next;
-    }
+    } // while sigs
 
     return HOST_DB_GET_SIGNATURE_FOUND;
 }
