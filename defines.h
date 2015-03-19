@@ -101,23 +101,23 @@
  *                                                                *
  ******************************************************************/
 
-#define RPC_ENVR_VARIABLES_NOT_SET              -1
+#define RPC_ENVR_VARIABLES_NOT_SET              -100
 
 #define RPC_SOCKET_UNINITIALIZED                -1
 
 #define RPC_SERVER_CREATE_SOCKET_SUCCESS         0
-#define RPC_SERVER_CREATE_SOCKET_FAIL           -1
-#define RPC_SERVER_BIND_SOCKET_FAIL             -2
-#define RPC_SERVER_GET_SOCK_NAME_FAIL           -3
+#define RPC_SERVER_CREATE_SOCKET_FAIL           -10
+#define RPC_SERVER_BIND_SOCKET_FAIL             -11
+#define RPC_SERVER_GET_SOCK_NAME_FAIL           -12
 
 #define RPC_REGISTER_OVERRIDE_PREVIOUS           1
-#define RPC_REGISTER_SERVER_SETUP_ERROR         -1
-#define RPC_REGISTER_INVALID_FCT_NAME           -2
-#define RPC_REGISTER_INVALID_ARGTYPES           -3
-#define RPC_REGISTER_UNKNOWN_ERROR              -4
+#define RPC_REGISTER_SERVER_SETUP_ERROR         -13
+#define RPC_REGISTER_INVALID_FCT_NAME           -14
+#define RPC_REGISTER_INVALID_ARGTYPES           -15
+#define RPC_REGISTER_UNKNOWN_ERROR              -16
 
-#define RPC_CALL_NO_HOSTS                       -1
-#define RPC_CALL_INTERNAL_DB_ERROR              -2
+#define RPC_CALL_NO_HOSTS                       -17
+#define RPC_CALL_INTERNAL_DB_ERROR              -18
 
 
 #define RPC_INIT_SUCCESS                         0
@@ -127,16 +127,16 @@
 #define RPC_TERMINATE_SUCCESS                    0
 #define RPC_EXECUTE_SUCCESS                      0
 
-#define RPC_CONNECT_TO_BINDER_FAIL              -1
-#define RPC_CONNECT_TO_SERVER_FAIL              -2
+#define RPC_CONNECT_TO_BINDER_FAIL              -19
+#define RPC_CONNECT_TO_SERVER_FAIL              -20
 
-#define RPC_CONNECTION_SELECT_FAIL              -1
+#define RPC_CONNECTION_SELECT_FAIL              -21
 
-#define RPC_WRITE_TO_BINDER_FAIL                -1
-#define RPC_READ_FROM_BINDER_FAIL               -2
+#define RPC_WRITE_TO_BINDER_FAIL                -22
+#define RPC_READ_FROM_BINDER_FAIL               -23
 
-#define RPC_WRITE_TO_SERVER_FAIL                -1
-#define RPC_READ_FROM_SERVER_FAIL               -2
+#define RPC_WRITE_TO_SERVER_FAIL                -24
+#define RPC_READ_FROM_SERVER_FAIL               -25
 
 
 
