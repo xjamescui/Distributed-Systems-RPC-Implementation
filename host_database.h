@@ -29,6 +29,8 @@ extern DB_NODE* g_db_nodes_root;
 int db_put(const HOST &host, SIGNATURE sig);
 int db_get(HOST* host, SIGNATURE sig);
 int db_delete_host(const HOST &host, SIGNATURE sig);
+int db_delete_all_for_sock(const int sock_fd);
+
 int db_drop();
 
 int db_get_all(unsigned int *hosts_len, unsigned int **ips, unsigned int **ports, SIGNATURE sig);

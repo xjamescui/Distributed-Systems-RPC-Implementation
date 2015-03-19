@@ -213,6 +213,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
         close(connection_fd);
         FD_CLR(connection_fd,active_fds);
         FD_CLR(connection_fd,server_fds);
+        db_delete_all_for_sock(connection_fd);
         return -1;
     }
     if ( read_len == READ_MSG_ZERO_LENGTH ) { // server closed
@@ -220,6 +221,7 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
         close(connection_fd);
         FD_CLR(connection_fd,active_fds);
         FD_CLR(connection_fd,server_fds);
+        db_delete_all_for_sock(connection_fd);
         return 0;
     }
 
