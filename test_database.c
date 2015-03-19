@@ -322,7 +322,10 @@ void test_add_delete() {
 
     HOST host_a = { 10 , 0xaaaa, 0x1111 , 0};
 
+    HOST get_host;
+    assert(db_get(&get_host,sig_f) < 0);
     assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_get(&get_host,sig_f) == HOST_DB_GET_SIGNATURE_FOUND);
     assert(db_delete_host(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
 
     free(sig_f.fct_name);
