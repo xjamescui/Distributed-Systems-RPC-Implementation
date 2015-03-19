@@ -59,7 +59,7 @@ bool is_same_sig(const SIGNATURE &a, const SIGNATURE &b)
 
 bool is_same_host(const HOST &a, const HOST &b)
 {
-    // TODO: should I check for the host's sock_id also?
+    // WARNING: this doesn't check for HOST::sock_fd
     return (a.ip == b.ip) && (a.port == b.port);
 }
 
@@ -423,5 +423,45 @@ int db_get_all(unsigned int *hosts_len, unsigned int **ips, unsigned int **ports
     }
 
     return HOST_DB_GET_SIGNATURE_FOUND;
+}
+
+// returns # of nodes deleted
+int db_delete_all_for_sock(const int sock_fd)
+{
+    int num_deleted = 0;
+
+    DB_NODE* temp_node = g_db_nodes_root;
+
+    // loop all the sigs
+    while( temp_node != NULL ) {
+        HOST* temp_host = temp_node->hosts_root;
+        HOST host_to_delete;
+        bool found = false;
+
+        // loop all the hosts
+        while ( temp_host != NULL ) {
+            if ( temp_host->sock_fd == sock_fd ) {
+                host_to_delete.sock_fd = temp_host->sock_fd;
+                host_to_delete.ip = temp_host->ip;
+                host_to_delete.port = temp_host->port;
+                found = true;
+                break;
+            }
+            temp_host = temp_host->next;
+        }
+
+        if ( found ) {
+            if ( db_delete_host(host_to_delete,temp_node->sig) == HOST_DB_DELETE_HOST_SUCCESS ) {
+                num_deleted += 1;
+            } else {
+                DEBUG("couldn't delete host: %x:%d",host_to_delete.ip,host_to_delete.port);
+            }
+        }
+
+        temp_node = temp_node->next;
+    }
+
+    return num_deleted;
+
 }
 
