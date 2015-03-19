@@ -309,10 +309,37 @@ void test_round_robin() {
 
 }
 
+void test_add_delete() {
+
+    SIGNATURE sig_f;
+    sig_f.fct_name_len = 5;
+    sig_f.fct_name = (char*)malloc(sig_f.fct_name_len);
+    memcpy(sig_f.fct_name,"fct_f",sig_f.fct_name_len);
+    sig_f.arg_types_len = 2;
+    sig_f.arg_types = (int*)malloc(sig_f.arg_types_len*4);
+    sig_f.arg_types[0] = 1;
+    sig_f.arg_types[1] = 2;
+
+    HOST host_a = { 10 , 0xaaaa, 0x1111 , 0};
+
+    assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_delete_host(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+
+    free(sig_f.fct_name);
+    free(sig_f.arg_types);
+
+    db_drop();
+
+    assert(db_size() == 0);
+
+}
+
 
 
 int main()
 {
+
+    test_add_delete();
 
     test_normal();
 
