@@ -345,17 +345,6 @@ int create_server_socket()
         return GET_IP_FROM_SOCKET_FAIL;
     }
 
-    // prints out ip and port for debug purpose
-    unsigned int ntoh_ip = ntohl(g_server_ip);
-    unsigned char ipb1 = (ntoh_ip >> 24) & 0xFF;
-    unsigned char ipb2 = (ntoh_ip >> 16) & 0xFF;
-    unsigned char ipb3 = (ntoh_ip >> 8) & 0xFF;
-    unsigned char ipb4 = (ntoh_ip >> 0) & 0xFF;
-
-    DEBUG("server addr:%u.%u.%u.%u",ipb1, ipb2, ipb3, ipb4);
-    DEBUG("server port:%d",ntohs(g_server_port));
-    DEBUG("(network)server port:%x",g_server_port);
-
     return RPC_SERVER_CREATE_SOCKET_SUCCESS;
 } // create_server_socket
 

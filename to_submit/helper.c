@@ -435,14 +435,6 @@ int get_ip_from_socket(unsigned int *ip, int socket_fd)
 int connect_to_ip_port(int *out_sock_fd, const unsigned int ip, const unsigned short port )
 {
 
-    unsigned int ntohip = ntohl(ip);
-    unsigned char ipb1,ipb2,ipb3,ipb4;
-    ipb1 = (ntohip >> 24) & 0xFF;
-    ipb2 = (ntohip >> 16) & 0xFF;
-    ipb3 = (ntohip >> 8) & 0xFF;
-    ipb4 = (ntohip >> 0) & 0xFF;
-    DEBUG("connect_to_ip_port(): %u.%u.%u.%u:%u",ipb1,ipb2,ipb3,ipb4,ntohs(port));
-
     int sock_fd;
     struct sockaddr_in temp_socket_addr;
     unsigned int temp_socket_addr_len = sizeof(temp_socket_addr);
