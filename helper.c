@@ -1038,7 +1038,7 @@ int validate_arg_types(int* argTypes) {
     }
     unsigned int length = arg_types_length(argTypes);
     for ( int i = 0 ; i < length ; i += 1 ) {
-        if ( type_is_valid == false ) {
+        if ( type_is_valid(argTypes[i]) == false ) {
             return -1;
         }
     }

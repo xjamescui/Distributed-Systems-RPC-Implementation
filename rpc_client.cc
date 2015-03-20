@@ -36,7 +36,7 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
- * RPC_CALL_SIGNATURE_NO_HOSTS
+ * RPC_CALL_NO_HOSTS
  * or failure code from the actual function
  */
 int rpcCall(char* name, int* argTypes, void** args)
@@ -137,7 +137,7 @@ int rpcCall(char* name, int* argTypes, void** args)
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
- * RPC_CALL_SIGNATURE_NO_HOSTS
+ * RPC_CALL_NO_HOSTS
  * or failure code from the actual function
  */
 int rpcCacheCall(char* name, int* argTypes, void** args)
