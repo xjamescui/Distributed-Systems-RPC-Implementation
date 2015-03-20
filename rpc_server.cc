@@ -128,7 +128,11 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     }
 
     msg = NULL;
-    read_message(&msg, g_binder_fd);
+    if ( read_message(&msg, g_binder_fd) < 0 ) {
+        fprintf(stderr, "Error : couldn't read register request result\n");
+        return RPC_READ_FROM_BINDER_FAIL;
+    }
+
     extract_registration_results(msg,&register_result); // wait for binder response
     free(msg);
 

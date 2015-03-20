@@ -460,9 +460,7 @@ int send_execute_to_server(int server_fd,
 
     free(reply_name);
     for ( unsigned int i = 0 ; i < reply_arg_types_len ; i += 1 ) {
-        if ( type_is_array(reply_arg_types[i]) ) {
-            free(reply_args[i]);
-        }
+        free(reply_args[i]);
     }
     free(reply_arg_types);
     free(reply_args);
