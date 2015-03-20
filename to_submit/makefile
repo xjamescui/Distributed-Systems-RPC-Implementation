@@ -54,7 +54,7 @@ $(BINDER_EXECUTABLE): $(BINDER_OBJECTS)
 
 # make clean
 clean:
-	rm -f *.o *.d $(EXECUTABLES) $(BINDER_EXECUTABLE) $(RPC_ARCHIVE)
+	rm -f *.o *.d $(BINDER_EXECUTABLE) $(RPC_ARCHIVE)
 
 # rule to transform .c to .o
 %.o: %.c debug.h defines.h
