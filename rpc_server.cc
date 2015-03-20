@@ -102,10 +102,7 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     skel_record.arg_types = argTypes;
     skel_record.skel = f;
 
-    DEBUG("NOW INSERTING: %s\n", skel_record.fct_name);
     dbOpCode = g_skeleton_database->db_put(skel_record);
-
-    g_skeleton_database->db_print(); // TODO remove later
 
     if (dbOpCode == SKEL_RECORD_PUT_DUPLICATE) {
         fprintf(stdout, "%s already exists in the server database\n", name);
@@ -136,7 +133,6 @@ int rpcRegister(char* name, int* argTypes, skeleton f)
     extract_registration_results(msg,&register_result); // wait for binder response
     free(msg);
 
-    DEBUG("registration result is: %d\n", register_result);
     switch ( register_result ) {
     case MSG_REGISTER_SUCCESS_NO_ERRORS : {
         return RPC_REGISTER_SUCCESS;

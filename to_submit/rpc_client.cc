@@ -98,6 +98,7 @@ int rpcCall(char* name, int* argTypes, void** args)
     // done with binder, close it
     close(binder_fd);
 
+
     // connect to server
     server_port_short = server_port;
     if ( connect_to_ip_port(&server_fd, server_ip, server_port_short) < 0 ) {

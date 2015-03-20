@@ -274,20 +274,6 @@ int handle_request(int connection_fd, fd_set *active_fds, fd_set *server_fds, bo
 }
 
 
-/**
- * register
- *   - add server socket to server_fds
- * returns -1 if either read/write fails
- */
-int is_valid_register(unsigned int ip, unsigned int port,
-                      unsigned int fct_name_len, char* fct_name,
-                      unsigned int arg_types_len, int* arg_types)
-{
-    // TODO: check if fct_name_len < 64
-    // TODO: check the argTypes
-    return 0;
-}
-
 int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd_set *server_fds)
 {
 
@@ -310,24 +296,6 @@ int handle_register(int connection_fd, char *buffer, unsigned int buffer_len, fd
 
     free(buffer);
     buffer = 0;
-
-    // check if it's valid
-    int is_valid = is_valid_register(server_ip,server_port,fct_name_len,fct_name,arg_types_len,arg_types);
-    if ( is_valid < 0 ) {
-        DEBUG("invalid register!! %d",is_valid);
-
-        free(fct_name); // from extract_msg
-        free(arg_types); // from extract_msg
-
-        // send MSG_REGISTER_FAILURE
-        assemble_msg(&buffer,&buffer_len,MSG_REGISTER_FAILURE,is_valid_register);
-        write_len = write_message(connection_fd,buffer,buffer_len);
-        free(buffer);
-        if ( write_len < buffer_len ) {
-            fprintf(stderr, "Error : couldn't send register request\n");
-        }
-        return -1;
-    }
 
     // add message to the db
     SIGNATURE sig;
