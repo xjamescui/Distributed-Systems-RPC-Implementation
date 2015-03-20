@@ -194,6 +194,11 @@ int rpcExecute()
         // iterate through each socket
         for (unsigned int connection_fd = 0; connection_fd < FD_SETSIZE; connection_fd+=1 ) {
 
+            if (connection_msg != NULL) {
+                free(connection_msg);
+                connection_msg = NULL;
+            }
+
             // this connection has no read requests
             if (!FD_ISSET(connection_fd, &read_fds)) continue;
 
@@ -266,6 +271,11 @@ int rpcExecute()
             }
         } // for
     } // while
+
+    if (connection_msg != NULL) {
+        free(connection_msg);
+        connection_msg = NULL;
+    }
 
     FD_ZERO(&g_active_fds);
     FD_ZERO(&read_fds);
@@ -407,7 +417,7 @@ int extract_registration_results(char *msg, int* result)
     case MSG_REGISTER_SUCCESS:
     case MSG_REGISTER_FAILURE:
         // register success or failure
-        if (extract_msg(msg, msg_len, msg_type, &result) < 0) {
+        if (extract_msg(msg, msg_len, msg_type, result) < 0) {
             fprintf(stderr, "ERROR extracting msg\n");
             return EXTRACT_MSG_FAIL;
         }
