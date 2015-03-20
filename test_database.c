@@ -19,8 +19,7 @@ unsigned int intersect(unsigned int const *const array1, unsigned int const arra
     return count;
 }
 
-int main()
-{
+void test_normal() {
 
     HOST host_1;
 
@@ -204,5 +203,147 @@ int main()
     free(sig_h.arg_types);
 
 
+}
 
+void test_delete_all_for_sock() {
+
+    SIGNATURE sig_f;
+    sig_f.fct_name_len = 10;
+    sig_f.fct_name = (char*)malloc(sig_f.fct_name_len);
+    memcpy(sig_f.fct_name,"fct_f",sig_f.fct_name_len);
+    sig_f.arg_types_len = 2;
+    sig_f.arg_types = (int*)malloc(sig_f.arg_types_len*4);
+    sig_f.arg_types[0] = 1;
+    sig_f.arg_types[1] = 2;
+
+    SIGNATURE sig_g;
+    sig_g.fct_name_len = 10;
+    sig_g.fct_name = (char*)malloc(sig_g.fct_name_len);
+    memcpy(sig_g.fct_name,"fct_g",sig_g.fct_name_len);
+    sig_g.arg_types_len = 1;
+    sig_g.arg_types = (int*)malloc(sig_g.fct_name_len*4);
+    sig_g.arg_types[0] = 20;
+
+
+    HOST host_a = { 10 , 0xaaaa, 0x1111};
+    HOST host_b = { 11 , 0xbbbb, 0x2222};
+
+    assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_a,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_b,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_b,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_size() == 4);
+
+    assert(db_delete_all_for_sock(10) == 2);
+    assert(db_size() == 2);
+
+    assert(db_delete_all_for_sock(11) == 2);
+    assert(db_size() == 0);
+
+    db_drop();
+
+    free(sig_f.fct_name);
+    free(sig_f.arg_types);
+    free(sig_g.fct_name);
+    free(sig_g.arg_types);
+
+}
+
+void test_round_robin() {
+
+    SIGNATURE sig_f;
+    sig_f.fct_name_len = 10;
+    sig_f.fct_name = (char*)malloc(sig_f.fct_name_len);
+    memcpy(sig_f.fct_name,"fct_f",sig_f.fct_name_len);
+    sig_f.arg_types_len = 2;
+    sig_f.arg_types = (int*)malloc(sig_f.arg_types_len*4);
+    sig_f.arg_types[0] = 1;
+    sig_f.arg_types[1] = 2;
+
+    SIGNATURE sig_g;
+    sig_g.fct_name_len = 10;
+    sig_g.fct_name = (char*)malloc(sig_g.fct_name_len);
+    memcpy(sig_g.fct_name,"fct_g",sig_g.fct_name_len);
+    sig_g.arg_types_len = 1;
+    sig_g.arg_types = (int*)malloc(sig_g.fct_name_len*4);
+    sig_g.arg_types[0] = 20;
+
+    HOST host_a = { 10 , 0xaaaa, 0x1111};
+    HOST host_b = { 11 , 0xbbbb, 0x2222};
+    HOST host_c = { 12 , 0xcccc, 0x3333};
+
+    // sig_f : a->b->c
+    // sig_g : b->a->c
+    // get(a)
+    // expect:
+    // sig_f : b->c->a
+    // sig_g : b->c->a
+
+    assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_b,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_c,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+
+    assert(db_put(host_b,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_a,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_put(host_c,sig_g) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+
+    assert(db_size() == 6);
+
+    HOST get_host;
+
+    assert(db_get(&get_host,sig_f) == HOST_DB_GET_SIGNATURE_FOUND);
+    assert(get_host.sock_fd == host_a.sock_fd && get_host.ip == host_a.ip && get_host.port == host_a.port );
+    assert(db_get(&get_host,sig_g) == HOST_DB_GET_SIGNATURE_FOUND);
+    assert(get_host.sock_fd == host_b.sock_fd && get_host.ip == host_b.ip && get_host.port == host_b.port );
+    assert(db_get(&get_host,sig_g) == HOST_DB_GET_SIGNATURE_FOUND);
+    assert(get_host.sock_fd == host_c.sock_fd && get_host.ip == host_c.ip && get_host.port == host_c.port );
+    assert(db_get(&get_host,sig_g) == HOST_DB_GET_SIGNATURE_FOUND);
+    assert(get_host.sock_fd == host_a.sock_fd && get_host.ip == host_a.ip && get_host.port == host_a.port );
+
+    db_drop();
+
+    free(sig_f.fct_name);
+    free(sig_f.arg_types);
+    free(sig_g.fct_name);
+    free(sig_g.arg_types);
+
+}
+
+void test_add_delete() {
+
+    SIGNATURE sig_f;
+    sig_f.fct_name_len = 5;
+    sig_f.fct_name = (char*)malloc(sig_f.fct_name_len);
+    memcpy(sig_f.fct_name,"fct_f",sig_f.fct_name_len);
+    sig_f.arg_types_len = 2;
+    sig_f.arg_types = (int*)malloc(sig_f.arg_types_len*4);
+    sig_f.arg_types[0] = 1;
+    sig_f.arg_types[1] = 2;
+
+    HOST host_a = { 10 , 0xaaaa, 0x1111 , 0};
+
+    assert(db_put(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+    assert(db_delete_host(host_a,sig_f) == HOST_DB_PUT_SIGNATURE_SUCCESS);
+
+    free(sig_f.fct_name);
+    free(sig_f.arg_types);
+
+    db_drop();
+
+    assert(db_size() == 0);
+
+}
+
+
+
+int main()
+{
+
+    test_add_delete();
+
+    test_normal();
+
+    test_delete_all_for_sock();
+
+    test_round_robin();
 }
