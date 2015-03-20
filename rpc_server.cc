@@ -74,6 +74,14 @@ int rpcInit()
 int rpcRegister(char* name, int* argTypes, skeleton f)
 {
 
+    if ( name == NULL || argTypes == NULL ) {
+        return RPC_NULL_PARAMETERS;
+    }
+
+    if ( validate_arg_types(argTypes) < 0 ) {
+        return RPC_INVALID_ARGTYPES;
+    }
+
     // not connected to binder
     if (g_binder_fd == RPC_SOCKET_UNINITIALIZED){
         fprintf(stderr, "ERROR: cannot execute rpcRegister because server is not connected to binder\n");

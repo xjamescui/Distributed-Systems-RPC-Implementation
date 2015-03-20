@@ -101,7 +101,11 @@
  *                                                                *
  ******************************************************************/
 
+
 #define RPC_ENVR_VARIABLES_NOT_SET              -100
+
+#define RPC_NULL_PARAMETERS                     -200
+#define RPC_INVALID_ARGTYPES                    -201
 
 #define RPC_SOCKET_UNINITIALIZED                -1
 
