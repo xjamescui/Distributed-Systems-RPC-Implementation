@@ -194,11 +194,6 @@ int rpcExecute()
         // iterate through each socket
         for (unsigned int connection_fd = 0; connection_fd < FD_SETSIZE; connection_fd+=1 ) {
 
-            if (connection_msg != NULL) {
-                free(connection_msg);
-                connection_msg = NULL;
-            }
-
             // this connection has no read requests
             if (!FD_ISSET(connection_fd, &read_fds)) continue;
 
@@ -252,9 +247,17 @@ int rpcExecute()
                     continue;
                 }
 
+                char msg_type;
+                unsigned int msg_len;
+
+                extract_msg_len_type(&msg_len, &msg_type, connection_msg);
+                
                 // create a new thread to process requests from this client
+                char* msg_copy = (char *)malloc(msg_len+5);
+                memcpy(msg_copy, connection_msg, msg_len + 5);
+
                 void** thread_args = new void*[2];
-                thread_args[0] = (void *) connection_msg;
+                thread_args[0] = (void *) msg_copy;
                 thread_args[1] = (void *) new int(connection_fd);
 
                 pthread_t client_thread;
@@ -484,6 +487,7 @@ void* handle_client_message(void * hidden_args)// char* msg, unsigned int client
 
     close(client_fd);
 
+    if (msg != NULL) free(msg);
     if (response_msg != NULL) free(response_msg);
     if (fct_name != NULL) free(fct_name);
     if (arg_types != NULL) free(arg_types);
