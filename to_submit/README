@@ -1,0 +1,29 @@
++------------+-------------+-------------+
+|            |  Member 1   | Member 2    |
++------------+-------------+-------------+
+| Name       |  Meng Yang  |  James Cui  | 
+| Student Id |  2040 2357  |  2037 8921  |
++------------+-------------+-------------+
+
+Assumptions:
+- When a server registers for a second time the same function name 
+  with same argTypes, the server loses its place in the round-robin 
+  algorithm and is now appended to the end of the queue.
+
+
+Commands for linking TA's client and server with our rpc library:
+1. make sure that you are in the same folder as this README
+2. make librpc.a
+3. g++ -L. client.o -lrpc -lpthread -o client 
+4. g++ -L. server_functions.o server_function_skels.o server.o -lrpc -lpthread -o server
+
+How to run binder:
+1. make clean binder && ./binder
+
+
+Dependencies:
+pthread for client since we are using POSIX thread locks for rpcCacheCall
+
+
+Message Format:
+all message format are specified in the manual
