@@ -559,5 +559,6 @@ int handle_terminate(fd_set *active_fds,fd_set *server_fds)
             FD_CLR(i,active_fds);
         }
     }
+    free(rw_buffer);
     return 0;
 }

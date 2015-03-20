@@ -42,10 +42,14 @@ ssize_t read_message(char** buffer, int socket_fd)
 
     if (read_so_far < 0) {
         fprintf(stderr,"Error reading first 5 bytes: %s\n" , strerror(errno));
+        free(*buffer);
+        *buffer = NULL;
         return READ_MSG_FAIL;
     }
     if (read_so_far == 0) {
         DEBUG("Read something of zero length!");
+        free(*buffer);
+        *buffer = NULL;
         return READ_MSG_ZERO_LENGTH;
     }
 
@@ -67,10 +71,14 @@ ssize_t read_message(char** buffer, int socket_fd)
         read_len = read(socket_fd, &(*buffer)[read_so_far], to_read_len );
         if (read_len == 0) {
             DEBUG("Read something of zero length!");
+            free(*buffer);
+            *buffer = NULL;
             return READ_MSG_ZERO_LENGTH;
         }
         if ( read_len < to_read_len ) {
             fprintf(stderr,"Error: Could only read %ld of %d\n",read_so_far,msg_len);
+            free(*buffer);
+            *buffer = NULL;
             return READ_MSG_FAIL;
         }
         read_so_far += read_len;

@@ -405,10 +405,10 @@ int send_execute_to_server(int server_fd,
     // for the message
     unsigned int msg_len;
     char msg_type;
-    unsigned int reply_name_len; // not sure if these are needed
-    char* reply_name = NULL; // not sure if these are needed
-    unsigned int reply_arg_types_len; // not sure if these are needed
-    int* reply_arg_types = NULL; // not sure if these are needed
+    unsigned int reply_name_len;
+    char* reply_name = NULL;
+    unsigned int reply_arg_types_len;
+    int* reply_arg_types = NULL;
     void** reply_args = NULL;
     int result;
 
@@ -460,9 +460,7 @@ int send_execute_to_server(int server_fd,
 
     free(reply_name);
     for ( unsigned int i = 0 ; i < reply_arg_types_len ; i += 1 ) {
-        if ( type_is_array(reply_arg_types[i]) ) {
-            free(reply_args[i]);
-        }
+        free(reply_args[i]);
     }
     free(reply_arg_types);
     free(reply_args);
