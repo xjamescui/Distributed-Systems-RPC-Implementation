@@ -1027,3 +1027,21 @@ int copy_args_step_by_step(int const *arg_types, void** const to_args, void cons
 
     return 0;
 }
+
+/**
+ * returns 0 if all argTypes are valid
+ * returns -1 if one of the fail
+ */
+int validate_arg_types(int* argTypes) {
+    if ( argTypes == NULL ) {
+        return -1;
+    }
+    unsigned int length = arg_types_length(argTypes);
+    for ( int i = 0 ; i < length ; i += 1 ) {
+        if ( type_is_valid(argTypes[i]) == false ) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
