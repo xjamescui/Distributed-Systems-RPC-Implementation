@@ -31,13 +31,24 @@ int ask_binder_for_cache_host(int binder_fd, unsigned int *hosts_len,
  * success:
  * RPC_CALL_SUCCESS
  * error codes:
+ * RPC_NULL_PARAMETERS
+ * RPC_INVALID_ARGTYPES
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
- * RPC_CALL_SIGNATURE_NO_HOSTS
+ * RPC_CALL_NO_HOSTS
+ * or failure code from the actual function
  */
 int rpcCall(char* name, int* argTypes, void** args)
 {
+
+    if ( name == NULL || argTypes == NULL || args == NULL ) {
+        return RPC_NULL_PARAMETERS;
+    }
+
+    if ( validate_arg_types(argTypes) < 0 ) {
+        return RPC_INVALID_ARGTYPES;
+    }
 
     DEBUG("rpcCall %s",name);
 
@@ -121,14 +132,24 @@ int rpcCall(char* name, int* argTypes, void** args)
  * success:
  * RPC_CACHE_CALL_SUCCESS
  * error codes:
+ * RPC_NULL_PARAMETERS
+ * RPC_INVALID_ARGTYPES
  * RPC_ENVR_VARIABLES_NOT_SET
  * RPC_CONNECT_TO_BINDER_FAIL
  * RPC_CONNECT_TO_SERVER_FAIL
- * RPC_CALL_SIGNATURE_NO_HOSTS
+ * RPC_CALL_NO_HOSTS
  * or failure code from the actual function
  */
 int rpcCacheCall(char* name, int* argTypes, void** args)
 {
+
+    if ( name == NULL || argTypes == NULL || args == NULL ) {
+        return RPC_NULL_PARAMETERS;
+    }
+
+    if ( validate_arg_types(argTypes) < 0 ) {
+        return RPC_INVALID_ARGTYPES;
+    }
 
     // setup
     SIGNATURE sig;

@@ -52,6 +52,12 @@ void print_received_message(char const *const buffer);
  */
 unsigned int arg_types_length(int* argTypes);
 
+/**
+ * returns 0 if all argTypes are valid
+ * returns -1 if one of the fail
+ */
+int validate_arg_types(int* argTypes);
+
 
 /**
  * returns IP given a socket_fd
